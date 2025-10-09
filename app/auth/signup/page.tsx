@@ -43,18 +43,27 @@ export default function SignUpPage() {
     const supabase = createClient()
 
     try {
+      console.log("[v0] Attempting signup with email:", email)
+
       // Create auth user
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || window.location.origin,
+          data: {
+            nombre_completo: nombreCompleto,
+          },
         },
       })
+
+      console.log("[v0] Signup response:", { data, error: signUpError })
 
       if (signUpError) throw signUpError
 
       if (data.user) {
+        console.log("[v0] User created:", data.user.id)
+
         // Create admin user record
         const { error: insertError } = await supabase.from("admin_users").insert({
           id: data.user.id,
@@ -62,14 +71,25 @@ export default function SignUpPage() {
           role: "admin",
         })
 
+        console.log("[v0] Admin user insert result:", { error: insertError })
+
         if (insertError) throw insertError
 
         setSuccess(true)
+
+        if (data.user.identities && data.user.identities.length === 0) {
+          setError("Este correo ya está registrado. Por favor inicia sesión.")
+          setSuccess(false)
+          setIsLoading(false)
+          return
+        }
+
         setTimeout(() => {
           router.push("/auth/login")
         }, 2000)
       }
     } catch (error: unknown) {
+      console.error("[v0] Signup error:", error)
       setError(error instanceof Error ? error.message : "Error al crear la cuenta")
     } finally {
       setIsLoading(false)

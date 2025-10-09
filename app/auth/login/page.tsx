@@ -27,44 +27,74 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("[v0] Attempting login with email:", email)
+
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-      if (error) throw error
+
+      console.log("[v0] Sign in response:", { data: signInData, error: signInError })
+
+      if (signInError) {
+        console.error("[v0] Sign in error:", signInError)
+        throw signInError
+      }
 
       // Check if user is admin or servidor
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
+      console.log("[v0] Current user:", user)
+
       if (user) {
         // Check if admin
-        const { data: adminData } = await supabase.from("admin_users").select("*").eq("id", user.id).single()
+        const { data: adminData, error: adminError } = await supabase
+          .from("admin_users")
+          .select("*")
+          .eq("id", user.id)
+          .single()
+
+        console.log("[v0] Admin check:", { adminData, adminError })
 
         if (adminData) {
+          console.log("[v0] User is admin, redirecting to /admin")
           router.push("/admin")
           return
         }
 
         // Check if servidor
-        const { data: servidorData } = await supabase
+        const { data: servidorData, error: servidorError } = await supabase
           .from("servidores")
           .select("*")
           .eq("auth_user_id", user.id)
           .single()
 
+        console.log("[v0] Servidor check:", { servidorData, servidorError })
+
         if (servidorData) {
+          console.log("[v0] User is servidor, redirecting to /servidor")
           router.push("/servidor")
           return
         }
 
         // User exists but has no role
+        console.log("[v0] User has no role, signing out")
         await supabase.auth.signOut()
         throw new Error("No tienes permisos para acceder al sistema")
       }
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Error al iniciar sesión")
+      console.error("[v0] Login error:", error)
+      const errorMessage = error instanceof Error ? error.message : "Error al iniciar sesión"
+
+      if (errorMessage.includes("Invalid login credentials")) {
+        setError("Credenciales inválidas. Verifica tu correo y contraseña.")
+      } else if (errorMessage.includes("Email not confirmed")) {
+        setError("Debes confirmar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.")
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setIsLoading(false)
     }

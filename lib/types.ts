@@ -18,6 +18,16 @@ export interface Caminante {
   nombre_contacto_emergencia: string
   parentesco_contacto: string
   celular_contacto: string
+  nombre_contacto_emergencia_2?: string
+  parentesco_contacto_2?: string
+  celular_contacto_2?: string
+  es_sorpresa: boolean
+  ronca_al_dormir: boolean
+  condicion_especial?: string
+  talla_camisa: string
+  sacramentos_recibidos: string[]
+  quien_invito?: string
+  invitador_hizo_retiro?: boolean
   eps: string
   tipo_sangre: string
   medicamentos?: string
