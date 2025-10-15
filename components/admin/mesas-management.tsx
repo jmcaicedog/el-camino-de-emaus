@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { CaminanteCard } from "@/components/servidor/caminante-card"
+import { ServidorCard } from "@/components/servidor/servidor-card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
@@ -163,7 +165,21 @@ export function MesasManagement() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-muted-foreground">Líder: </span>
-                        {lider ? lider.nombre_completo : "Sin asignar"}
+                        {lider ? (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="text-left text-sm underline underline-offset-2 text-primary/90">{lider.nombre_completo}</button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle>{lider.nombre_completo}</DialogTitle>
+                              </DialogHeader>
+                              <ServidorCard servidor={lider} onUpdate={loadData} />
+                            </DialogContent>
+                          </Dialog>
+                        ) : (
+                          "Sin asignar"
+                        )}
                       </div>
                       {lider && (
                         <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(lider.id, "servidor")} disabled={isAssigning}>
@@ -174,7 +190,21 @@ export function MesasManagement() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-muted-foreground">Colíder: </span>
-                        {colider ? colider.nombre_completo : "Sin asignar"}
+                        {colider ? (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="text-left text-sm underline underline-offset-2 text-primary/90">{colider.nombre_completo}</button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle>{colider.nombre_completo}</DialogTitle>
+                              </DialogHeader>
+                              <ServidorCard servidor={colider} onUpdate={loadData} />
+                            </DialogContent>
+                          </Dialog>
+                        ) : (
+                          "Sin asignar"
+                        )}
                       </div>
                       {colider && (
                         <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(colider.id, "servidor")} disabled={isAssigning}>
@@ -191,10 +221,20 @@ export function MesasManagement() {
                     <span className="text-sm font-medium">Caminantes</span>
                   </div>
                   <div className="space-y-1 text-sm text-muted-foreground">
-                    {mesaCaminantes.length > 0 ? (
+                        {mesaCaminantes.length > 0 ? (
                       mesaCaminantes.map((c) => (
                         <div key={c.id} className="flex items-center justify-between">
-                          <span>{c.nombre_completo}</span>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="text-left text-sm underline underline-offset-2 text-primary/90">{c.nombre_completo}</button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle>{c.nombre_completo}</DialogTitle>
+                              </DialogHeader>
+                              <CaminanteCard caminante={c} onUpdate={loadData} />
+                            </DialogContent>
+                          </Dialog>
                           <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(c.id, "caminante")} disabled={isAssigning}>
                             Desasignar
                           </Button>
@@ -267,8 +307,13 @@ export function MesasManagement() {
                                         <SelectValue placeholder="Seleccionar tipo" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="lider">Líder</SelectItem>
-                                        <SelectItem value="colider">Colíder</SelectItem>
+                                        {/* Disable option if that role already exists in the mesa */}
+                                        <SelectItem value="lider" disabled={!!lider}>
+                                          Líder {lider ? "(ya asignado)" : ""}
+                                        </SelectItem>
+                                        <SelectItem value="colider" disabled={!!colider}>
+                                          Colíder {colider ? "(ya asignado)" : ""}
+                                        </SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </div>
@@ -276,7 +321,13 @@ export function MesasManagement() {
                                 <Button
                                   size="sm"
                                   onClick={() => assignToMesa(servidor.id, mesa.id, "servidor")}
-                                  disabled={isAssigning || mesaServidores.length >= 2 || !servidor.tipo_servidor}
+                                  disabled={
+                                    isAssigning ||
+                                    mesaServidores.length >= 2 ||
+                                    !servidor.tipo_servidor ||
+                                    (servidor.tipo_servidor === "lider" && !!lider) ||
+                                    (servidor.tipo_servidor === "colider" && !!colider)
+                                  }
                                 >
                                   Asignar
                                 </Button>

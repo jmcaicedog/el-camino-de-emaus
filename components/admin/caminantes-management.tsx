@@ -8,14 +8,17 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { CaminanteCard } from "@/components/servidor/caminante-card"
+import { ServidorCard } from "@/components/servidor/servidor-card"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Search, DollarSign } from "lucide-react"
-import type { Caminante } from "@/lib/types"
+import type { Caminante, Servidor } from "@/lib/types"
 
 export function CaminantesManagement() {
   const { toast } = useToast()
   const [caminantes, setCaminantes] = useState<Caminante[]>([])
+  const [mesas, setMesas] = useState<Array<{ id: string; numero: number }>>([])
+  const [servidores, setServidores] = useState<Servidor[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCaminante, setSelectedCaminante] = useState<Caminante | null>(null)
@@ -28,9 +31,19 @@ export function CaminantesManagement() {
 
   const loadCaminantes = async () => {
     try {
-      const response = await fetch("/api/caminantes")
-      const data = await response.json()
-      setCaminantes(data)
+      const [caminantesRes, mesasRes, servidoresRes] = await Promise.all([
+        fetch("/api/caminantes"),
+        fetch("/api/mesas"),
+        fetch("/api/servidores"),
+      ])
+      const [caminantesData, mesasData, servidoresData] = await Promise.all([
+        caminantesRes.json(),
+        mesasRes.json(),
+        servidoresRes.json(),
+      ])
+      setCaminantes(caminantesData)
+      setMesas(mesasData)
+      setServidores(servidoresData)
     } catch (error) {
       toast({
         title: "Error",
@@ -146,17 +159,131 @@ export function CaminantesManagement() {
                     </TableCell>
                     <TableCell>{caminante.cedula}</TableCell>
                     <TableCell>{caminante.celular}</TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       {caminante.mesa_id ? (
-                        <Badge variant="secondary">Asignado</Badge>
+                        <Dialog onOpenChange={(open) => {
+                          if (open) loadCaminantes()
+                        }}>
+                          <DialogTrigger asChild>
+                            <Badge variant="secondary" className="cursor-pointer">
+                              {mesas.find((m) => m.id === caminante.mesa_id)?.numero}
+                            </Badge>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Mesa {mesas.find((m) => m.id === caminante.mesa_id)?.numero}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="text-sm font-medium">Servidores asignados</h4>
+                                <ul className="mt-2 space-y-2">
+                                  {(() => {
+                                    const asignados = servidores.filter((s) => s.mesa_id === caminante.mesa_id)
+                                    const seen = new Set<string>()
+                                    const unique = asignados.filter((s) => {
+                                      if (seen.has(s.id)) return false
+                                      seen.add(s.id)
+                                      return true
+                                    })
+                                    const lideres = unique.filter((s) => s.tipo_servidor === "lider")
+                                    const colideres = unique.filter((s) => s.tipo_servidor === "colider")
+                                    const otros = unique.filter((s) => !s.tipo_servidor)
+
+                                    return (
+                                      <>
+                                        {lideres.length > 0 && (
+                                          <li>
+                                            <div className="text-xs text-muted-foreground">Líder</div>
+                                            <ul className="mt-1 space-y-1">
+                                              {lideres.map((s) => (
+                                                <li key={s.id}>
+                                                  <Dialog>
+                                                    <DialogTrigger asChild>
+                                                      <button className="text-sm underline underline-offset-2 text-primary/90">{s.nombre_completo}</button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                      <ServidorCard servidor={s} onUpdate={loadCaminantes} />
+                                                    </DialogContent>
+                                                  </Dialog>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </li>
+                                        )}
+
+                                        {colideres.length > 0 && (
+                                          <li>
+                                            <div className="text-xs text-muted-foreground">Colíder</div>
+                                            <ul className="mt-1 space-y-1">
+                                              {colideres.map((s) => (
+                                                <li key={s.id}>
+                                                  <Dialog>
+                                                    <DialogTrigger asChild>
+                                                      <button className="text-sm underline underline-offset-2 text-primary/90">{s.nombre_completo}</button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                      <ServidorCard servidor={s} onUpdate={loadCaminantes} />
+                                                    </DialogContent>
+                                                  </Dialog>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </li>
+                                        )}
+
+                                        {otros.length > 0 && (
+                                          <li>
+                                            <div className="text-xs text-muted-foreground">Otros</div>
+                                            <ul className="mt-1 space-y-1">
+                                              {otros.map((s) => (
+                                                <li key={s.id}>
+                                                  <Dialog>
+                                                    <DialogTrigger asChild>
+                                                      <button className="text-sm underline underline-offset-2 text-primary/90">{s.nombre_completo}</button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                      <ServidorCard servidor={s} onUpdate={loadCaminantes} />
+                                                    </DialogContent>
+                                                  </Dialog>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </li>
+                                        )}
+                                      </>
+                                    )
+                                  })()}
+                                </ul>
+                              </div>
+
+                              <div>
+                                <h4 className="text-sm font-medium">Caminantes asignados</h4>
+                                <ul className="mt-2 space-y-1">
+                                  {caminantes
+                                    .filter((c) => c.mesa_id === caminante.mesa_id)
+                                    .map((c) => (
+                                      <li key={c.id}>
+                                        <Dialog>
+                                          <DialogTrigger asChild>
+                                            <button className="text-sm underline underline-offset-2 text-primary/90">{c.nombre_completo}</button>
+                                          </DialogTrigger>
+                                          <DialogContent>
+                                            <CaminanteCard caminante={c} onUpdate={loadCaminantes} />
+                                          </DialogContent>
+                                        </Dialog>
+                                      </li>
+                                    ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       ) : (
                         <Badge variant="outline">Sin asignar</Badge>
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={caminante.monto_pagado >= caminante.monto_total ? "default" : "secondary"}>
-                        ${caminante.monto_pagado.toLocaleString()} / ${caminante.monto_total.toLocaleString()}
-                      </Badge>
+                      {`$${caminante.monto_pagado.toLocaleString()} / $${caminante.monto_total.toLocaleString()}`}
                     </TableCell>
                     <TableCell>
                       <Dialog>
@@ -180,16 +307,16 @@ export function CaminantesManagement() {
                             <div className="space-y-2">
                               <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Monto total:</span>
-                                <span className="font-medium">${caminante.monto_total.toLocaleString()}</span>
+                                <span className="font-medium">{`$${caminante.monto_total.toLocaleString()}`}</span>
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Pagado:</span>
-                                <span className="font-medium">${caminante.monto_pagado.toLocaleString()}</span>
+                                <span className="font-medium">{`$${caminante.monto_pagado.toLocaleString()}`}</span>
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Saldo:</span>
                                 <span className="font-medium text-destructive">
-                                  ${(caminante.monto_total - caminante.monto_pagado).toLocaleString()}
+                                  {`$${(caminante.monto_total - caminante.monto_pagado).toLocaleString()}`}
                                 </span>
                               </div>
                             </div>

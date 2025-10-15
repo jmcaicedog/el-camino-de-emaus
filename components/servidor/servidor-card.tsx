@@ -7,19 +7,22 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
-import { Phone, MapPin, Loader2 } from "lucide-react"
+import { Phone, MapPin, Loader2, Pill, UtensilsCrossed } from "lucide-react"
 import type { Servidor } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 
 interface ServidorCardProps {
   servidor: Servidor
   onClose?: () => void
+  onUpdate?: () => void
 }
 
-export function ServidorCard({ servidor }: ServidorCardProps) {
+export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
   const { toast } = useToast()
-  const [isEditing, setIsEditing] = useState(false)
   const [medicamentos, setMedicamentos] = useState(servidor.medicamentos || "")
+  const [restricciones, setRestricciones] = useState(servidor.restricciones_alimenticias || "")
+  const [isEditing, setIsEditing] = useState(false)
+  const [isViewing, setIsViewing] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
 
   const updateMedicalInfo = async () => {
@@ -28,13 +31,14 @@ export function ServidorCard({ servidor }: ServidorCardProps) {
       const res = await fetch(`/api/servidores/${servidor.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ medicamentos }),
+        body: JSON.stringify({ medicamentos, restricciones_alimenticias: restricciones }),
       })
 
       if (!res.ok) throw new Error("Error al actualizar")
 
       toast({ title: "Actualizado", description: "Información médica actualizada" })
       setIsEditing(false)
+      if (typeof onUpdate === "function") onUpdate()
     } catch (e) {
       toast({ title: "Error", description: "No se pudo actualizar", variant: "destructive" })
     } finally {
@@ -96,38 +100,127 @@ export function ServidorCard({ servidor }: ServidorCardProps) {
           </div>
         )}
 
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={() => setIsEditing(true)} disabled={isUpdating}>
-            Editar Médicos
-          </Button>
+        <div className="space-y-2">
+          <Dialog open={isEditing} onOpenChange={setIsEditing}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full bg-transparent">
+                <Pill className="mr-2 h-4 w-4" />
+                Ver/Editar Información Médica
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Información Médica - {servidor.nombre_completo}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="medicamentos">Medicamentos</Label>
+                  <Textarea id="medicamentos" value={medicamentos} onChange={(e) => setMedicamentos(e.target.value)} rows={4} />
+                </div>
+
+                <div>
+                  <Label htmlFor="restricciones">
+                    <div className="flex items-center gap-2 mb-2">
+                      <UtensilsCrossed className="h-4 w-4" />
+                      Restricciones Alimenticias
+                    </div>
+                  </Label>
+                  <Textarea id="restricciones" value={restricciones} onChange={(e) => setRestricciones(e.target.value)} rows={4} />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsEditing(false)} disabled={isUpdating}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={updateMedicalInfo} disabled={isUpdating}>
+                    {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Guardar Cambios
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isViewing} onOpenChange={setIsViewing}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" className="w-full text-xs">
+                Ver información completa
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{servidor.nombre_completo}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 text-sm">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="font-medium">Cédula:</span> {servidor.cedula}
+                  </div>
+                  <div>
+                    <span className="font-medium">Edad:</span> {servidor.edad} años
+                  </div>
+                  <div>
+                    <span className="font-medium">Celular:</span> {servidor.celular}
+                  </div>
+                  <div>
+                    <span className="font-medium">Correo:</span> {servidor.correo}
+                  </div>
+                  <div>
+                    <span className="font-medium">Ciudad:</span> {servidor.ciudad}
+                  </div>
+                  <div>
+                    <span className="font-medium">Estado Civil:</span> {servidor.estado_civil}
+                  </div>
+                  <div>
+                    <span className="font-medium">Profesión:</span> {servidor.profesion || "-"}
+                  </div>
+                  <div>
+                    <span className="font-medium">EPS:</span> {servidor.eps}
+                  </div>
+                  <div>
+                    <span className="font-medium">Tipo de Sangre:</span> {servidor.tipo_sangre}
+                  </div>
+                  <div>
+                    <span className="font-medium">Parroquia:</span> {servidor.parroquia}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-2">Contacto de Emergencia</h3>
+                  <div className="space-y-1">
+                    <div>
+                      <span className="font-medium">Nombre:</span> {servidor.nombre_contacto_emergencia}
+                    </div>
+                    <div>
+                      <span className="font-medium">Parentesco:</span> {servidor.parentesco_contacto}
+                    </div>
+                    <div>
+                      <span className="font-medium">Celular:</span> {servidor.celular_contacto}
+                    </div>
+                  </div>
+                </div>
+
+                {(servidor.medicamentos || servidor.restricciones_alimenticias) && (
+                  <div className="pt-4 border-t">
+                    <h3 className="font-semibold mb-2">Información Médica</h3>
+                    {servidor.medicamentos && (
+                      <div className="mb-2">
+                        <span className="font-medium">Medicamentos:</span>
+                        <p className="text-muted-foreground">{servidor.medicamentos}</p>
+                      </div>
+                    )}
+                    {servidor.restricciones_alimenticias && (
+                      <div>
+                        <span className="font-medium">Restricciones Alimenticias:</span>
+                        <p className="text-muted-foreground">{servidor.restricciones_alimenticias}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
-
-        <Dialog open={isEditing} onOpenChange={setIsEditing}>
-          <DialogTrigger asChild>
-            <span />
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Información Médica - {servidor.nombre_completo}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="medicamentos">Medicamentos</Label>
-                <Textarea id="medicamentos" value={medicamentos} onChange={(e) => setMedicamentos(e.target.value)} rows={4} />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsEditing(false)} disabled={isUpdating}>
-                  Cancelar
-                </Button>
-                <Button onClick={updateMedicalInfo} disabled={isUpdating}>
-                  {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Guardar
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </CardContent>
     </Card>
   )
