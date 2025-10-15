@@ -37,15 +37,21 @@ export function ServidorRegistrationForm() {
     }
 
     try {
+      // Normalize form values: convert radio values like "si"/"no" to booleans,
+      // and parse numeric fields to numbers before sending to the API.
+      const payload = {
+        ...data,
+        edad: age,
+        monto_total: 150000,
+        retiros_anteriores: Number.parseInt((data.retiros_anteriores as string) || "0") || 0,
+        // Convert known boolean-like radio fields
+        ronca_al_dormir: (data.ronca_al_dormir as string) === "si",
+      }
+
       const response = await fetch("/api/servidores", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          edad: age,
-          monto_total: 150000,
-          retiros_anteriores: Number.parseInt(data.retiros_anteriores as string) || 0,
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {

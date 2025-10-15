@@ -3,7 +3,33 @@ import { createClient } from '@/lib/supabase/server'
 import { Resend } from 'resend'
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY
-const RESEND_FROM = process.env.RESEND_FROM || 'no-reply@emaus.local'
+// Read raw value and sanitize it: some hosting UIs accidentally include quotes or the whole `KEY="value"` string.
+const rawResendFrom = process.env.RESEND_FROM || ''
+function sanitizeFrom(raw: string) {
+  if (!raw) return ''
+  let v = raw.trim()
+  // If someone pasted `RESEND_FROM="..."` remove the left side until '='
+  if (v.includes('=')) {
+    const parts = v.split('=')
+    v = parts.slice(1).join('=')
+  }
+  // Trim wrapping single or double quotes
+  v = v.replace(/^"|"$/g, '').replace(/^'|'$/g, '')
+  return v.trim()
+}
+
+function isValidFromValue(value: string) {
+  if (!value) return false
+  // Accept formats like: "Name <local@domain.tld>" or just "local@domain.tld"
+  // Simple regex to ensure there's at least a valid-looking email somewhere.
+  const emailMatch = value.match(/<([^>]+)>/) || value.match(/([\w.+-]+@[\w-]+\.[\w.-]+)/)
+  if (!emailMatch) return false
+  const email = emailMatch[1] || emailMatch[0]
+  // Basic email validation
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+const RESEND_FROM = sanitizeFrom(rawResendFrom) || 'no-reply@emaus.local'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000'
 
 const resendClient = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null
@@ -81,13 +107,20 @@ export async function POST(request: Request) {
         const text = `Hola,\n\nHas sido invitado a registrarte como administrador en Emaús.\n\nCódigo de invitación: ${token}\n\nRegístrate aquí: ${signupLink}\n\nSi no esperabas esto, ignora este correo.`
         const html = `<p>Hola,</p><p>Has sido invitado a registrarte como <strong>administrador</strong> en Emaús.</p><p><strong>Código de invitación:</strong> <code>${token}</code></p><p>Puedes registrarte aquí: <a href="${signupLink}">${signupLink}</a></p><p>Si no esperabas esto, ignora este correo.</p>`
 
-        await resendClient.emails.send({
-          from: RESEND_FROM,
-          to: email,
-          subject,
-          text,
-          html,
-        })
+        // Validate the configured `from` value. If it's malformed (often caused by
+        // accidentally including the env var name or wrapping quotes), don't call the API
+        // because Resend will return a 422 validation_error.
+        if (!isValidFromValue(RESEND_FROM)) {
+          console.warn('[v0] RESEND_FROM appears invalid, skipping Resend send. RESEND_FROM=' + rawResendFrom)
+        } else {
+          await resendClient.emails.send({
+            from: RESEND_FROM,
+            to: email,
+            subject,
+            text,
+            html,
+          })
+        }
       } catch (sendErr) {
         console.error('[v0] Error sending invite email via Resend:', sendErr)
         // We don't block invite creation if email sending fails; it's logged for later inspection.
