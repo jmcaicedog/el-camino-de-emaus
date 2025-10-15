@@ -12,5 +12,5 @@ ADD COLUMN restricciones_alimenticias TEXT,
 ADD COLUMN parroco TEXT,
 ADD COLUMN ronca_al_dormir BOOLEAN DEFAULT false;
 
--- Update monto_total default for servidores to 150000 if needed
-ALTER TABLE servidores ALTER COLUMN monto_total SET DEFAULT 150000;
+-- Update monto_total default for servidores to 400000 if needed
+ALTER TABLE servidores ALTER COLUMN monto_total SET DEFAULT 400000;

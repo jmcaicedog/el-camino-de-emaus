@@ -99,7 +99,7 @@ CREATE TABLE servidores (
   experiencia_servicio TEXT,
   tipo_servidor tipo_servidor,
   monto_pagado DECIMAL(10, 2) DEFAULT 0,
-  monto_total DECIMAL(10, 2) NOT NULL DEFAULT 150000,
+  monto_total DECIMAL(10, 2) NOT NULL DEFAULT 400000,
   mesa_id UUID REFERENCES mesas(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
