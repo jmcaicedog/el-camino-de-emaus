@@ -294,7 +294,7 @@ export function MesasManagement() {
                                       Tipo:
                                     </Label>
                                     <Select
-                                      onValueChange={async (value) => {
+                                      onValueChange={async (value: string) => {
                                         await fetch(`/api/servidores/${servidor.id}`, {
                                           method: "PATCH",
                                           headers: { "Content-Type": "application/json" },

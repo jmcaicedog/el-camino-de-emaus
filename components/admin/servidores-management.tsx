@@ -227,7 +227,7 @@ export function ServidoresManagement() {
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {servidor.mesa_id ? (
-                        <Dialog onOpenChange={(open) => {
+                        <Dialog onOpenChange={(open: boolean) => {
                           if (open) loadServidores()
                         }}>
                           <DialogTrigger asChild>
@@ -440,7 +440,7 @@ export function ServidoresManagement() {
       </div>
       <ConfirmDialog
       open={confirmOpen}
-      onOpenChange={(open) => setConfirmOpen(open)}
+  onOpenChange={(open: boolean) => setConfirmOpen(open)}
       title="Confirmar eliminación"
       description="¿Estás seguro de que deseas eliminar este servidor? Esta acción no se puede deshacer."
       confirmLabel="Eliminar"

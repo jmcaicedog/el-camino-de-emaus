@@ -457,7 +457,7 @@ export function CaminanteRegistrationForm() {
           <div className="space-y-3">
             <Label>Sacramentos Recibidos</Label>
             <div className="space-y-2">
-              {[
+                  {[
                 { id: "bautismo", label: "Bautismo" },
                 { id: "confesion", label: "Confesión" },
                 { id: "primera_comunion", label: "Primera Comunión" },
@@ -469,7 +469,7 @@ export function CaminanteRegistrationForm() {
                   <Checkbox
                     id={sacramento.id}
                     checked={sacramentos.includes(sacramento.id)}
-                    onCheckedChange={(checked) => handleSacramentoChange(sacramento.id, checked as boolean)}
+                    onCheckedChange={(checked: boolean | 'indeterminate') => handleSacramentoChange(sacramento.id, checked === true)}
                   />
                   <Label htmlFor={sacramento.id} className="font-normal cursor-pointer">
                     {sacramento.label}

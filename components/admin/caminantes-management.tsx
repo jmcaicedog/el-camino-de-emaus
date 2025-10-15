@@ -181,7 +181,7 @@ export function CaminantesManagement() {
                     <TableCell>{caminante.celular}</TableCell>
                     <TableCell className="whitespace-nowrap">
                       {caminante.mesa_id ? (
-                        <Dialog onOpenChange={(open) => {
+                        <Dialog onOpenChange={(open: boolean) => {
                           if (open) loadCaminantes()
                         }}>
                           <DialogTrigger asChild>
@@ -389,7 +389,7 @@ export function CaminantesManagement() {
     </div>
       <ConfirmDialog
       open={confirmOpen}
-      onOpenChange={(open) => setConfirmOpen(open)}
+  onOpenChange={(open: boolean) => setConfirmOpen(open)}
       title="Confirmar eliminación"
       description="¿Estás seguro de que deseas eliminar este caminante? Esta acción no se puede deshacer."
       confirmLabel="Eliminar"
