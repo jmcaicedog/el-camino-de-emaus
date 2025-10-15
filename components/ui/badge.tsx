@@ -32,7 +32,8 @@ function Badge({
   ...props
 }: React.ComponentProps<'span'> &
   VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot : 'span'
+  // See note in button.tsx — Slot vs string element ref types can conflict.
+  const Comp: any = asChild ? Slot : 'span'
 
   return (
     <Comp

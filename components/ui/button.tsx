@@ -45,7 +45,10 @@ function Button({
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
   }) {
-  const Comp = asChild ? Slot : 'button'
+  // Slot can produce different element types; typing as `any` avoids
+  // a ref incompatibility between string elements and Radix Slot generic refs.
+  // This is a small, safe relaxation for these UI primitives.
+  const Comp: any = asChild ? Slot : 'button'
 
   return (
     <Comp
