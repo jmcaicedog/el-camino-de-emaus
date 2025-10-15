@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Search, DollarSign } from "lucide-react"
@@ -130,7 +131,19 @@ export function CaminantesManagement() {
               <TableBody>
                 {filteredCaminantes.map((caminante) => (
                   <TableRow key={caminante.id}>
-                    <TableCell className="font-medium">{caminante.nombre_completo}</TableCell>
+                    <TableCell className="font-medium">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="text-left text-sm underline underline-offset-2 text-primary/90">{caminante.nombre_completo}</button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>{caminante.nombre_completo}</DialogTitle>
+                          </DialogHeader>
+                          <CaminanteCard caminante={caminante} onUpdate={loadCaminantes} />
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
                     <TableCell>{caminante.cedula}</TableCell>
                     <TableCell>{caminante.celular}</TableCell>
                     <TableCell>

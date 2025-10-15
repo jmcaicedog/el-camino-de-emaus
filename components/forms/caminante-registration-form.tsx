@@ -14,6 +14,15 @@ import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 export function CaminanteRegistrationForm() {
@@ -85,50 +94,72 @@ export function CaminanteRegistrationForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Alert className="bg-rose-50 border-rose-200">
-        <AlertDescription className="space-y-3 text-sm">
-          <h3 className="font-semibold text-rose-900 text-base">¡BIENVENIDO A EMAÚS!</h3>
-          <p className="text-rose-800">
-            Para hacer su pre-inscripción al retiro de Emaús Cristo Rey Hombres, por favor tenga en cuenta:
-          </p>
-          <ol className="list-decimal list-inside space-y-2 text-rose-800">
-            <li>
-              Debajo de estas instrucciones se encuentra un sencillo formulario de inscripción, el cual no toma más de
-              cinco minutos diligenciarlo. Por favor completar todas las casillas del formulario. Si usted está
-              realizando el registro para otra persona, por favor indicarlo en la casilla correspondiente.
-            </li>
-            <li>
-              Una vez diligenciado el formulario, haz click en ENVIAR (botón al final). Si no le aparece una ventana de
-              bienvenida, verifique que todos los campos estén completos.
-            </li>
-            <li>
-              Le llegará un correo electrónico de emauscristoreyhombres@gmail.com dándole las instrucciones para asistir
-              al retiro y formalizar su pago; por favor leerlo, imprimirlo o guardarlo.
-            </li>
-            <li>
-              Una vez realizada la inscripción, lo invitamos a consignar $450.000 en la cuenta FUNDACION EMAUS PARA EL
-              DESARROLLO PROFESIONAL, SOCIAL Y COMUNITARIO, NIT 901 637364-9, Cuenta de ahorros #042863332, Banco de
-              Occidente. La consignación puede hacerse en efectivo, cheque o transferencia bancaria. También puede pagar
-              con tarjeta de crédito en este link www.opd.com.co/pagos.
-            </li>
-            <li>
-              Enviar el comprobante de pago con el nombre del inscrito, al correo emauscristoreyhombres@gmail.com. LA
-              INSCRIPCIÓN NO SERÁ VÁLIDA SIN EL RECIBO DE CONSIGNACIÓN ENVIADO A ESTE CORREO ELECTRÓNICO. SU CUPO NO
-              ESTARÁ ASEGURADO SI NO SE ENVÍA LA COPIA DE DICHA CONSIGNACIÓN.
-            </li>
-            <li>
-              LOS CUPOS SON LIMITADOS. El pago no garantiza el cupo, copia de la consignación debe ser enviada al correo
-              emauscristoreyhombres@gmail.com con los datos completos de la persona que va a realizar el retiro. Ningún
-              otro medio es válido para enviar la copia de la consignación (no es válido enviar texto o mensaje al
-              whatsapp de los servidores o coordinador del retiro).
-            </li>
-            <li>
-              POLÍTICA DE DEVOLUCIÓN DEL DINERO: Sólo se devolverá el dinero si la persona informa por escrito al correo
-              emauscristoreyhombres@gmail.com con al menos una semana de anticipación a la iniciación del retiro. El
-              proceso de devolución de dinero iniciará una semana después de realizado el retiro.
-            </li>
-          </ol>
+      <Alert className="bg-rose-50 border-rose-200 flex items-start justify-between">
+        <AlertDescription className="text-sm text-rose-800">
+          Antes de diligenciar el formulario, por favor lee las instrucciones importantes.
         </AlertDescription>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="outline" className="ml-4">
+              Leer instrucciones
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>¡BIENVENIDO A EMAÚS!</DialogTitle>
+              <DialogDescription>Por favor lee detenidamente antes de completar el formulario</DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-2 text-sm space-y-3 text-rose-800">
+              <p>
+                Para hacer su pre-inscripción al retiro de Emaús Cristo Rey Hombres, por favor tenga en cuenta:
+              </p>
+              <ol className="list-decimal list-inside space-y-2">
+                <li>
+                  Debajo de estas instrucciones se encuentra un sencillo formulario de inscripción, el cual no toma más de
+                  cinco minutos diligenciarlo. Por favor completar todas las casillas del formulario. Si usted está
+                  realizando el registro para otra persona, por favor indicarlo en la casilla correspondiente.
+                </li>
+                <li>
+                  Una vez diligenciado el formulario, haz click en ENVIAR (botón al final). Si no le aparece una ventana de
+                  bienvenida, verifique que todos los campos estén completos.
+                </li>
+                <li>
+                  Le llegará un correo electrónico de emauscristoreyhombres@gmail.com dándole las instrucciones para asistir
+                  al retiro y formalizar su pago; por favor leerlo, imprimirlo o guardarlo.
+                </li>
+                <li>
+                  Una vez realizada la inscripción, lo invitamos a consignar $450.000 en la cuenta FUNDACION EMAUS PARA EL
+                  DESARROLLO PROFESIONAL, SOCIAL Y COMUNITARIO, NIT 901 637364-9, Cuenta de ahorros #042863332, Banco de
+                  Occidente. La consignación puede hacerse en efectivo, cheque o transferencia bancaria. También puede pagar
+                  con tarjeta de crédito en este link www.opd.com.co/pagos.
+                </li>
+                <li>
+                  Enviar el comprobante de pago con el nombre del inscrito, al correo emauscristoreyhombres@gmail.com. LA
+                  INSCRIPCIÓN NO SERÁ VÁLIDA SIN EL RECIBO DE CONSIGNACIÓN ENVIADO A ESTE CORREO ELECTRÓNICO. SU CUPO NO
+                  ESTARÁ ASEGURADO SI NO SE ENVÍA LA COPIA DE DICHA CONSIGNACIÓN.
+                </li>
+                <li>
+                  LOS CUPOS SON LIMITADOS. El pago no garantiza el cupo, copia de la consignación debe ser enviada al correo
+                  emauscristoreyhombres@gmail.com con los datos completos de la persona que va a realizar el retiro. Ningún
+                  otro medio es válido para enviar la copia de la consignación (no es válido enviar texto o mensaje al
+                  whatsapp de los servidores o coordinador del retiro).
+                </li>
+                <li>
+                  POLÍTICA DE DEVOLUCIÓN DEL DINERO: Sólo se devolverá el dinero si la persona informa por escrito al correo
+                  emauscristoreyhombres@gmail.com con al menos una semana de anticipación a la iniciación del retiro. El
+                  proceso de devolución de dinero iniciará una semana después de realizado el retiro.
+                </li>
+              </ol>
+            </div>
+
+            <DialogFooter>
+              <Button>Entendido</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Alert>
 
       <Card>

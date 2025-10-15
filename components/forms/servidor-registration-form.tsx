@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 
@@ -130,9 +132,21 @@ export function ServidorRegistrationForm() {
               </div>
             </div>
 
+            {/* Profesión, empresa y cargo han sido movidos a Información Laboral */}
             <div>
-              <Label htmlFor="profesion">Profesión *</Label>
-              <Input id="profesion" name="profesion" required placeholder="Profesión u oficio" />
+              <Label htmlFor="talla_camisa">Talla de Camisa *</Label>
+              <Select name="talla_camisa" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona tu talla" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="S">S</SelectItem>
+                  <SelectItem value="M">M</SelectItem>
+                  <SelectItem value="L">L</SelectItem>
+                  <SelectItem value="XL">XL</SelectItem>
+                  <SelectItem value="XXL">XXL</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -140,33 +154,87 @@ export function ServidorRegistrationForm() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Contacto de Emergencia</CardTitle>
+          <CardTitle>Información Laboral</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="profesion">Profesión u oficio</Label>
+            <Input id="profesion" name="profesion" placeholder="Profesión u oficio" />
+          </div>
+
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="nombre_contacto_emergencia">Nombre Completo *</Label>
-              <Input
-                id="nombre_contacto_emergencia"
-                name="nombre_contacto_emergencia"
-                required
-                placeholder="Nombre del contacto"
-              />
+              <Label htmlFor="empresa">Empresa</Label>
+              <Input id="empresa" name="empresa" placeholder="Nombre de la empresa" />
             </div>
             <div>
-              <Label htmlFor="parentesco_contacto">Parentesco *</Label>
-              <Input
-                id="parentesco_contacto"
-                name="parentesco_contacto"
-                required
-                placeholder="Ej: Esposa, Madre, Hermano"
-              />
+              <Label htmlFor="cargo">Cargo</Label>
+              <Input id="cargo" name="cargo" placeholder="Cargo actual" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Contactos de Emergencia</CardTitle>
+          <CardDescription>Por favor proporciona dos contactos de emergencia</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <h4 className="font-medium text-sm">Contacto de Emergencia #1</h4>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="nombre_contacto_emergencia">Nombre Completo *</Label>
+                <Input
+                  id="nombre_contacto_emergencia"
+                  name="nombre_contacto_emergencia"
+                  required
+                  placeholder="Nombre del contacto"
+                />
+              </div>
+              <div>
+                <Label htmlFor="parentesco_contacto">Parentesco *</Label>
+                <Input
+                  id="parentesco_contacto"
+                  name="parentesco_contacto"
+                  required
+                  placeholder="Ej: Esposa, Madre, Hermano"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="celular_contacto">Celular de Contacto *</Label>
+              <Input id="celular_contacto" name="celular_contacto" type="tel" required placeholder="Número de celular" />
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="celular_contacto">Celular de Contacto *</Label>
-            <Input id="celular_contacto" name="celular_contacto" type="tel" required placeholder="Número de celular" />
+          <div className="space-y-4">
+            <h4 className="font-medium text-sm">Contacto de Emergencia #2</h4>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="nombre_contacto_emergencia_2">Nombre Completo *</Label>
+                <Input
+                  id="nombre_contacto_emergencia_2"
+                  name="nombre_contacto_emergencia_2"
+                  required
+                  placeholder="Nombre del contacto"
+                />
+              </div>
+              <div>
+                <Label htmlFor="parentesco_contacto_2">Parentesco *</Label>
+                <Input
+                  id="parentesco_contacto_2"
+                  name="parentesco_contacto_2"
+                  required
+                  placeholder="Ej: Padre, Hermana, Amigo"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="celular_contacto_2">Celular de Contacto *</Label>
+              <Input id="celular_contacto_2" name="celular_contacto_2" type="tel" required placeholder="Número de celular" />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -200,6 +268,44 @@ export function ServidorRegistrationForm() {
               </Select>
             </div>
           </div>
+
+          <div>
+            <Label htmlFor="medicamentos">Medicamentos</Label>
+            <Textarea
+              id="medicamentos"
+              name="medicamentos"
+              placeholder="Lista de medicamentos que toma regularmente (opcional)"
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="restricciones_alimenticias">Restricciones Alimenticias</Label>
+            <Textarea
+              id="restricciones_alimenticias"
+              name="restricciones_alimenticias"
+              placeholder="Alergias o restricciones alimenticias (opcional)"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>¿Ronca al dormir? *</Label>
+            <RadioGroup name="ronca_al_dormir" defaultValue="no" required>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="si" id="ronca-si" />
+                <Label htmlFor="ronca-si" className="font-normal cursor-pointer">
+                  Sí
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="no" id="ronca-no" />
+                <Label htmlFor="ronca-no" className="font-normal cursor-pointer">
+                  No
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
         </CardContent>
       </Card>
 
@@ -209,8 +315,12 @@ export function ServidorRegistrationForm() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="parroquia">Parroquia *</Label>
-            <Input id="parroquia" name="parroquia" required placeholder="Nombre de la parroquia" />
+            <Label htmlFor="parroquia">Parroquia</Label>
+            <Input id="parroquia" name="parroquia" placeholder="Nombre de la parroquia" />
+          </div>
+          <div>
+            <Label htmlFor="parroco">Párroco</Label>
+            <Input id="parroco" name="parroco" placeholder="Nombre del párroco" />
           </div>
         </CardContent>
       </Card>

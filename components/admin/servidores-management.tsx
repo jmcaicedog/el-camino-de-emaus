@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { ServidorCard } from "@/components/servidor/servidor-card"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Search, DollarSign } from "lucide-react"
@@ -131,7 +132,19 @@ export function ServidoresManagement() {
               <TableBody>
                 {filteredServidores.map((servidor) => (
                   <TableRow key={servidor.id}>
-                    <TableCell className="font-medium">{servidor.nombre_completo}</TableCell>
+                    <TableCell className="font-medium">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="text-left text-sm underline underline-offset-2 text-primary/90">{servidor.nombre_completo}</button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>{servidor.nombre_completo}</DialogTitle>
+                          </DialogHeader>
+                          <ServidorCard servidor={servidor} />
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
                     <TableCell>{servidor.cedula}</TableCell>
                     <TableCell>{servidor.celular}</TableCell>
                     <TableCell>

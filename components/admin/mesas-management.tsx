@@ -89,6 +89,35 @@ export function MesasManagement() {
     }
   }
 
+  const unassignFromMesa = async (personId: string, type: "caminante" | "servidor") => {
+    setIsAssigning(true)
+    try {
+      const endpoint = type === "caminante" ? "/api/caminantes" : "/api/servidores"
+      const response = await fetch(`${endpoint}/${personId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mesa_id: null }),
+      })
+
+      if (!response.ok) throw new Error("Error al desasignar")
+
+      toast({
+        title: "Éxito",
+        description: `${type === "caminante" ? "Caminante" : "Servidor"} desasignado correctamente`,
+      })
+
+      await loadData()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error al desasignar de la mesa",
+        variant: "destructive",
+      })
+    } finally {
+      setIsAssigning(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -131,13 +160,27 @@ export function MesasManagement() {
                     <span className="text-sm font-medium">Servidores</span>
                   </div>
                   <div className="space-y-1 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Líder: </span>
-                      {lider ? lider.nombre_completo : "Sin asignar"}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-muted-foreground">Líder: </span>
+                        {lider ? lider.nombre_completo : "Sin asignar"}
+                      </div>
+                      {lider && (
+                        <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(lider.id, "servidor")} disabled={isAssigning}>
+                          Desasignar
+                        </Button>
+                      )}
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Colíder: </span>
-                      {colider ? colider.nombre_completo : "Sin asignar"}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-muted-foreground">Colíder: </span>
+                        {colider ? colider.nombre_completo : "Sin asignar"}
+                      </div>
+                      {colider && (
+                        <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(colider.id, "servidor")} disabled={isAssigning}>
+                          Desasignar
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -149,7 +192,14 @@ export function MesasManagement() {
                   </div>
                   <div className="space-y-1 text-sm text-muted-foreground">
                     {mesaCaminantes.length > 0 ? (
-                      mesaCaminantes.map((c) => <div key={c.id}>{c.nombre_completo}</div>)
+                      mesaCaminantes.map((c) => (
+                        <div key={c.id} className="flex items-center justify-between">
+                          <span>{c.nombre_completo}</span>
+                          <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(c.id, "caminante")} disabled={isAssigning}>
+                            Desasignar
+                          </Button>
+                        </div>
+                      ))
                     ) : (
                       <div>Sin caminantes asignados</div>
                     )}

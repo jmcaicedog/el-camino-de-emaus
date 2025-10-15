@@ -56,9 +56,20 @@ export interface Servidor {
   ciudad: string
   estado_civil: string
   profesion: string
+  empresa?: string
+  cargo?: string
+  talla_camisa?: string
   nombre_contacto_emergencia: string
   parentesco_contacto: string
   celular_contacto: string
+  nombre_contacto_emergencia_2?: string
+  parentesco_contacto_2?: string
+  celular_contacto_2?: string
+  condicion_especial?: string
+  medicamentos?: string
+  restricciones_alimenticias?: string
+  parroco?: string
+  ronca_al_dormir?: boolean
   eps: string
   tipo_sangre: string
   parroquia: string
