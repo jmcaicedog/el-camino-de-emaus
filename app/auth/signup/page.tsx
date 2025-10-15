@@ -18,6 +18,7 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [nombreCompleto, setNombreCompleto] = useState("")
+  const [inviteCode, setInviteCode] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -64,16 +65,29 @@ export default function SignUpPage() {
       if (data.user) {
         console.log("[v0] User created:", data.user.id)
 
-        // Create admin user record
-        const { error: insertError } = await supabase.from("admin_users").insert({
-          id: data.user.id,
-          nombre_completo: nombreCompleto,
-          role: "admin",
-        })
+        // NOTE: We do NOT automatically create an admin record from the client side.
+        // If the user provides an invite code, call a server-side endpoint that
+        // validates a server-only secret and inserts into `admin_users` safely.
+        if (inviteCode && inviteCode.trim().length > 0) {
+          try {
+            const res = await fetch("/api/admins/create", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: data.user.id, nombreCompleto, token: inviteCode }),
+            })
 
-        console.log("[v0] Admin user insert result:", { error: insertError })
-
-        if (insertError) throw insertError
+            if (!res.ok) {
+              const body = await res.json().catch(() => ({}))
+              throw new Error(body?.message || "No autorizado para crear admin")
+            }
+          } catch (e) {
+            // If invite verification failed, we don't block account creation but show an error.
+            console.error("[v0] Invite code validation failed:", e)
+            setError(e instanceof Error ? e.message : String(e))
+            setIsLoading(false)
+            return
+          }
+        }
 
         setSuccess(true)
 
@@ -169,6 +183,16 @@ export default function SignUpPage() {
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="inviteCode">Código de Invitación (opcional)</Label>
+                    <Input
+                      id="inviteCode"
+                      type="text"
+                      placeholder="Ingresa el código de invitación"
+                      value={inviteCode}
+                      onChange={(e) => setInviteCode(e.target.value)}
                     />
                   </div>
                   {error && <p className="text-sm text-destructive">{error}</p>}

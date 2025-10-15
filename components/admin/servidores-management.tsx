@@ -11,7 +11,7 @@ import { ServidorCard } from "@/components/servidor/servidor-card"
 import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, DollarSign, Trash } from "lucide-react"
+import { Loader2, Search, DollarSign, Trash, Mail } from "lucide-react"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { Servidor } from "@/lib/types"
 
@@ -25,6 +25,7 @@ export function ServidoresManagement() {
   const [selectedServidor, setSelectedServidor] = useState<Servidor | null>(null)
   const [paymentAmount, setPaymentAmount] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
+  const [inviteLoadingId, setInviteLoadingId] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
@@ -110,6 +111,36 @@ export function ServidoresManagement() {
     } finally {
       setIsUpdating(false)
       setPendingDeleteId(null)
+    }
+  }
+
+  const sendInvite = async (servidor: Servidor) => {
+    if (!servidor) return
+    setInviteLoadingId(servidor.id)
+    try {
+      const res = await fetch('/api/admins/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: servidor.correo }),
+      })
+      if (!res.ok) throw new Error('No se pudo crear la invitación')
+      const data = await res.json()
+      const token = data?.token
+
+      // Copy token to clipboard if available
+      try {
+        if (token && typeof navigator !== 'undefined' && navigator.clipboard) {
+          await navigator.clipboard.writeText(token)
+        }
+      } catch (e) {
+        // ignore clipboard errors
+      }
+
+      toast({ title: 'Invitación creada', description: 'Token copiado al portapapeles. Se envió la invitación por correo (si el servidor la procesó).' })
+    } catch (error) {
+      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Error creando invitación', variant: 'destructive' })
+    } finally {
+      setInviteLoadingId(null)
     }
   }
 
@@ -317,6 +348,18 @@ export function ServidoresManagement() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => sendInvite(servidor)}
+                          disabled={isUpdating || inviteLoadingId === servidor.id}
+                        >
+                          {inviteLoadingId === servidor.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
