@@ -123,8 +123,12 @@ export function ServidoresManagement() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: servidor.correo }),
       })
+      const data = await res.json().catch(() => ({}))
+      if (data?.alreadyAdmin) {
+        toast({ title: 'Usuario ya es administrador', description: `${servidor.nombre_completo} ya tiene permisos de administrador.`, variant: 'default' })
+        return
+      }
       if (!res.ok) throw new Error('No se pudo crear la invitación')
-      const data = await res.json()
       const token = data?.token
 
       // Copy token to clipboard if available

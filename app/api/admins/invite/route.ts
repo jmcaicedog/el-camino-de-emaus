@@ -29,6 +29,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 403 })
     }
 
+    // If email provided, check whether that email already belongs to an admin
+    if (email) {
+      try {
+        // Try to find a matching admin by email in admin_users table (if you store email there)
+        const { data: adminByEmail } = await supabase.from('admin_users').select('id,email').eq('email', email).maybeSingle()
+        if (adminByEmail) {
+          return NextResponse.json({ message: 'Usuario ya es administrador', alreadyAdmin: true }, { status: 200 })
+        }
+
+        // Try to find user id in profiles or servidores table (common places)
+        const { data: profile } = await supabase.from('profiles').select('id,email').eq('email', email).maybeSingle()
+        let targetUserId = profile?.id || null
+
+        if (!targetUserId) {
+          const { data: servidorRow } = await supabase.from('servidores').select('id,correo').eq('correo', email).maybeSingle()
+          if (servidorRow?.id) targetUserId = servidorRow.id
+        }
+
+        if (targetUserId) {
+          const { data: adm } = await supabase.from('admin_users').select('id').eq('id', targetUserId).maybeSingle()
+          if (adm) {
+            return NextResponse.json({ message: 'Usuario ya es administrador', alreadyAdmin: true }, { status: 200 })
+          }
+        }
+      } catch (checkErr) {
+        console.error('[v0] Error checking admin status for email:', checkErr)
+        // continue; failure in the check should not block invite creation
+      }
+    }
+
     // Insert invite and record who created it
     const { data: invite, error: insertError } = await supabase
       .from('admin_invites')
