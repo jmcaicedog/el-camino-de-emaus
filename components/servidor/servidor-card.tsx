@@ -73,7 +73,7 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
         </div>
 
         <div className="pt-4 border-t">
-          <h3 className="font-semibold mb-2">Contacto de Emergencia</h3>
+          <h3 className="font-semibold mb-2">Contactos de emergencia</h3>
           <div className="space-y-1">
             <div>
               <span className="font-medium">Nombre:</span> {servidor.nombre_contacto_emergencia}
@@ -86,8 +86,15 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
             </div>
             {servidor.nombre_contacto_emergencia_2 && (
               <div className="pt-2">
-                <span className="font-medium">Contacto 2:</span>
-                <div className="text-muted-foreground">{servidor.nombre_contacto_emergencia_2} ({servidor.parentesco_contacto_2}) - {servidor.celular_contacto_2}</div>
+                <div>
+                  <span className="font-medium">Nombre:</span> {servidor.nombre_contacto_emergencia_2}
+                </div>
+                <div>
+                  <span className="font-medium">Parentesco:</span> {servidor.parentesco_contacto_2}
+                </div>
+                <div>
+                  <span className="font-medium">Celular:</span> {servidor.celular_contacto_2}
+                </div>
               </div>
             )}
           </div>

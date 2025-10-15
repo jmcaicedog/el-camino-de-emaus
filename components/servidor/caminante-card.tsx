@@ -260,13 +260,10 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                 <div>
                   <span className="font-medium">Tipo de Sangre:</span> {caminante.tipo_sangre}
                 </div>
-                <div>
-                  <span className="font-medium">Parroquia:</span> {caminante.parroquia}
-                </div>
               </div>
 
               <div className="pt-4 border-t">
-                <h3 className="font-semibold mb-2">Contacto de Emergencia</h3>
+                <h3 className="font-semibold mb-2">Contactos de emergencia</h3>
                 <div className="space-y-1">
                   <div>
                     <span className="font-medium">Nombre:</span> {caminante.nombre_contacto_emergencia}
@@ -277,6 +274,20 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                   <div>
                     <span className="font-medium">Celular:</span> {caminante.celular_contacto}
                   </div>
+
+                  {caminante.nombre_contacto_emergencia_2 && (
+                    <div className="pt-2">
+                      <div>
+                        <span className="font-medium">Nombre:</span> {caminante.nombre_contacto_emergencia_2}
+                      </div>
+                      <div>
+                        <span className="font-medium">Parentesco:</span> {caminante.parentesco_contacto_2}
+                      </div>
+                      <div>
+                        <span className="font-medium">Celular:</span> {caminante.celular_contacto_2}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -297,21 +308,34 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                   )}
                 </div>
               )}
-
               {/* Información Espiritual */}
               <div className="pt-4 border-t">
                 <h3 className="font-semibold mb-2">Información Espiritual</h3>
-                {caminante.sacramentos_recibidos && caminante.sacramentos_recibidos.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {caminante.sacramentos_recibidos.map((s, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs">
-                        {s}
-                      </Badge>
-                    ))}
+                <div className="space-y-1">
+                  <div>
+                    <span className="font-medium">Parroquia:</span> {caminante.parroquia || '-'}
                   </div>
-                ) : (
-                  <p className="text-muted-foreground">Sin información registrada</p>
-                )}
+                  <div>
+                    <span className="font-medium">Párroco:</span> {caminante.parroco || '-'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Retiro sorpresa:</span> {caminante.es_sorpresa ? 'Sí' : 'No'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Sacramentos recibidos:</span>
+                    {caminante.sacramentos_recibidos && caminante.sacramentos_recibidos.length > 0 ? (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {caminante.sacramentos_recibidos.map((s, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {s}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">Sin información registrada</p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Información de Invitación */}
@@ -319,10 +343,26 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                 <h3 className="font-semibold mb-2">Información de Invitación</h3>
                 <div className="space-y-1">
                   <div>
-                    <span className="font-medium">Quien lo invitó:</span> {caminante.quien_invito || '-'}
+                    <span className="font-medium">Quien invitó:</span> {caminante.quien_invito || '-'}
                   </div>
                   <div>
-                    <span className="font-medium">Invitador hizo Emaús:</span> {caminante.invitador_hizo_retiro ? 'Sí' : 'No'}
+                    <span className="font-medium">Invitador hizo retiro:</span> {caminante.invitador_hizo_retiro ? 'Sí' : 'No'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Información Laboral */}
+              <div className="pt-4 border-t">
+                <h3 className="font-semibold mb-2">Información Laboral</h3>
+                <div className="space-y-1">
+                  <div>
+                    <span className="font-medium">Profesión:</span> {caminante.profesion || '-'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Empresa:</span> {caminante.empresa || '-'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Cargo:</span> {caminante.cargo || '-'}
                   </div>
                 </div>
               </div>
