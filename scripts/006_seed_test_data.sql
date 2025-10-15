@@ -1,4 +1,3 @@
-
 -- Servidores de prueba (6) - columnas mínimas y seguras según el esquema actual
 INSERT INTO servidores (
   nombre_completo, cedula, fecha_nacimiento, edad, celular, correo, direccion, ciudad, estado_civil, profesion,
