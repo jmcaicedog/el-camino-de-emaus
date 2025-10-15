@@ -61,7 +61,7 @@ export async function POST(request: Request) {
         // Try to find a matching admin by email in admin_users table (if you store email there)
         const { data: adminByEmail } = await supabase.from('admin_users').select('id,email').eq('email', email).maybeSingle()
         if (adminByEmail) {
-          return NextResponse.json({ message: 'Usuario ya es administrador', alreadyAdmin: true }, { status: 200 })
+          return NextResponse.json({ message: 'Este usuario ya es administrador', alreadyAdmin: true }, { status: 200 })
         }
 
         // Try to find user id in profiles or servidores table (common places)
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
         if (targetUserId) {
           const { data: adm } = await supabase.from('admin_users').select('id').eq('id', targetUserId).maybeSingle()
           if (adm) {
-            return NextResponse.json({ message: 'Usuario ya es administrador', alreadyAdmin: true }, { status: 200 })
+            return NextResponse.json({ message: 'Este usuario ya es administrador', alreadyAdmin: true }, { status: 200 })
           }
         }
       } catch (checkErr) {
@@ -103,9 +103,9 @@ export async function POST(request: Request) {
         const token = invite.token
         const signupLink = `${SITE_URL}/auth/signup`
 
-        const subject = 'Invitación para ser administrador en Emaús'
-        const text = `Hola,\n\nHas sido invitado a registrarte como administrador en Emaús.\n\nCódigo de invitación: ${token}\n\nRegístrate aquí: ${signupLink}\n\nSi no esperabas esto, ignora este correo.`
-        const html = `<p>Hola,</p><p>Has sido invitado a registrarte como <strong>administrador</strong> en Emaús.</p><p><strong>Código de invitación:</strong> <code>${token}</code></p><p>Puedes registrarte aquí: <a href="${signupLink}">${signupLink}</a></p><p>Si no esperabas esto, ignora este correo.</p>`
+        const subject = 'Invitación para ser administrador en el Retiro de Emaús Cristo Rey'
+        const text = `¡Hola!,\n\nHas sido invitado a registrarte como administrador en la plataforma del Retiro de Emaús Cristo Rey.\n\nCódigo de invitación: ${token}\n\nRegístrate aquí: ${signupLink}\n\nSi no esperabas esto, ignora este correo.`
+        const html = `<p>Hola,</p><p>Has sido invitado a registrarte como <strong>administrador</strong> en la plataforma del Retiro de Emaús Cristo Rey.</p><p><strong>Código de invitación:</strong> <code>${token}</code></p><p>Puedes registrarte aquí: <a href="${signupLink}">${signupLink}</a></p><p>Si no esperabas esto, ignora este correo.</p>`
 
         // Validate the configured `from` value. If it's malformed (often caused by
         // accidentally including the env var name or wrapping quotes), don't call the API
