@@ -297,6 +297,35 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                   )}
                 </div>
               )}
+
+              {/* Información Espiritual */}
+              <div className="pt-4 border-t">
+                <h3 className="font-semibold mb-2">Información Espiritual</h3>
+                {caminante.sacramentos_recibidos && caminante.sacramentos_recibidos.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {caminante.sacramentos_recibidos.map((s, idx) => (
+                      <Badge key={idx} variant="outline" className="text-xs">
+                        {s}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">Sin información registrada</p>
+                )}
+              </div>
+
+              {/* Información de Invitación */}
+              <div className="pt-4 border-t">
+                <h3 className="font-semibold mb-2">Información de Invitación</h3>
+                <div className="space-y-1">
+                  <div>
+                    <span className="font-medium">Quien lo invitó:</span> {caminante.quien_invito || '-'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Invitador hizo Emaús:</span> {caminante.invitador_hizo_retiro ? 'Sí' : 'No'}
+                  </div>
+                </div>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

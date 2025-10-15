@@ -217,6 +217,33 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
                     )}
                   </div>
                 )}
+
+                {/* Información Espiritual */}
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-2">Información Espiritual</h3>
+                  <div className="space-y-1">
+                    <div>
+                      <span className="font-medium">Parroquia:</span> {servidor.parroquia || '-'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Párroco:</span> {servidor.parroco || '-'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Información de Invitación / Experiencia */}
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-2">Información de Servicio</h3>
+                  <div className="space-y-1">
+                    <div>
+                      <span className="font-medium">Retiros anteriores:</span> {servidor.retiros_anteriores ?? '-'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Experiencia en servicio:</span>
+                      <div className="text-muted-foreground">{servidor.experiencia_servicio || 'Sin información registrada'}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
