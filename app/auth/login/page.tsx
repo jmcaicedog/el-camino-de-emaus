@@ -146,9 +146,6 @@ export default function LoginPage() {
                 </div>
                 <div className="mt-4 text-center text-sm">
                   <div className="flex flex-col gap-2">
-                    <Link href="/auth/signup" className="underline underline-offset-4">
-                      ¿No tienes cuenta? Crear cuenta de administrador
-                    </Link>
                     <Link href="/" className="underline underline-offset-4">
                       Volver al inicio
                     </Link>
