@@ -11,8 +11,7 @@ import { ServidorCard } from "@/components/servidor/servidor-card"
 import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, DollarSign, Trash } from "lucide-react"
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Loader2, Search, DollarSign } from "lucide-react"
 import type { Servidor } from "@/lib/types"
 
 export function ServidoresManagement() {
@@ -25,8 +24,6 @@ export function ServidoresManagement() {
   const [selectedServidor, setSelectedServidor] = useState<Servidor | null>(null)
   const [paymentAmount, setPaymentAmount] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     loadServidores()
@@ -97,22 +94,6 @@ export function ServidoresManagement() {
     }
   }
 
-  const deleteServidor = async (id?: string) => {
-    if (!id) return
-    setIsUpdating(true)
-    try {
-      const res = await fetch(`/api/servidores/${id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Error al eliminar")
-      toast({ title: "Eliminado", description: "Servidor eliminado correctamente" })
-      await loadServidores()
-    } catch (error) {
-      toast({ title: "Error", description: error instanceof Error ? error.message : "Error al eliminar", variant: "destructive" })
-    } finally {
-      setIsUpdating(false)
-      setPendingDeleteId(null)
-    }
-  }
-
   const filteredServidores = servidores.filter(
     (s) =>
       s.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,8 +110,7 @@ export function ServidoresManagement() {
   }
 
   return (
-    <>
-      <div className="space-y-6">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Servidores Registrados</CardTitle>
@@ -316,21 +296,20 @@ export function ServidoresManagement() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedServidor(servidor)
-                                setPaymentAmount("")
-                              }}
-                            >
-                              <DollarSign className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedServidor(servidor)
+                              setPaymentAmount("")
+                            }}
+                          >
+                            <DollarSign className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Registrar Pago - {servidor.nombre_completo}</DialogTitle>
                           </DialogHeader>
@@ -375,13 +354,8 @@ export function ServidoresManagement() {
                               </Button>
                             </div>
                           </div>
-                          </DialogContent>
-                        </Dialog>
-
-                        <Button size="sm" variant="ghost" onClick={() => { setPendingDeleteId(servidor.id); setConfirmOpen(true) }} disabled={isUpdating}>
-                          <Trash className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                        </DialogContent>
+                      </Dialog>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -390,18 +364,6 @@ export function ServidoresManagement() {
           </div>
         </CardContent>
       </Card>
-      </div>
-      <ConfirmDialog
-      open={confirmOpen}
-      onOpenChange={(open) => setConfirmOpen(open)}
-      title="Confirmar eliminación"
-      description="¿Estás seguro de que deseas eliminar este servidor? Esta acción no se puede deshacer."
-      confirmLabel="Eliminar"
-      cancelLabel="Cancelar"
-      onConfirm={async () => {
-        await deleteServidor(pendingDeleteId || undefined)
-      }}
-    />
-    </>
+    </div>
   )
 }

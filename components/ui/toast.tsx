@@ -16,10 +16,7 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      // Use a fixed bottom-right viewport with a very high z-index so toasts
-      // are visible and not clipped by transformed ancestors. Make the
-      // viewport pointer-events-none and individual toasts pointer-events-auto.
-      'fixed z-[9999] bottom-4 right-4 flex max-h-[calc(100vh-2rem)] w-auto flex-col gap-2 p-0 pointer-events-none md:max-w-[420px]',
+      'fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]',
       className,
     )}
     {...props}
@@ -33,12 +30,8 @@ const toastVariants = cva(
     variants: {
       variant: {
         default: 'border bg-background text-foreground',
-        // Add an arbitrary color class to force the CSS variable for destructive
-        // text color in case other rules (inspector, user-agent, or external
-        // styles) are overriding the token. Tailwind arbitrary values are
-        // compiled to inline styles with higher specificity at build time.
         destructive:
-          'destructive group border-destructive bg-destructive [color:var(--destructive-foreground)]',
+          'destructive group border-destructive bg-destructive text-destructive-foreground',
       },
     },
     defaultVariants: {

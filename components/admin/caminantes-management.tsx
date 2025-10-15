@@ -11,8 +11,7 @@ import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { ServidorCard } from "@/components/servidor/servidor-card"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, DollarSign, Trash } from "lucide-react"
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Loader2, Search, DollarSign } from "lucide-react"
 import type { Caminante, Servidor } from "@/lib/types"
 
 export function CaminantesManagement() {
@@ -25,8 +24,6 @@ export function CaminantesManagement() {
   const [selectedCaminante, setSelectedCaminante] = useState<Caminante | null>(null)
   const [paymentAmount, setPaymentAmount] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     loadCaminantes()
@@ -97,22 +94,6 @@ export function CaminantesManagement() {
     }
   }
 
-  const deleteCaminante = async (id?: string) => {
-    if (!id) return
-    setIsUpdating(true)
-    try {
-      const res = await fetch(`/api/caminantes/${id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Error al eliminar")
-      toast({ title: "Eliminado", description: "Caminante eliminado correctamente" })
-      await loadCaminantes()
-    } catch (error) {
-      toast({ title: "Error", description: error instanceof Error ? error.message : "Error al eliminar", variant: "destructive" })
-    } finally {
-      setIsUpdating(false)
-      setPendingDeleteId(null)
-    }
-  }
-
   const filteredCaminantes = caminantes.filter(
     (c) =>
       c.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,8 +110,7 @@ export function CaminantesManagement() {
   }
 
   return (
-    <>
-      <div className="space-y-6">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Caminantes Registrados</CardTitle>
@@ -303,26 +283,23 @@ export function CaminantesManagement() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={caminante.monto_pagado >= caminante.monto_total ? "default" : "secondary"}>
-                        {`$${caminante.monto_pagado.toLocaleString()} / $${caminante.monto_total.toLocaleString()}`}
-                      </Badge>
+                      {`$${caminante.monto_pagado.toLocaleString()} / $${caminante.monto_total.toLocaleString()}`}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedCaminante(caminante)
-                                setPaymentAmount("")
-                              }}
-                            >
-                              <DollarSign className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedCaminante(caminante)
+                              setPaymentAmount("")
+                            }}
+                          >
+                            <DollarSign className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Registrar Pago - {caminante.nombre_completo}</DialogTitle>
                           </DialogHeader>
@@ -371,13 +348,8 @@ export function CaminantesManagement() {
                               </Button>
                             </div>
                           </div>
-                          </DialogContent>
-                        </Dialog>
-
-                        <Button size="sm" variant="ghost" onClick={() => { setPendingDeleteId(caminante.id); setConfirmOpen(true) }} disabled={isUpdating}>
-                          <Trash className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                        </DialogContent>
+                      </Dialog>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -387,17 +359,5 @@ export function CaminantesManagement() {
         </CardContent>
       </Card>
     </div>
-      <ConfirmDialog
-      open={confirmOpen}
-      onOpenChange={(open) => setConfirmOpen(open)}
-      title="Confirmar eliminación"
-      description="¿Estás seguro de que deseas eliminar este caminante? Esta acción no se puede deshacer."
-      confirmLabel="Eliminar"
-      cancelLabel="Cancelar"
-      onConfirm={async () => {
-        await deleteCaminante(pendingDeleteId || undefined)
-      }}
-    />
-    </>
   )
 }
