@@ -283,9 +283,7 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
               <DialogTitle>{caminante.nombre_completo}</DialogTitle>
             </DialogHeader>
             <div className="flex justify-end mb-2">
-              {/* Use a ref so we can reliably trigger the native file dialog */}
               <input
-                ref={function (el) { /* placeholder, set below */ }}
                 id={`caminante-file-input-${caminante.id}`}
                 type="file"
                 accept="image/*"
@@ -297,21 +295,22 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
               />
               <button
                 type="button"
-                className="text-sm text-primary underline"
+                aria-label={`Cambiar foto de ${caminante.nombre_completo}`}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-md text-primary hover:bg-primary/10"
                 onClick={() => {
                   const el = document.getElementById(`caminante-file-input-${caminante.id}`) as HTMLInputElement | null
                   if (el) el.click()
                 }}
               >
-                Cambiar foto
+                <ImageIcon className="h-5 w-5" />
               </button>
             </div>
             <div className="space-y-1 text-sm">
-              <div className="flex justify-center mb-4">
+                <div className="flex justify-center mb-4">
                 <img
                   src={caminante.imagen || uiAvatarUrl(caminante.nombre_completo, 512)}
                   alt={caminante.nombre_completo}
-                  className="rounded-md max-h-64 object-contain"
+                  className="rounded-full max-h-32 w-auto object-cover"
                 />
               </div>
               <div className="grid md:grid-cols-2 gap-2">

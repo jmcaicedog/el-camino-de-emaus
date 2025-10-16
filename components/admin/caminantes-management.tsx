@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { CaminanteCard } from "@/components/servidor/caminante-card"
 import type { AdminUser } from "@/lib/types"
 import { ServidorCard } from "@/components/servidor/servidor-card"
+import { uiAvatarUrl } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Search, DollarSign, Trash } from "lucide-react"
@@ -158,6 +159,7 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">Foto</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Cédula</TableHead>
                   <TableHead>Celular</TableHead>
@@ -169,6 +171,25 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
               <TableBody>
                 {filteredCaminantes.map((caminante) => (
                   <TableRow key={caminante.id}>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 p-0">
+                            <img
+                              src={caminante.imagen || uiAvatarUrl(caminante.nombre_completo)}
+                              alt={caminante.nombre_completo}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>{caminante.nombre_completo}</DialogTitle>
+                          </DialogHeader>
+                          <CaminanteCard caminante={caminante} onUpdate={loadCaminantes} />
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
                     <TableCell className="font-medium">
                       <Dialog>
                         <DialogTrigger asChild>

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useState, useRef } from "react"
-import { Phone, MapPin, Loader2, Pill, UtensilsCrossed } from "lucide-react"
+import { Phone, MapPin, Loader2, Pill, UtensilsCrossed, ImageIcon } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Servidor } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
@@ -219,13 +219,14 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
                     />
                     <button
                       type="button"
-                      className="text-sm text-primary underline"
+                      aria-label={`Cambiar foto de ${servidor.nombre_completo}`}
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-md text-primary hover:bg-primary/10"
                       onClick={() => {
                         const el = document.getElementById(`servidor-file-input-${servidor.id}`) as HTMLInputElement | null
                         if (el) el.click()
                       }}
                     >
-                      Cambiar foto
+                      <ImageIcon className="h-5 w-5" />
                     </button>
                 </div>
               <div className="space-y-4 text-sm">
@@ -233,7 +234,7 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
                   <img
                     src={servidor.imagen || uiAvatarUrl(servidor.nombre_completo, 512)}
                     alt={servidor.nombre_completo}
-                    className="rounded-md max-h-64 object-contain"
+                    className="rounded-full max-h-32 w-auto object-cover"
                   />
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">

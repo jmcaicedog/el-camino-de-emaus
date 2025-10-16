@@ -11,6 +11,7 @@ import { ServidorCard } from "@/components/servidor/servidor-card"
 import type { AdminUser } from "@/lib/types"
 import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { Label } from "@/components/ui/label"
+import { uiAvatarUrl } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Search, DollarSign, Trash, Mail } from "lucide-react"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -193,6 +194,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">Foto</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Cédula</TableHead>
                   <TableHead>Celular</TableHead>
@@ -205,6 +207,25 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
               <TableBody>
                 {filteredServidores.map((servidor) => (
                   <TableRow key={servidor.id}>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 p-0">
+                            <img
+                              src={servidor.imagen || uiAvatarUrl(servidor.nombre_completo)}
+                              alt={servidor.nombre_completo}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>{servidor.nombre_completo}</DialogTitle>
+                          </DialogHeader>
+                          <ServidorCard servidor={servidor} onUpdate={loadServidores} />
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
                     <TableCell className="font-medium">
                       <Dialog>
                         <DialogTrigger asChild>
