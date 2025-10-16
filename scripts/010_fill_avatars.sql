@@ -1,4 +1,4 @@
-    -- Fill missing imagen fields for caminantes and servidores using ui-avatars.com
+-- Fill missing imagen fields for caminantes and servidores using ui-avatars.com
     -- This is idempotent: it only updates rows where imagen IS NULL or empty.
 
     -- Define urlencode(text). CREATE OR REPLACE is safe to run multiple times.
