@@ -20,6 +20,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       const allowedFields = [
         'medicamentos',
         'restricciones_alimenticias',
+        'imagen',
         'monto_pagado',
         'retiros_anteriores',
         'experiencia_servicio',

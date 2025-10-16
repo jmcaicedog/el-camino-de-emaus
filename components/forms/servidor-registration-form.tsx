@@ -19,6 +19,7 @@ export function ServidorRegistrationForm() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -46,6 +47,7 @@ export function ServidorRegistrationForm() {
         retiros_anteriores: Number.parseInt((data.retiros_anteriores as string) || "0") || 0,
         // Convert known boolean-like radio fields
         ronca_al_dormir: (data.ronca_al_dormir as string) === "si",
+        imagen: previewImage || null,
       }
 
       const response = await fetch("/api/servidores", {
@@ -114,6 +116,28 @@ export function ServidorRegistrationForm() {
             <div>
               <Label htmlFor="direccion">Dirección *</Label>
               <Input id="direccion" name="direccion" required placeholder="Dirección completa" />
+            </div>
+
+            <div>
+              <Label htmlFor="imagen">Foto personal (opcional)</Label>
+              <input
+                id="imagen"
+                name="imagen_file"
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.currentTarget.files?.[0]
+                  if (!file) return setPreviewImage(null)
+                  const reader = new FileReader()
+                  reader.onload = () => setPreviewImage(reader.result as string)
+                  reader.readAsDataURL(file)
+                }}
+              />
+              {previewImage && (
+                <div className="mt-2 w-24 h-24 rounded-full overflow-hidden">
+                  <img src={previewImage} alt="preview" className="w-full h-full object-cover" />
+                </div>
+              )}
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">

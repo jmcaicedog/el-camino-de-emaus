@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { Mail, ImageIcon, Pill, UtensilsCrossed, Phone, MapPin, Heart, Loader2 } from "lucide-react"
+import Image from "next/image"
+import { uiAvatarUrl } from "@/lib/utils"
 import type { Caminante } from "@/lib/types"
 
 interface CaminanteCardProps {
@@ -85,10 +87,59 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
     }
   }
 
+  const handleImageChange = async (file?: File) => {
+    if (!file) return
+    setIsUpdating(true)
+    try {
+      const reader = new FileReader()
+      const dataUrl = await new Promise<string>((res, rej) => {
+        reader.onload = () => res(reader.result as string)
+        reader.onerror = rej
+        reader.readAsDataURL(file)
+      })
+
+      // Upload to server endpoint
+      const upRes = await fetch('/api/uploads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl, filename: file.name }),
+      })
+
+      if (!upRes.ok) throw new Error('Error al subir imagen')
+      const { url } = await upRes.json()
+
+      // Save to caminante record
+      const res = await fetch(`/api/caminantes/${caminante.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagen: url }),
+      })
+
+      if (!res.ok) throw new Error('Error al guardar imagen')
+
+      toast({ title: 'Actualizado', description: 'Foto actualizada correctamente' })
+      onUpdate()
+    } catch (e) {
+      console.error(e)
+      toast({ title: 'Error', description: 'No se pudo actualizar la imagen', variant: 'destructive' })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">{caminante.nombre_completo}</CardTitle>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
+            <img
+              src={caminante.imagen || uiAvatarUrl(caminante.nombre_completo)}
+              alt={caminante.nombre_completo}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <CardTitle className="text-lg">{caminante.nombre_completo}</CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2 text-sm">
@@ -231,7 +282,38 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
             <DialogHeader>
               <DialogTitle>{caminante.nombre_completo}</DialogTitle>
             </DialogHeader>
+            <div className="flex justify-end mb-2">
+              {/* Use a ref so we can reliably trigger the native file dialog */}
+              <input
+                ref={function (el) { /* placeholder, set below */ }}
+                id={`caminante-file-input-${caminante.id}`}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.currentTarget.files?.[0]
+                  if (f) handleImageChange(f)
+                }}
+              />
+              <button
+                type="button"
+                className="text-sm text-primary underline"
+                onClick={() => {
+                  const el = document.getElementById(`caminante-file-input-${caminante.id}`) as HTMLInputElement | null
+                  if (el) el.click()
+                }}
+              >
+                Cambiar foto
+              </button>
+            </div>
             <div className="space-y-1 text-sm">
+              <div className="flex justify-center mb-4">
+                <img
+                  src={caminante.imagen || uiAvatarUrl(caminante.nombre_completo, 512)}
+                  alt={caminante.nombre_completo}
+                  className="rounded-md max-h-64 object-contain"
+                />
+              </div>
               <div className="grid md:grid-cols-2 gap-2">
                 <div>
                   <span className="font-medium">Cédula:</span> {caminante.cedula}

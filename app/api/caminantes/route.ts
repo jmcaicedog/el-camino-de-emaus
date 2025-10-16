@@ -6,6 +6,33 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const supabase = await createClient()
 
+    // If imagen is a data URL, upload to Storage and replace with public URL
+    if (body.imagen && typeof body.imagen === 'string' && body.imagen.startsWith('data:')) {
+      const match = body.imagen.match(/^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/)
+      if (match) {
+        const mime = match[1]
+        const ext = match[2] === 'jpeg' ? 'jpg' : match[2]
+        const base64 = match[3]
+        const buffer = Buffer.from(base64, 'base64')
+        const MAX_BYTES = 2 * 1024 * 1024 // 2MB
+        if (buffer.length > MAX_BYTES) {
+          return NextResponse.json({ message: 'Imagen muy grande (max 2MB)' }, { status: 400 })
+        }
+
+        const key = `avatars/${Date.now()}_caminante.${ext}`
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(key, buffer, { contentType: mime, upsert: true })
+        if (uploadError) {
+          console.error('Upload error', uploadError)
+          return NextResponse.json({ message: uploadError.message }, { status: 500 })
+        }
+        const { data: publicUrl } = supabase.storage.from('avatars').getPublicUrl(key)
+        body.imagen = publicUrl.publicUrl
+      } else {
+        // invalid data url
+        return NextResponse.json({ message: 'Formato de imagen inválido' }, { status: 400 })
+      }
+    }
+
     // Insert caminante (no auth required for public registration)
     const { data, error } = await supabase.from("caminantes").insert([body]).select().single()
 

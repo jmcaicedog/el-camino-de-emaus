@@ -6,8 +6,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Phone, MapPin, Loader2, Pill, UtensilsCrossed } from "lucide-react"
+import { uiAvatarUrl } from "@/lib/utils"
 import type { Servidor } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 
@@ -46,10 +47,57 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
     }
   }
 
+  const handleImageChange = async (file?: File) => {
+    if (!file) return
+    setIsUpdating(true)
+    try {
+      const reader = new FileReader()
+      const dataUrl = await new Promise<string>((res, rej) => {
+        reader.onload = () => res(reader.result as string)
+        reader.onerror = rej
+        reader.readAsDataURL(file)
+      })
+
+      const upRes = await fetch('/api/uploads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl, filename: file.name }),
+      })
+
+      if (!upRes.ok) throw new Error('Error al subir imagen')
+      const { url } = await upRes.json()
+
+      const res = await fetch(`/api/servidores/${servidor.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagen: url }),
+      })
+
+      if (!res.ok) throw new Error('Error al guardar imagen')
+
+      toast({ title: 'Actualizado', description: 'Foto actualizada correctamente' })
+      if (typeof onUpdate === 'function') onUpdate()
+    } catch (e) {
+      console.error(e)
+      toast({ title: 'Error', description: 'No se pudo actualizar la imagen', variant: 'destructive' })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">{servidor.nombre_completo}</CardTitle>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
+            <img
+              src={servidor.imagen || uiAvatarUrl(servidor.nombre_completo)}
+              alt={servidor.nombre_completo}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <CardTitle className="text-lg">{servidor.nombre_completo}</CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
         <div className="space-y-2">
@@ -158,7 +206,36 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
               <DialogHeader>
                 <DialogTitle>{servidor.nombre_completo}</DialogTitle>
               </DialogHeader>
+                <div className="flex justify-end mb-2">
+                    <input
+                      id={`servidor-file-input-${servidor.id}`}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.currentTarget.files?.[0]
+                        if (f) handleImageChange(f)
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="text-sm text-primary underline"
+                      onClick={() => {
+                        const el = document.getElementById(`servidor-file-input-${servidor.id}`) as HTMLInputElement | null
+                        if (el) el.click()
+                      }}
+                    >
+                      Cambiar foto
+                    </button>
+                </div>
               <div className="space-y-4 text-sm">
+                <div className="flex justify-center mb-4">
+                  <img
+                    src={servidor.imagen || uiAvatarUrl(servidor.nombre_completo, 512)}
+                    alt={servidor.nombre_completo}
+                    className="rounded-md max-h-64 object-contain"
+                  />
+                </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <span className="font-medium">Cédula:</span> {servidor.cedula}

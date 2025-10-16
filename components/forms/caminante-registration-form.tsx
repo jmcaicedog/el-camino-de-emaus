@@ -30,6 +30,7 @@ export function CaminanteRegistrationForm() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [sacramentos, setSacramentos] = useState<string[]>([])
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   const handleSacramentoChange = (sacramento: string, checked: boolean) => {
     if (checked) {
@@ -67,6 +68,7 @@ export function CaminanteRegistrationForm() {
           es_sorpresa: data.es_sorpresa === "si",
           ronca_al_dormir: data.ronca_al_dormir === "si",
           invitador_hizo_retiro: data.invitador_hizo_retiro === "si",
+          imagen: previewImage || null,
         }),
       })
 
@@ -476,6 +478,28 @@ export function CaminanteRegistrationForm() {
                   </Label>
                 </div>
               ))}
+            </div>
+
+            <div>
+              <Label htmlFor="imagen">Foto personal (opcional)</Label>
+              <input
+                id="imagen"
+                name="imagen_file"
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.currentTarget.files?.[0]
+                  if (!file) return setPreviewImage(null)
+                  const reader = new FileReader()
+                  reader.onload = () => setPreviewImage(reader.result as string)
+                  reader.readAsDataURL(file)
+                }}
+              />
+              {previewImage && (
+                <div className="mt-2 w-24 h-24 rounded-full overflow-hidden">
+                  <img src={previewImage} alt="preview" className="w-full h-full object-cover" />
+                </div>
+              )}
             </div>
           </div>
         </CardContent>

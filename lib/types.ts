@@ -36,6 +36,7 @@ export interface Caminante {
   parroco: string
   monto_pagado: number
   monto_total: number
+  imagen?: string | null
   cartas_recibidas: number
   fotos_recibidas: number
   mesa_id?: string
@@ -78,6 +79,7 @@ export interface Servidor {
   tipo_servidor?: TipoServidor
   monto_pagado: number
   monto_total: number
+  imagen?: string | null
   mesa_id?: string
   created_at: string
   updated_at: string
