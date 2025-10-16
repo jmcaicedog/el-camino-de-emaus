@@ -13,7 +13,13 @@ import { useToast } from "@/hooks/use-toast"
 import { Loader2, Users, UserCog } from "lucide-react"
 import type { Mesa, Caminante, Servidor } from "@/lib/types"
 
-export function MesasManagement() {
+import type { AdminUser } from "@/lib/types"
+
+interface MesasManagementProps {
+  adminUser?: AdminUser
+}
+
+export function MesasManagement({ adminUser }: MesasManagementProps) {
   const { toast } = useToast()
   const [mesas, setMesas] = useState<Mesa[]>([])
   const [caminantes, setCaminantes] = useState<Caminante[]>([])
@@ -65,6 +71,8 @@ export function MesasManagement() {
   const assignToMesa = async (personId: string, mesaId: string, type: "caminante" | "servidor") => {
     setIsAssigning(true)
     try {
+      // Only super admins can assign
+      if (!adminUser?.is_super) throw new Error("No autorizado para asignar")
       const endpoint = type === "caminante" ? "/api/caminantes" : "/api/servidores"
       const response = await fetch(`${endpoint}/${personId}`, {
         method: "PATCH",
@@ -94,6 +102,8 @@ export function MesasManagement() {
   const unassignFromMesa = async (personId: string, type: "caminante" | "servidor") => {
     setIsAssigning(true)
     try {
+      // Only super admins can unassign
+      if (!adminUser?.is_super) throw new Error("No autorizado para desasignar")
       const endpoint = type === "caminante" ? "/api/caminantes" : "/api/servidores"
       const response = await fetch(`${endpoint}/${personId}`, {
         method: "PATCH",
@@ -207,7 +217,7 @@ export function MesasManagement() {
                         )}
                       </div>
                       {colider && (
-                        <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(colider.id, "servidor")} disabled={isAssigning}>
+                        <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(colider.id, "servidor")} disabled={isAssigning || !adminUser?.is_super}>
                           Desasignar
                         </Button>
                       )}
@@ -235,7 +245,7 @@ export function MesasManagement() {
                               <CaminanteCard caminante={c} onUpdate={loadData} />
                             </DialogContent>
                           </Dialog>
-                          <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(c.id, "caminante")} disabled={isAssigning}>
+                          <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(c.id, "caminante")} disabled={isAssigning || !adminUser?.is_super}>
                             Desasignar
                           </Button>
                         </div>

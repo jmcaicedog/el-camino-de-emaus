@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { CaminanteCard } from "@/components/servidor/caminante-card"
+import type { AdminUser } from "@/lib/types"
 import { ServidorCard } from "@/components/servidor/servidor-card"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
@@ -15,7 +16,11 @@ import { Loader2, Search, DollarSign, Trash } from "lucide-react"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { Caminante, Servidor } from "@/lib/types"
 
-export function CaminantesManagement() {
+interface CaminantesManagementProps {
+  adminUser?: AdminUser
+}
+
+export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
   const { toast } = useToast()
   const [caminantes, setCaminantes] = useState<Caminante[]>([])
   const [mesas, setMesas] = useState<Array<{ id: string; numero: number }>>([])
@@ -374,7 +379,7 @@ export function CaminantesManagement() {
                           </DialogContent>
                         </Dialog>
 
-                        <Button size="sm" variant="ghost" onClick={() => { setPendingDeleteId(caminante.id); setConfirmOpen(true) }} disabled={isUpdating}>
+                        <Button size="sm" variant="ghost" onClick={() => { setPendingDeleteId(caminante.id); setConfirmOpen(true) }} disabled={isUpdating || !adminUser?.is_super}>
                           <Trash className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

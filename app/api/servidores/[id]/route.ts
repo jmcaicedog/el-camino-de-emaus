@@ -7,6 +7,27 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const body = await request.json()
     const supabase = await createClient()
 
+    // Get current user and admin record to check permissions
+    const { data: userData } = await supabase.auth.getUser()
+    const currentUser = userData?.user
+    if (!currentUser) return NextResponse.json({ message: 'No autenticado' }, { status: 401 })
+
+    const { data: adminRecord } = await supabase.from('admin_users').select('*').eq('id', currentUser.id).maybeSingle()
+    const isSuper = !!adminRecord?.is_super
+
+    // If not super admin, restrict which fields can be modified
+    if (!isSuper) {
+      const allowedFields = [
+        'medicamentos',
+        'restricciones_alimenticias',
+        'monto_pagado',
+        'retiros_anteriores',
+        'experiencia_servicio',
+      ]
+      const forbidden = Object.keys(body).some((k) => !allowedFields.includes(k))
+      if (forbidden) return NextResponse.json({ message: 'No autorizado para modificar ese campo' }, { status: 403 })
+    }
+
     const { data, error } = await supabase.from("servidores").update(body).eq("id", id).select().single()
 
     if (error) {
@@ -25,6 +46,15 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const { id } = await params
     const supabase = await createClient()
+
+    // Only super admins can delete servidores
+    const { data: userData } = await supabase.auth.getUser()
+    const currentUser = userData?.user
+    if (!currentUser) return NextResponse.json({ message: 'No autenticado' }, { status: 401 })
+
+    const { data: adminRecord } = await supabase.from('admin_users').select('*').eq('id', currentUser.id).maybeSingle()
+    const isSuper = !!adminRecord?.is_super
+    if (!isSuper) return NextResponse.json({ message: 'No autorizado' }, { status: 403 })
 
     const { data, error } = await supabase.from('servidores').delete().eq('id', id).select().single()
 

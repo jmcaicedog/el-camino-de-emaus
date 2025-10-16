@@ -95,5 +95,7 @@ export interface AdminUser {
   id: string
   nombre_completo: string
   role: UserRole
+  // Flag to indicate a Super Administrator who can perform destructive actions
+  is_super?: boolean
   created_at: string
 }

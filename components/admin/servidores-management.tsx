@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ServidorCard } from "@/components/servidor/servidor-card"
+import type { AdminUser } from "@/lib/types"
 import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
@@ -15,7 +16,11 @@ import { Loader2, Search, DollarSign, Trash, Mail } from "lucide-react"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { Servidor } from "@/lib/types"
 
-export function ServidoresManagement() {
+interface ServidoresManagementProps {
+  adminUser?: AdminUser
+}
+
+export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
   const { toast } = useToast()
   const [servidores, setServidores] = useState<Servidor[]>([])
   const [mesas, setMesas] = useState<Array<{ id: string; numero: number }>>([])
@@ -351,19 +356,19 @@ export function ServidoresManagement() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => sendInvite(servidor)}
-                          disabled={isUpdating || inviteLoadingId === servidor.id}
-                        >
-                          {inviteLoadingId === servidor.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </Button>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => sendInvite(servidor)}
+                                          disabled={isUpdating || inviteLoadingId === servidor.id || !adminUser?.is_super}
+                                        >
+                                          {inviteLoadingId === servidor.id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <Mail className="h-4 w-4 text-muted-foreground" />
+                                          )}
+                                        </Button>
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
@@ -425,7 +430,7 @@ export function ServidoresManagement() {
                           </DialogContent>
                         </Dialog>
 
-                        <Button size="sm" variant="ghost" onClick={() => { setPendingDeleteId(servidor.id); setConfirmOpen(true) }} disabled={isUpdating}>
+                        <Button size="sm" variant="ghost" onClick={() => { setPendingDeleteId(servidor.id); setConfirmOpen(true) }} disabled={isUpdating || !adminUser?.is_super}>
                           <Trash className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

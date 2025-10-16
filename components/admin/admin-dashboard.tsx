@@ -70,15 +70,15 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           </TabsList>
 
           <TabsContent value="mesas">
-            <MesasManagement />
+            <MesasManagement adminUser={adminUser} />
           </TabsContent>
 
           <TabsContent value="caminantes">
-            <CaminantesManagement />
+            <CaminantesManagement adminUser={adminUser} />
           </TabsContent>
 
           <TabsContent value="servidores">
-            <ServidoresManagement />
+            <ServidoresManagement adminUser={adminUser} />
           </TabsContent>
 
           <TabsContent value="reportes">
