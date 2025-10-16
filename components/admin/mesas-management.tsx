@@ -191,8 +191,8 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                           "Sin asignar"
                         )}
                       </div>
-                      {lider && (
-                        <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(lider.id, "servidor")} disabled={isAssigning}>
+                      {lider && adminUser?.is_super && (
+                        <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(lider.id, "servidor")}>
                           Desasignar
                         </Button>
                       )}
@@ -216,8 +216,8 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                           "Sin asignar"
                         )}
                       </div>
-                      {colider && (
-                        <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(colider.id, "servidor")} disabled={isAssigning || !adminUser?.is_super}>
+                      {colider && adminUser?.is_super && (
+                        <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(colider.id, "servidor")} disabled={isAssigning}>
                           Desasignar
                         </Button>
                       )}
@@ -245,9 +245,11 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                               <CaminanteCard caminante={c} onUpdate={loadData} />
                             </DialogContent>
                           </Dialog>
-                          <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(c.id, "caminante")} disabled={isAssigning || !adminUser?.is_super}>
-                            Desasignar
-                          </Button>
+                          {adminUser?.is_super && (
+                            <Button size="sm" variant="ghost" onClick={() => unassignFromMesa(c.id, "caminante")} disabled={isAssigning}>
+                              Desasignar
+                            </Button>
+                          )}
                         </div>
                       ))
                     ) : (
@@ -256,12 +258,13 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                   </div>
                 </div>
 
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full bg-transparent" onClick={() => setSelectedMesa(mesa)}>
-                      Asignar Personas
-                    </Button>
-                  </DialogTrigger>
+                {adminUser?.is_super && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full bg-transparent" onClick={() => setSelectedMesa(mesa)}>
+                        Asignar Personas
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Asignar a Mesa {mesa.numero}</DialogTitle>
@@ -305,6 +308,7 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                                     </Label>
                                     <Select
                                       onValueChange={async (value: string) => {
+                                        if (!adminUser?.is_super) return
                                         await fetch(`/api/servidores/${servidor.id}`, {
                                           method: "PATCH",
                                           headers: { "Content-Type": "application/json" },
@@ -312,6 +316,8 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                                         })
                                         await loadData()
                                       }}
+                                      // disable changing role unless super admin
+                                      disabled={!adminUser?.is_super}
                                     >
                                       <SelectTrigger className="h-8 text-xs">
                                         <SelectValue placeholder="Seleccionar tipo" />
@@ -350,7 +356,9 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                       </div>
                     </div>
                   </DialogContent>
-                </Dialog>
+                  </Dialog>
+                )}
+              
               </CardContent>
             </Card>
           )
