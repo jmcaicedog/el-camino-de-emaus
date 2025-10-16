@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import ExcelJS from "exceljs"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
@@ -9,30 +10,24 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const supabase = await createClient()
 
-    let data: any[] = []
-    let headers: string[] = []
-    let title = ""
+  let data: any[] = []
+  let columns: { key: string; label: string }[] = []
+  let title = ""
 
     switch (type) {
       case "caminantes": {
         const { data: caminantes } = await supabase.from("caminantes").select("*").order("nombre_completo")
         data = caminantes || []
-        headers = [
-          "Nombre",
-          "Cédula",
-          "Edad",
-          "Celular",
-          "Correo",
-          "Ciudad",
-          "Estado Civil",
-          "Profesión",
-          "EPS",
-          "Tipo Sangre",
-          "Parroquia",
-          "Monto Total",
-          "Monto Pagado",
-          "Saldo",
-        ]
+        title = "Reporte de Caminantes"
+        // If we have data, build columns dynamically to include all fields
+        if (data.length > 0) {
+          columns = Object.keys(data[0]).map((k) => ({ key: k, label: humanize(k) }))
+        } else {
+          columns = [
+            { key: "nombre_completo", label: "Nombre" },
+            { key: "cedula", label: "Cédula" },
+          ]
+        }
         title = "Reporte de Caminantes"
         break
       }
@@ -40,19 +35,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       case "servidores": {
         const { data: servidores } = await supabase.from("servidores").select("*").order("nombre_completo")
         data = servidores || []
-        headers = [
-          "Nombre",
-          "Cédula",
-          "Edad",
-          "Celular",
-          "Correo",
-          "Ciudad",
-          "Tipo Servidor",
-          "Retiros Anteriores",
-          "Monto Total",
-          "Monto Pagado",
-          "Saldo",
-        ]
+        if (data.length > 0) {
+          columns = Object.keys(data[0]).map((k) => ({ key: k, label: humanize(k) }))
+        } else {
+          columns = [
+            { key: "nombre_completo", label: "Nombre" },
+            { key: "cedula", label: "Cédula" },
+          ]
+        }
         title = "Reporte de Servidores"
         break
       }
@@ -69,8 +59,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             caminantes: caminantes?.filter((c) => c.mesa_id === mesa.id).map((c) => c.nombre_completo) || [],
             servidores: servidores?.filter((s) => s.mesa_id === mesa.id).map((s) => s.nombre_completo) || [],
           })) || []
-
-        headers = ["Número", "Nombre", "Caminantes", "Servidores"]
+        columns = [
+          { key: "numero", label: "Número" },
+          { key: "nombre", label: "Nombre" },
+          { key: "caminantes", label: "Caminantes" },
+          { key: "servidores", label: "Servidores" },
+        ]
         title = "Reporte de Mesas"
         break
       }
@@ -97,8 +91,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             saldo: s.monto_total - s.monto_pagado,
           })) || []),
         ]
-
-        headers = ["Tipo", "Nombre", "Cédula", "Monto Total", "Monto Pagado", "Saldo"]
+        columns = [
+          { key: "tipo", label: "Tipo" },
+          { key: "nombre", label: "Nombre" },
+          { key: "cedula", label: "Cédula" },
+          { key: "monto_total", label: "Monto Total" },
+          { key: "monto_pagado", label: "Monto Pagado" },
+          { key: "saldo", label: "Saldo" },
+        ]
         title = "Reporte de Pagos"
         break
       }
@@ -108,18 +108,98 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     if (format === "excel") {
-      const csv = generateCSV(data, headers, type)
-      return new NextResponse(csv, {
-        headers: {
-          "Content-Type": "text/csv",
-          "Content-Disposition": `attachment; filename="${type}-${new Date().toISOString().split("T")[0]}.csv"`,
-        },
-      })
+      try {
+        const workbook = new ExcelJS.Workbook()
+        const sheet = workbook.addWorksheet(title || "Reporte")
+
+        // Add header row
+        sheet.addRow(columns.map((c) => c.label))
+        // Bold header
+        const headerRow = sheet.getRow(1)
+        headerRow.font = { bold: true }
+
+        // Add data rows with typed values so Excel recognizes numbers/dates
+        data.forEach((item) => {
+          const typedRow = columns.map((col) => {
+            const v = item[col.key]
+            if (v === null || v === undefined) return ""
+
+            // Handle arrays and objects
+            if (Array.isArray(v)) return v.join(", ")
+            if (typeof v === "object") return JSON.stringify(v)
+
+            // Detect numeric values
+            if (typeof v === "number") return v
+            if (typeof v === "string") {
+              const maybeNumber = Number(v)
+              if (!Number.isNaN(maybeNumber) && String(maybeNumber) === v.trim()) return maybeNumber
+
+              // Detect ISO date strings
+              const maybeDate = new Date(v)
+              if (!Number.isNaN(maybeDate.getTime()) && /\d{4}-\d{2}-\d{2}/.test(v)) return maybeDate
+
+              return v
+            }
+
+            return String(v)
+          })
+          sheet.addRow(typedRow)
+        })
+
+        // Simple formatting: set column widths and number/date formats when applicable
+        sheet.columns.forEach((col, idx) => {
+          try {
+            // calculate max length
+            let maxLength = 10
+            if (col && typeof (col as any).eachCell === "function") {
+              ;(col as any).eachCell({ includeEmpty: true }, (cell: any) => {
+                const len = cell && cell.value ? String(cell.value).length : 0
+                if (len > maxLength) maxLength = len
+              })
+            }
+            ;(col as any).width = Math.min(Math.max(maxLength + 2, 10), 80)
+
+            // Determine the original key for this column
+            const key = columns[idx] && columns[idx].key ? columns[idx].key.toLowerCase() : ""
+
+            // Numeric/monetary columns
+            if (/(monto|saldo|total|pagado|amount|price)/i.test(key)) {
+              // Apply currency/number format
+              ;(sheet.getColumn(idx + 1) as any).numFmt = '#,##0.00'
+            }
+
+            // Date-like columns
+            if (/(fecha|date|created_at|updated_at)/i.test(key)) {
+              ;(sheet.getColumn(idx + 1) as any).numFmt = 'dd/mm/yyyy'
+            }
+          } catch (e) {
+            // ignore formatting errors
+          }
+        })
+
+        const buffer = await workbook.xlsx.writeBuffer()
+
+        return new NextResponse(buffer, {
+          headers: {
+            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Content-Disposition": `attachment; filename="${type}-${new Date().toISOString().split("T")[0]}.xlsx"`,
+          },
+        })
+      } catch (err) {
+        console.error("Error generating xlsx, falling back to CSV:", err)
+        const csv = generateCSV(data, columns)
+        return new NextResponse(csv, {
+          headers: {
+            "Content-Type": "text/csv; charset=utf-8",
+            "Content-Disposition": `attachment; filename="${type}-${new Date().toISOString().split("T")[0]}.csv"`,
+          },
+        })
+      }
     } else {
-      const html = generateHTML(data, headers, title, type)
+      const html = generateHTML(data, columns, title)
       return new NextResponse(html, {
         headers: {
-          "Content-Type": "text/html",
+          "Content-Type": "text/html; charset=utf-8",
         },
       })
     }
@@ -129,137 +209,33 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-function generateCSV(data: any[], headers: string[], type: string): string {
-  const rows: string[][] = [headers]
+function formatValue(value: any): string {
+  if (value === null || value === undefined) return ""
+  if (Array.isArray(value)) return value.join(", ")
+  if (typeof value === "object") return JSON.stringify(value)
+  return String(value)
+}
+
+function generateCSV(data: any[], columns: { key: string; label: string }[]): string {
+  const rows: string[][] = [columns.map((c) => c.label)]
 
   data.forEach((item) => {
-    let row: string[] = []
-
-    switch (type) {
-      case "caminantes":
-        row = [
-          item.nombre_completo,
-          item.cedula,
-          item.edad?.toString() || "",
-          item.celular,
-          item.correo,
-          item.ciudad,
-          item.estado_civil,
-          item.profesion,
-          item.eps,
-          item.tipo_sangre,
-          item.parroquia,
-          item.monto_total?.toString() || "0",
-          item.monto_pagado?.toString() || "0",
-          (item.monto_total - item.monto_pagado)?.toString() || "0",
-        ]
-        break
-
-      case "servidores":
-        row = [
-          item.nombre_completo,
-          item.cedula,
-          item.edad?.toString() || "",
-          item.celular,
-          item.correo,
-          item.ciudad,
-          item.tipo_servidor || "",
-          item.retiros_anteriores?.toString() || "0",
-          item.monto_total?.toString() || "0",
-          item.monto_pagado?.toString() || "0",
-          (item.monto_total - item.monto_pagado)?.toString() || "0",
-        ]
-        break
-
-      case "mesas":
-        row = [
-          item.numero?.toString() || "",
-          item.nombre || "",
-          item.caminantes?.join(", ") || "",
-          item.servidores?.join(", ") || "",
-        ]
-        break
-
-      case "pagos":
-        row = [
-          item.tipo,
-          item.nombre,
-          item.cedula,
-          item.monto_total?.toString() || "0",
-          item.monto_pagado?.toString() || "0",
-          item.saldo?.toString() || "0",
-        ]
-        break
-    }
-
+    const row = columns.map((col) => `"${formatValue(item[col.key])}"`)
     rows.push(row)
   })
 
-  return rows.map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n")
+  // Prefix with UTF-8 BOM so Excel (Windows) detects UTF-8 encoding
+  const csv = rows.map((row) => row.join(",")).join("\n")
+  return "\uFEFF" + csv
 }
 
-function generateHTML(data: any[], headers: string[], title: string, type: string): string {
+function generateHTML(data: any[], columns: { key: string; label: string }[], title: string): string {
   let tableRows = ""
 
   data.forEach((item) => {
-    let cells = ""
-
-    switch (type) {
-      case "caminantes":
-        cells = `
-          <td>${item.nombre_completo}</td>
-          <td>${item.cedula}</td>
-          <td>${item.edad || ""}</td>
-          <td>${item.celular}</td>
-          <td>${item.correo}</td>
-          <td>${item.ciudad}</td>
-          <td>${item.estado_civil}</td>
-          <td>${item.profesion}</td>
-          <td>${item.eps}</td>
-          <td>${item.tipo_sangre}</td>
-          <td>${item.parroquia}</td>
-          <td>$${item.monto_total?.toLocaleString() || "0"}</td>
-          <td>$${item.monto_pagado?.toLocaleString() || "0"}</td>
-          <td>$${(item.monto_total - item.monto_pagado)?.toLocaleString() || "0"}</td>
-        `
-        break
-
-      case "servidores":
-        cells = `
-          <td>${item.nombre_completo}</td>
-          <td>${item.cedula}</td>
-          <td>${item.edad || ""}</td>
-          <td>${item.celular}</td>
-          <td>${item.correo}</td>
-          <td>${item.ciudad}</td>
-          <td>${item.tipo_servidor || ""}</td>
-          <td>${item.retiros_anteriores || "0"}</td>
-          <td>$${item.monto_total?.toLocaleString() || "0"}</td>
-          <td>$${item.monto_pagado?.toLocaleString() || "0"}</td>
-          <td>$${(item.monto_total - item.monto_pagado)?.toLocaleString() || "0"}</td>
-        `
-        break
-
-      case "mesas":
-        cells = `
-          <td>${item.numero || ""}</td>
-          <td>${item.nombre || ""}</td>
-          <td>${item.caminantes?.join(", ") || ""}</td>
-          <td>${item.servidores?.join(", ") || ""}</td>
-        `
-        break
-
-      case "pagos":
-        cells = `
-          <td>${item.tipo}</td>
-          <td>${item.nombre}</td>
-          <td>${item.cedula}</td>
-          <td>$${item.monto_total?.toLocaleString() || "0"}</td>
-          <td>$${item.monto_pagado?.toLocaleString() || "0"}</td>
-          <td>$${item.saldo?.toLocaleString() || "0"}</td>
-        `
-        break
-    }
+    const cells = columns
+      .map((col) => `<td>${escapeHtml(formatValue(item[col.key]))}</td>`)
+      .join("")
 
     tableRows += `<tr>${cells}</tr>`
   })
@@ -269,7 +245,7 @@ function generateHTML(data: any[], headers: string[], title: string, type: strin
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>${title}</title>
+      <title>${escapeHtml(title)}</title>
       <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1 { color: #333; }
@@ -286,13 +262,13 @@ function generateHTML(data: any[], headers: string[], title: string, type: strin
     </head>
     <body>
       <div class="header">
-        <h1>${title}</h1>
+        <h1>${escapeHtml(title)}</h1>
         <p class="date">Fecha: ${new Date().toLocaleDateString("es-CO")}</p>
         <button onclick="window.print()">Imprimir / Guardar como PDF</button>
       </div>
       <table>
         <thead>
-          <tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr>
+          <tr>${columns.map((c) => `<th>${escapeHtml(c.label)}</th>`).join("")}</tr>
         </thead>
         <tbody>
           ${tableRows}
@@ -301,4 +277,19 @@ function generateHTML(data: any[], headers: string[], title: string, type: strin
     </body>
     </html>
   `
+}
+
+function humanize(key: string) {
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function escapeHtml(str: string) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
 }

@@ -12,26 +12,78 @@ export function ReportsManagement() {
 
   const exportReport = async (type: "caminantes" | "servidores" | "mesas" | "pagos", format: "excel" | "pdf") => {
     setIsExporting(`${type}-${format}`)
+    let win: Window | null = null
     try {
+      // If user wants PDF, open the window synchronously to avoid popup blockers.
+      if (format === "pdf") {
+        win = window.open("", "_blank")
+        if (!win) throw new Error("No se pudo abrir una nueva ventana para el reporte")
+        // Show a simple loading page so the user sees feedback while we fetch the report
+        win.document.open()
+        win.document.write(
+          `<!doctype html><html><head><meta charset="utf-8"><title>Cargando reporte...</title></head><body><p>Cargando reporte, por favor espere...</p></body></html>`
+        )
+        win.document.close()
+      }
+
       const response = await fetch(`/api/reports/${type}?format=${format}`)
 
       if (!response.ok) throw new Error("Error al generar reporte")
 
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `${type}-${new Date().toISOString().split("T")[0]}.${format === "excel" ? "xlsx" : "pdf"}`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      if (format === "excel") {
+        // Server returns an .xlsx file when exceljs is available
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `${type}-${new Date().toISOString().split("T")[0]}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        // Server returns HTML for printable report. We already opened a window synchronously above.
+        const html = await response.text()
+        if (win) {
+          win.document.open()
+          win.document.write(html)
+          win.document.close()
+          // Try to trigger print — may be blocked by browser, but opening synchronously avoids most blockers
+          try {
+            win.focus()
+            win.print()
+          } catch (e) {
+            // no-op
+          }
+        } else {
+          // Fallback: if for some reason window isn't available, open a new one now (may be blocked)
+          const fallback = window.open("", "_blank")
+          if (fallback) {
+            fallback.document.open()
+            fallback.document.write(html)
+            fallback.document.close()
+            try {
+              fallback.focus()
+              fallback.print()
+            } catch (e) {
+              // no-op
+            }
+          }
+        }
+      }
 
       toast({
         title: "Reporte generado",
         description: `El reporte se ha descargado correctamente`,
       })
     } catch (error) {
+      // Close the opened window if there was an error after opening it
+      try {
+        if (win && !win.closed) win.close()
+      } catch (e) {
+        // ignore
+      }
+
       toast({
         title: "Error",
         description: "Error al generar el reporte",
