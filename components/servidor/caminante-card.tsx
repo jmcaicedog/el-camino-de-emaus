@@ -231,8 +231,8 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
             <DialogHeader>
               <DialogTitle>{caminante.nombre_completo}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 text-sm">
-              <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-1 text-sm">
+              <div className="grid md:grid-cols-2 gap-2">
                 <div>
                   <span className="font-medium">Cédula:</span> {caminante.cedula}
                 </div>
@@ -271,12 +271,12 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                   <div>
                     <span className="font-medium">Parentesco:</span> {caminante.parentesco_contacto}
                   </div>
-                  <div>
+                  <div className="pb-2">
                     <span className="font-medium">Celular:</span> {caminante.celular_contacto}
                   </div>
 
                   {caminante.nombre_contacto_emergencia_2 && (
-                    <div className="pt-2">
+                    <div className="space-y-1">
                       <div>
                         <span className="font-medium">Nombre:</span> {caminante.nombre_contacto_emergencia_2}
                       </div>
