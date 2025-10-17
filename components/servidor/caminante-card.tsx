@@ -306,40 +306,67 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
               </button>
             </div>
             <div className="space-y-1 text-sm">
-                <div className="flex justify-center mb-4">
-                <img
-                  src={caminante.imagen || uiAvatarUrl(caminante.nombre_completo, 512)}
-                  alt={caminante.nombre_completo}
-                  className="rounded-full max-h-32 w-auto object-cover"
-                />
-              </div>
-              <div className="grid md:grid-cols-2 gap-2">
-                <div>
-                  <span className="font-medium">Cédula:</span> {caminante.cedula}
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                {/* Avatar column */}
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={caminante.imagen || uiAvatarUrl(caminante.nombre_completo, 512)}
+                    alt={caminante.nombre_completo}
+                    className="rounded-full h-36 w-36 object-cover shadow-lg"
+                  />
+                  <input
+                    id={`caminante-file-input-${caminante.id}`}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.currentTarget.files?.[0]
+                      if (f) handleImageChange(f)
+                    }}
+                  />
+                  <button
+                    type="button"
+                    aria-label={`Cambiar foto de ${caminante.nombre_completo}`}
+                    title="Cambiar foto"
+                    className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow hover:bg-neutral-100"
+                    onClick={() => {
+                      const el = document.getElementById(`caminante-file-input-${caminante.id}`) as HTMLInputElement | null
+                      if (el) el.click()
+                    }}
+                  >
+                    <ImageIcon className="h-5 w-5" />
+                  </button>
                 </div>
-                <div>
-                  <span className="font-medium">Edad:</span> {caminante.edad} años
-                </div>
-                <div>
-                  <span className="font-medium">Celular:</span> {caminante.celular}
-                </div>
-                <div>
-                  <span className="font-medium">Correo:</span> {caminante.correo}
-                </div>
-                <div>
-                  <span className="font-medium">Ciudad:</span> {caminante.ciudad}
-                </div>
-                <div>
-                  <span className="font-medium">Estado Civil:</span> {caminante.estado_civil}
-                </div>
-                <div>
-                  <span className="font-medium">Profesión:</span> {caminante.profesion}
-                </div>
-                <div>
-                  <span className="font-medium">EPS:</span> {caminante.eps}
-                </div>
-                <div>
-                  <span className="font-medium">Tipo de Sangre:</span> {caminante.tipo_sangre}
+
+                {/* Details column */}
+                <div className="flex-1 grid md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="font-medium">Cédula:</span> {caminante.cedula}
+                  </div>
+                  <div>
+                    <span className="font-medium">Edad:</span> {caminante.edad} años
+                  </div>
+                  <div>
+                    <span className="font-medium">Celular:</span> {caminante.celular}
+                  </div>
+                  <div>
+                    <span className="font-medium">Correo:</span> {caminante.correo}
+                  </div>
+                  <div>
+                    <span className="font-medium">Ciudad:</span> {caminante.ciudad}
+                  </div>
+                  <div>
+                    <span className="font-medium">Estado Civil:</span> {caminante.estado_civil}
+                  </div>
+                  <div>
+                    <span className="font-medium">Profesión:</span> {caminante.profesion}
+                  </div>
+                  <div>
+                    <span className="font-medium">EPS:</span> {caminante.eps}
+                  </div>
+                  <div>
+                    <span className="font-medium">Tipo de Sangre:</span> {caminante.tipo_sangre}
+                  </div>
                 </div>
               </div>
 

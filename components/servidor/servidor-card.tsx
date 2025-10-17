@@ -10,6 +10,7 @@ import { useState, useRef } from "react"
 import { Phone, MapPin, Loader2, Pill, UtensilsCrossed, ImageIcon } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Servidor } from "@/lib/types"
+import ServidorDetails from "@/components/servidor/servidor-details"
 import { useToast } from "@/hooks/use-toast"
 
 interface ServidorCardProps {
@@ -206,144 +207,7 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
               <DialogHeader>
                 <DialogTitle>{servidor.nombre_completo}</DialogTitle>
               </DialogHeader>
-                <div className="flex justify-end mb-2">
-                    <input
-                      id={`servidor-file-input-${servidor.id}`}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.currentTarget.files?.[0]
-                        if (f) handleImageChange(f)
-                      }}
-                    />
-                    <button
-                      type="button"
-                      aria-label={`Cambiar foto de ${servidor.nombre_completo}`}
-                      className="inline-flex items-center justify-center w-9 h-9 rounded-md text-primary hover:bg-primary/10"
-                      onClick={() => {
-                        const el = document.getElementById(`servidor-file-input-${servidor.id}`) as HTMLInputElement | null
-                        if (el) el.click()
-                      }}
-                    >
-                      <ImageIcon className="h-5 w-5" />
-                    </button>
-                </div>
-              <div className="space-y-4 text-sm">
-                <div className="flex justify-center mb-4">
-                  <img
-                    src={servidor.imagen || uiAvatarUrl(servidor.nombre_completo, 512)}
-                    alt={servidor.nombre_completo}
-                    className="rounded-full max-h-32 w-auto object-cover"
-                  />
-                </div>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="font-medium">Cédula:</span> {servidor.cedula}
-                  </div>
-                  <div>
-                    <span className="font-medium">Edad:</span> {servidor.edad} años
-                  </div>
-                  <div>
-                    <span className="font-medium">Celular:</span> {servidor.celular}
-                  </div>
-                  <div>
-                    <span className="font-medium">Correo:</span> {servidor.correo}
-                  </div>
-                  <div>
-                    <span className="font-medium">Ciudad:</span> {servidor.ciudad}
-                  </div>
-                  <div>
-                    <span className="font-medium">Estado Civil:</span> {servidor.estado_civil}
-                  </div>
-                  <div>
-                    <span className="font-medium">Profesión:</span> {servidor.profesion || "-"}
-                  </div>
-                  <div>
-                    <span className="font-medium">EPS:</span> {servidor.eps}
-                  </div>
-                  <div>
-                    <span className="font-medium">Tipo de Sangre:</span> {servidor.tipo_sangre}
-                  </div>
-                  <div>
-                    <span className="font-medium">Parroquia:</span> {servidor.parroquia}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t">
-                  <h3 className="font-semibold mb-2">Contactos de emergencia</h3>
-                  <div className="space-y-1">
-                    <div>
-                      <span className="font-medium">Nombre:</span> {servidor.nombre_contacto_emergencia}
-                    </div>
-                    <div>
-                      <span className="font-medium">Parentesco:</span> {servidor.parentesco_contacto}
-                    </div>
-                    <div>
-                      <span className="font-medium">Celular:</span> {servidor.celular_contacto}
-                    </div>
-
-                    {servidor.nombre_contacto_emergencia_2 && (
-                      <div className="pt-2">
-                        <div>
-                          <span className="font-medium">Nombre:</span> {servidor.nombre_contacto_emergencia_2}
-                        </div>
-                        <div>
-                          <span className="font-medium">Parentesco:</span> {servidor.parentesco_contacto_2}
-                        </div>
-                        <div>
-                          <span className="font-medium">Celular:</span> {servidor.celular_contacto_2}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {(servidor.medicamentos || servidor.restricciones_alimenticias) && (
-                  <div className="pt-4 border-t">
-                    <h3 className="font-semibold mb-2">Información Médica</h3>
-                    {servidor.medicamentos && (
-                      <div className="mb-2">
-                        <span className="font-medium">Medicamentos:</span>
-                        <p className="text-muted-foreground">{servidor.medicamentos}</p>
-                      </div>
-                    )}
-                    {servidor.restricciones_alimenticias && (
-                      <div>
-                        <span className="font-medium">Restricciones Alimenticias:</span>
-                        <p className="text-muted-foreground">{servidor.restricciones_alimenticias}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Información Espiritual */}
-                <div className="pt-4 border-t">
-                  <h3 className="font-semibold mb-2">Información Espiritual</h3>
-                  <div className="space-y-1">
-                    <div>
-                      <span className="font-medium">Parroquia:</span> {servidor.parroquia || '-'}
-                    </div>
-                    <div>
-                      <span className="font-medium">Párroco:</span> {servidor.parroco || '-'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Información de Invitación / Experiencia */}
-                <div className="pt-4 border-t">
-                  <h3 className="font-semibold mb-2">Información de Servicio</h3>
-                  <div className="space-y-1">
-                    <div>
-                      <span className="font-medium">Retiros anteriores:</span> {servidor.retiros_anteriores ?? '-'}
-                    </div>
-                    <div>
-                      <span className="font-medium">Experiencia en servicio:</span>
-                      <div className="text-muted-foreground">{servidor.experiencia_servicio || 'Sin información registrada'}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ServidorDetails servidor={servidor} onImageChange={handleImageChange} />
             </DialogContent>
           </Dialog>
         </div>
