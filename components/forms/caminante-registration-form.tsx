@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import AvatarUploader from "@/components/ui/avatar-uploader"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Dialog,
@@ -480,27 +481,17 @@ export function CaminanteRegistrationForm() {
               ))}
             </div>
 
-            <div>
-              <Label htmlFor="imagen">Foto personal (opcional)</Label>
-              <input
-                id="imagen"
-                name="imagen_file"
-                type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.currentTarget.files?.[0]
-                  if (!file) return setPreviewImage(null)
-                  const reader = new FileReader()
-                  reader.onload = () => setPreviewImage(reader.result as string)
-                  reader.readAsDataURL(file)
-                }}
-              />
-              {previewImage && (
-                <div className="mt-2 w-24 h-24 rounded-full overflow-hidden">
-                  <img src={previewImage} alt="preview" className="w-full h-full object-cover" />
+              <div>
+                <Label htmlFor="imagen">Foto personal (opcional)</Label>
+                <div className="mt-2">
+                  <AvatarUploader
+                    id="caminante-imagen"
+                    name={undefined}
+                    preview={previewImage}
+                    onChange={(file, dataUrl) => setPreviewImage(dataUrl ?? null)}
+                  />
                 </div>
-              )}
-            </div>
+              </div>
           </div>
         </CardContent>
       </Card>
