@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { ImageIcon, Phone, Loader2, Pill, Eye, Clipboard } from "lucide-react"
+import { ImageIcon, Phone, Loader2, Pill, Eye, Clipboard, UtensilsCrossed, Tablets } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Caminante } from "@/lib/types"
 
@@ -240,12 +240,12 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="medicamentos">Medicamentos</Label>
+                    <Label htmlFor="medicamentos" className="pb-2"><Tablets className="h-4 w-4" />Medicamentos</Label>
                     <Textarea id="medicamentos" value={medicamentos} onChange={(e) => setMedicamentos(e.target.value)} rows={4} />
                   </div>
 
                   <div>
-                    <Label htmlFor="restricciones">Restricciones alimenticias</Label>
+                    <Label htmlFor="restricciones" className="pb-2"><UtensilsCrossed className="h-4 w-4" />Restricciones alimenticias</Label>
                     <Textarea id="restricciones" value={restricciones} onChange={(e) => setRestricciones(e.target.value)} rows={4} />
                   </div>
 

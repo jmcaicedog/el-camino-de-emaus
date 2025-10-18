@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Phone, Loader2, Pill, UtensilsCrossed, Eye } from "lucide-react"
+import { Phone, Loader2, Pill, UtensilsCrossed, Eye, Tablets } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Servidor } from "@/lib/types"
 import ServidorDetails from "@/components/servidor/servidor-details"
@@ -129,7 +129,7 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="medicamentos">Medicamentos</Label>
+                  <Label htmlFor="medicamentos" className="pb-2"><Tablets className="h-4 w-4" />Medicamentos</Label>
                   <Textarea id="medicamentos" value={medicamentos} onChange={(e) => setMedicamentos(e.target.value)} rows={4} />
                 </div>
 
