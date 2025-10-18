@@ -1,13 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useState, useRef } from "react"
-import { Phone, MapPin, Loader2, Pill, UtensilsCrossed, ImageIcon } from "lucide-react"
+import { Phone, Loader2, Pill, UtensilsCrossed, Eye } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Servidor } from "@/lib/types"
 import ServidorDetails from "@/components/servidor/servidor-details"
@@ -15,7 +14,6 @@ import { useToast } from "@/hooks/use-toast"
 
 interface ServidorCardProps {
   servidor: Servidor
-  onClose?: () => void
   onUpdate?: () => void
 }
 
@@ -100,52 +98,12 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
           <CardTitle className="text-lg">{servidor.nombre_completo}</CardTitle>
         </div>
       </CardHeader>
+
       <CardContent className="space-y-4 text-sm">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Phone className="h-4 w-4 text-muted-foreground" />
             <span>{servidor.celular}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span>{servidor.ciudad}</span>
-          </div>
-          <div>
-            <span className="font-medium">Profesión:</span> {servidor.profesion || "-"}
-          </div>
-          <div>
-            <span className="font-medium">Empresa / Cargo:</span> {servidor.empresa || "-"} {servidor.cargo ? ` / ${servidor.cargo}` : ""}
-          </div>
-          <div>
-            <span className="font-medium">Talla Camisa:</span> {servidor.talla_camisa || "-"}
-          </div>
-        </div>
-
-        <div className="pt-4 border-t">
-          <h3 className="font-semibold mb-2">Contactos de emergencia</h3>
-          <div className="space-y-1">
-            <div>
-              <span className="font-medium">Nombre:</span> {servidor.nombre_contacto_emergencia}
-            </div>
-            <div>
-              <span className="font-medium">Parentesco:</span> {servidor.parentesco_contacto}
-            </div>
-            <div>
-              <span className="font-medium">Celular:</span> {servidor.celular_contacto}
-            </div>
-            {servidor.nombre_contacto_emergencia_2 && (
-              <div className="pt-2">
-                <div>
-                  <span className="font-medium">Nombre:</span> {servidor.nombre_contacto_emergencia_2}
-                </div>
-                <div>
-                  <span className="font-medium">Parentesco:</span> {servidor.parentesco_contacto_2}
-                </div>
-                <div>
-                  <span className="font-medium">Celular:</span> {servidor.celular_contacto_2}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -156,11 +114,11 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
           </div>
         )}
 
-        <div className="space-y-2">
+        <div className="md:col-span-2 flex flex-col items-center gap-2 mt-4">
           <Dialog open={isEditing} onOpenChange={setIsEditing}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-full bg-transparent">
-                <Pill className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="w-66 bg-transparent flex items-center justify-center gap-2">
+                <Pill className="h-4 w-4" />
                 Ver/Editar Información Médica
               </Button>
             </DialogTrigger>
@@ -168,6 +126,7 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
               <DialogHeader>
                 <DialogTitle>Información Médica - {servidor.nombre_completo}</DialogTitle>
               </DialogHeader>
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="medicamentos">Medicamentos</Label>
@@ -199,7 +158,8 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
 
           <Dialog open={isViewing} onOpenChange={setIsViewing}>
             <DialogTrigger asChild>
-              <Button variant="ghost" className="w-full text-xs">
+              <Button variant="outline" className="w-56 bg-transparent flex items-center justify-center gap-2">
+                <Eye className="h-4 w-4" />
                 Ver información completa
               </Button>
             </DialogTrigger>
@@ -215,3 +175,4 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
     </Card>
   )
 }
+
