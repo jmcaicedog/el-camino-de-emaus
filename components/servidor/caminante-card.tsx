@@ -85,7 +85,7 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
       const uploadRes = await fetch('/api/uploads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: dataUrl, filename: file.name }),
+        body: JSON.stringify({ dataUrl, filename: file.name }),
       })
 
       if (!uploadRes.ok) throw new Error('Error al subir imagen')
