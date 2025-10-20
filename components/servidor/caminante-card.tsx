@@ -416,6 +416,18 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                         <div className="truncate">{caminante.parroco || '-'}</div>
                       </div>
                     </div>
+                    <div className="mt-3">
+                      <div className="font-medium">Sacramentos recibidos</div>
+                      {caminante.sacramentos_recibidos && caminante.sacramentos_recibidos.length > 0 ? (
+                        <ul className="list-disc list-inside text-sm mt-1">
+                          {caminante.sacramentos_recibidos.map((s) => (
+                            <li key={s}>{s}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="text-sm text-muted-foreground mt-1">-</div>
+                      )}
+                    </div>
                   </section>
 
                   <section className="pt-4 border-t">
