@@ -175,4 +175,3 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
     </Card>
   )
 }
-

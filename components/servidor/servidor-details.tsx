@@ -196,4 +196,3 @@ export default function ServidorDetails({ servidor, onImageChange }: Props) {
     </div>
   )
 }
-
