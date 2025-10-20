@@ -191,6 +191,14 @@ export default function ServidorDetails({ servidor, onImageChange }: Props) {
             <div className="font-medium">Experiencia en servicio</div>
             <div className="truncate" title={servidor.experiencia_servicio ?? '-'}>{servidor.experiencia_servicio ?? 'Sin información registrada'}</div>
           </div>
+          <div>
+            <div className="font-medium">Dirección</div>
+            <div className="text-muted-foreground whitespace-pre-wrap break-words" title={servidor.direccion ?? '-'}>{servidor.direccion ?? '-'}</div>
+          </div>
+          <div>
+            <div className="font-medium">Talla de camisa</div>
+            <div className="truncate" title={servidor.talla_camisa ?? '-'}>{servidor.talla_camisa ?? '-'}</div>
+          </div>
         </div>
       </section>
     </div>
