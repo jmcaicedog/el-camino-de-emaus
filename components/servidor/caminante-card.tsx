@@ -391,6 +391,23 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                         <div className="font-medium">EPS</div>
                         <div className="truncate">{caminante.eps || '-'}</div>
                       </div>
+                    </div>
+                  </section>
+
+                    
+                  
+
+                  <section className="pt-4 border-t">
+                    <h3 className="font-semibold mb-2">Información Personal</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="font-medium">Dirección</div>
+                        <div className="truncate">{caminante.direccion || '-'}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Talla de camisa</div>
+                        <div className="truncate">{caminante.talla_camisa || '-'}</div>
+                      </div>
 
                       <div>
                         <div className="font-medium">¿Ronca al dormir?</div>
