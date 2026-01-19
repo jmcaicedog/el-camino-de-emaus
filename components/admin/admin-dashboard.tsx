@@ -5,9 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MesasManagement } from "@/components/admin/mesas-management"
 import { CaminantesManagement } from "@/components/admin/caminantes-management"
 import { ServidoresManagement } from "@/components/admin/servidores-management"
+import { EquiposManagement } from "@/components/admin/equipos-management"
 import { ReportsManagement } from "@/components/admin/reports-management"
 import { Button } from "@/components/ui/button"
-import { LogOut, Users, Table2, UserCog, FileText } from "lucide-react"
+import { LogOut, Users, Table2, UserCog, FileText, UsersRound } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -49,8 +50,12 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="mesas" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <Tabs defaultValue="equipos" className="space-y-6">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5">
+            <TabsTrigger value="equipos">
+              <UsersRound className="mr-2 h-4 w-4" />
+              Equipos
+            </TabsTrigger>
             <TabsTrigger value="mesas">
               <Table2 className="mr-2 h-4 w-4" />
               Mesas
@@ -68,6 +73,10 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
               Reportes
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="equipos">
+            <EquiposManagement />
+          </TabsContent>
 
           <TabsContent value="mesas">
             <MesasManagement adminUser={adminUser} />

@@ -52,14 +52,35 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
 
     // This will be protected by RLS - only admins can view all servidores
-    const { data, error } = await supabase.from("servidores").select("*").order("created_at", { ascending: false })
+    const { data: servidores, error } = await supabase.from("servidores").select("*").order("created_at", { ascending: false })
 
     if (error) {
       console.error("[v0] Error fetching servidores:", error)
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
-    return NextResponse.json(data, { status: 200 })
+    // Para cada servidor, obtener sus equipos
+    const servidoresConEquipos = await Promise.all(
+      (servidores || []).map(async (servidor) => {
+        const { data: relaciones } = await supabase
+          .from("servidor_equipo")
+          .select(`
+            equipos (
+              nombre
+            )
+          `)
+          .eq("servidor_id", servidor.id)
+
+        const equipos = relaciones?.map((r: any) => r.equipos?.nombre).filter(Boolean) || []
+
+        return {
+          ...servidor,
+          equipos,
+        }
+      })
+    )
+
+    return NextResponse.json(servidoresConEquipos, { status: 200 })
   } catch (error) {
     console.error("[v0] Error in GET /api/servidores:", error)
     return NextResponse.json({ message: "Error al procesar la solicitud" }, { status: 500 })

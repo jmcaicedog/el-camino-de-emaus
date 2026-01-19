@@ -81,6 +81,7 @@ export interface Servidor {
   monto_total: number
   imagen?: string | null
   mesa_id?: string
+  equipos?: string[]
   created_at: string
   updated_at: string
 }
@@ -99,5 +100,20 @@ export interface AdminUser {
   role: UserRole
   // Flag to indicate a Super Administrator who can perform destructive actions
   is_super?: boolean
+  created_at: string
+}
+
+export interface Equipo {
+  id: string
+  nombre: string
+  descripcion?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ServidorEquipo {
+  id: string
+  servidor_id: string
+  equipo_id: string
   created_at: string
 }

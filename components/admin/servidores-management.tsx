@@ -194,11 +194,11 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">Foto</TableHead>
+                  <TableHead>Foto</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Cédula</TableHead>
                   <TableHead>Celular</TableHead>
-                  <TableHead>Tipo</TableHead>
+                  <TableHead>Equipos</TableHead>
                   <TableHead>Mesa</TableHead>
                   <TableHead>Pago</TableHead>
                   <TableHead>Acciones</TableHead>
@@ -242,13 +242,13 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                     <TableCell>{servidor.cedula}</TableCell>
                     <TableCell>{servidor.celular}</TableCell>
                     <TableCell>
-                      {/* Mostrar 'Sin asignar' si no tiene mesa; si tiene mesa mostrar rol si existe, o 'Sin definir' */}
-                      {!servidor.mesa_id ? (
-                        <Badge variant="outline">Sin asignar</Badge>
+                      {/* Mostrar equipos separados por comas */}
+                      {servidor.equipos && servidor.equipos.length > 0 ? (
+                        <span className="text-sm">{servidor.equipos.join(", ")}</span>
                       ) : servidor.tipo_servidor ? (
                         <Badge variant="default">{servidor.tipo_servidor === "lider" ? "Líder" : "Colíder"}</Badge>
                       ) : (
-                        <Badge variant="outline">Sin definir</Badge>
+                        <span className="text-sm text-muted-foreground">Sin equipos</span>
                       )}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">

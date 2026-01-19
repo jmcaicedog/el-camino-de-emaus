@@ -36,6 +36,55 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
+    // Si se actualiza tipo_servidor a líder o colíder, agregar al equipo de líderes
+    if (body.tipo_servidor && (body.tipo_servidor === "lider" || body.tipo_servidor === "colider")) {
+      const { data: equipoLideres } = await supabase
+        .from("equipos")
+        .select("id")
+        .eq("nombre", "Líderes y colíderes")
+        .single()
+
+      if (equipoLideres) {
+        // Verificar si ya está en el equipo
+        const { data: existing } = await supabase
+          .from("servidor_equipo")
+          .select("id")
+          .eq("servidor_id", id)
+          .eq("equipo_id", equipoLideres.id)
+          .maybeSingle()
+
+        if (!existing) {
+          await supabase
+            .from("servidor_equipo")
+            .insert({ servidor_id: id, equipo_id: equipoLideres.id })
+        }
+      }
+    }
+
+    // Si se actualiza mesa_id y el servidor tiene tipo_servidor, también agregarlo al equipo
+    if (body.mesa_id && data.tipo_servidor && (data.tipo_servidor === "lider" || data.tipo_servidor === "colider")) {
+      const { data: equipoLideres } = await supabase
+        .from("equipos")
+        .select("id")
+        .eq("nombre", "Líderes y colíderes")
+        .single()
+
+      if (equipoLideres) {
+        const { data: existing } = await supabase
+          .from("servidor_equipo")
+          .select("id")
+          .eq("servidor_id", id)
+          .eq("equipo_id", equipoLideres.id)
+          .maybeSingle()
+
+        if (!existing) {
+          await supabase
+            .from("servidor_equipo")
+            .insert({ servidor_id: id, equipo_id: equipoLideres.id })
+        }
+      }
+    }
+
     return NextResponse.json(data, { status: 200 })
   } catch (error) {
     console.error("[v0] Error in PATCH /api/servidores/[id]:", error)
