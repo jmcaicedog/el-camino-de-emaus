@@ -242,14 +242,18 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                     <TableCell>{servidor.cedula}</TableCell>
                     <TableCell>{servidor.celular}</TableCell>
                     <TableCell>
-                      {/* Mostrar equipos separados por comas */}
-                      {servidor.equipos && servidor.equipos.length > 0 ? (
-                        <span className="text-sm">{servidor.equipos.join(", ")}</span>
-                      ) : servidor.tipo_servidor ? (
+                      {/* Si es líder o colíder, mostrar badge. Sino, mostrar equipos (excluyendo Líderes y colíderes) */}
+                      {servidor.tipo_servidor === "lider" || servidor.tipo_servidor === "colider" ? (
                         <Badge variant="default">{servidor.tipo_servidor === "lider" ? "Líder" : "Colíder"}</Badge>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Sin equipos</span>
-                      )}
+                      ) : (() => {
+                        const equiposFiltrados = servidor.equipos?.filter(equipo => equipo !== "Líderes y colíderes") || []
+                        
+                        if (equiposFiltrados.length > 0) {
+                          return <span className="text-sm">{equiposFiltrados.join(", ")}</span>
+                        } else {
+                          return <span className="text-sm text-muted-foreground">Sin equipos</span>
+                        }
+                      })()}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {servidor.mesa_id ? (

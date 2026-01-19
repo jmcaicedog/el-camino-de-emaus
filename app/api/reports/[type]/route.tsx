@@ -171,6 +171,41 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         break
       }
 
+      case "equipos-servidores": {
+        const { data: equipos } = await supabase.from("equipos").select("*").order("nombre")
+        const { data: relaciones } = await supabase.from("servidor_equipo").select("servidor_id, equipo_id")
+        const { data: servidores } = await supabase.from("servidores").select("id, nombre_completo, tipo_servidor")
+
+        data = []
+        for (const equipo of equipos || []) {
+          let nombresServidores: string[] = []
+          
+          // Si es el equipo de Líderes y colíderes, incluir todos los que tienen tipo_servidor
+          if (equipo.nombre === "Líderes y colíderes") {
+            nombresServidores = servidores
+              ?.filter(s => s.tipo_servidor === "lider" || s.tipo_servidor === "colider")
+              .map(s => s.nombre_completo) || []
+          } else {
+            // Para otros equipos, usar la relación de servidor_equipo
+            const servidoresEquipo = relaciones?.filter(r => r.equipo_id === equipo.id) || []
+            nombresServidores = servidoresEquipo
+              .map(rel => servidores?.find(s => s.id === rel.servidor_id)?.nombre_completo)
+              .filter(Boolean) as string[]
+          }
+          
+          data.push({
+            equipo: equipo.nombre,
+            servidores: nombresServidores.length > 0 ? nombresServidores.join("\n") : "Sin servidores asignados",
+          })
+        }
+        columns = [
+          { key: "equipo", label: "Equipo" },
+          { key: "servidores", label: "Servidores" },
+        ]
+        title = "Equipos y Servidores"
+        break
+      }
+
       default:
         return NextResponse.json({ message: "Tipo de reporte no válido" }, { status: 400 })
     }
@@ -302,7 +337,12 @@ function generateHTML(data: any[], columns: { key: string; label: string }[], ti
 
   data.forEach((item) => {
     const cells = columns
-      .map((col) => `<td>${escapeHtml(formatValue(item[col.key]))}</td>`)
+      .map((col) => {
+        const value = formatValue(item[col.key])
+        // Convertir saltos de línea a <br> para HTML
+        const htmlValue = escapeHtml(value).replace(/\n/g, '<br>')
+        return `<td>${htmlValue}</td>`
+      })
       .join("")
 
     tableRows += `<tr>${cells}</tr>`
