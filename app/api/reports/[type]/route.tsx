@@ -131,6 +131,46 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         break
       }
 
+      case "restricciones": {
+        const { data: caminantes } = await supabase.from("caminantes").select("*").order("nombre_completo")
+        const { data: servidores } = await supabase.from("servidores").select("*").order("nombre_completo")
+
+        data = [
+          ...(caminantes?.filter((c) => c.medicamentos || c.restricciones_alimenticias || c.condicion_especial).map((c) => ({
+            tipo: "Caminante",
+            nombre: c.nombre_completo,
+            celular: c.celular,
+            eps: c.eps,
+            tipo_sangre: c.tipo_sangre,
+            medicamentos: c.medicamentos || "Ninguno",
+            restricciones_alimenticias: c.restricciones_alimenticias || "Ninguna",
+            condicion_especial: c.condicion_especial || "Ninguna",
+          })) || []),
+          ...(servidores?.filter((s) => s.medicamentos || s.restricciones_alimenticias || s.condicion_especial).map((s) => ({
+            tipo: "Servidor",
+            nombre: s.nombre_completo,
+            celular: s.celular,
+            eps: s.eps,
+            tipo_sangre: s.tipo_sangre,
+            medicamentos: s.medicamentos || "Ninguno",
+            restricciones_alimenticias: s.restricciones_alimenticias || "Ninguna",
+            condicion_especial: s.condicion_especial || "Ninguna",
+          })) || []),
+        ]
+        columns = [
+          { key: "tipo", label: "Tipo" },
+          { key: "nombre", label: "Nombre" },
+          { key: "celular", label: "Celular" },
+          { key: "eps", label: "EPS" },
+          { key: "tipo_sangre", label: "Tipo de Sangre" },
+          { key: "medicamentos", label: "Medicamentos" },
+          { key: "restricciones_alimenticias", label: "Restricciones Alimenticias" },
+          { key: "condicion_especial", label: "Condición Especial" },
+        ]
+        title = "Restricciones Alimenticias y Medicamentos"
+        break
+      }
+
       default:
         return NextResponse.json({ message: "Tipo de reporte no válido" }, { status: 400 })
     }

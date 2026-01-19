@@ -10,7 +10,7 @@ export function ReportsManagement() {
   const { toast } = useToast()
   const [isExporting, setIsExporting] = useState<string | null>(null)
 
-  const exportReport = async (type: "caminantes" | "servidores" | "mesas" | "pagos" | "cartas", format: "excel" | "pdf") => {
+  const exportReport = async (type: "caminantes" | "servidores" | "mesas" | "pagos" | "cartas" | "restricciones", format: "excel" | "pdf") => {
     setIsExporting(`${type}-${format}`)
     let win: Window | null = null
     try {
@@ -123,6 +123,12 @@ export function ReportsManagement() {
       id: "cartas",
       title: "Cartas de Caminantes por Mesa",
       description: "Número de cartas y fotos recibidas por cada caminante, organizado por mesa",
+      icon: FileText,
+    },
+    {
+      id: "restricciones",
+      title: "Restricciones Alimenticias y Medicamentos",
+      description: "Información médica y restricciones de caminantes y servidores",
       icon: FileText,
     },
   ]
