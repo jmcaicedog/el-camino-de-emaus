@@ -103,6 +103,46 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         break
       }
 
+      case "cartas": {
+        const { data: mesas } = await supabase.from("mesas").select("*").order("numero")
+        const { data: caminantes } = await supabase.from("caminantes").select("*").order("nombre_completo")
+
+        data = []
+        for (const mesa of mesas || []) {
+          const caminantesMesa = caminantes?.filter((c) => c.mesa_id === mesa.id) || []
+          for (const caminante of caminantesMesa) {
+            data.push({
+              mesa_numero: mesa.numero,
+              mesa_nombre: mesa.nombre,
+              nombre_completo: caminante.nombre_completo,
+              cedula: caminante.cedula,
+              celular: caminante.celular,
+              edad: caminante.edad,
+              ciudad: caminante.ciudad,
+              direccion: caminante.direccion,
+              correo: caminante.correo,
+              estado_civil: caminante.estado_civil,
+              quien_invito: caminante.quien_invito,
+            })
+          }
+        }
+        columns = [
+          { key: "mesa_numero", label: "Mesa #" },
+          { key: "mesa_nombre", label: "Mesa" },
+          { key: "nombre_completo", label: "Nombre" },
+          { key: "cedula", label: "Cédula" },
+          { key: "celular", label: "Celular" },
+          { key: "edad", label: "Edad" },
+          { key: "ciudad", label: "Ciudad" },
+          { key: "direccion", label: "Dirección" },
+          { key: "correo", label: "Correo" },
+          { key: "estado_civil", label: "Estado Civil" },
+          { key: "quien_invito", label: "Quien Invitó" },
+        ]
+        title = "Cartas de Caminantes por Mesa"
+        break
+      }
+
       default:
         return NextResponse.json({ message: "Tipo de reporte no válido" }, { status: 400 })
     }
