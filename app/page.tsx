@@ -14,7 +14,7 @@ export default function HomePage() {
             <p className="text-lg text-muted-foreground text-pretty max-w-2xl">
               Retiro Espiritual Cristo Rey Hombres
               <br />
-              Septiembre 12, 13 y 14 de 2025
+              Abril 10, 11 y 12 de 2026
             </p>
           </div>
 
