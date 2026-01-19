@@ -137,7 +137,7 @@ export function CaminanteRegistrationForm() {
                   Después de inscribirte, realiza la consignación de $490.000 en la cuenta FUNDACIÓN EMAÚS PARA EL DESARROLLO
                   PROFESIONAL, SOCIAL Y COMUNITARIO, NIT 901 637364-9, Cuenta de ahorros #042863332, Banco de Occidente. La
                   consignación puede hacerse en efectivo, cheque o transferencia bancaria. También puedes pagar con tarjeta de
-                  crédito en este link: www.opd.com.co/pagos.
+                  crédito en este link: www.opd.com.co/pagos. También puedes transferir a través de la llave de Bre-b 0037939865.
                 </li>
                 <li>
                   Envía el comprobante de pago con el nombre del inscrito al correo emauscristoreyhombres@gmail.com. LA
