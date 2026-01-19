@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   title: "El Camino de Emaús - Administración",
   description: "Sistema de administración para el retiro espiritual El Camino de Emaús",
   generator: "v0.app",
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({

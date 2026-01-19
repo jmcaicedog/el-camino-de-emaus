@@ -122,7 +122,7 @@ export function ReportsManagement() {
     {
       id: "cartas",
       title: "Cartas de Caminantes por Mesa",
-      description: "Información de caminantes organizada por mesa para escribir cartas",
+      description: "Número de cartas y fotos recibidas por cada caminante, organizado por mesa",
       icon: FileText,
     },
   ]

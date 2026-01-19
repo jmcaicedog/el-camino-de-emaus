@@ -115,29 +115,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               mesa_numero: mesa.numero,
               mesa_nombre: mesa.nombre,
               nombre_completo: caminante.nombre_completo,
-              cedula: caminante.cedula,
-              celular: caminante.celular,
-              edad: caminante.edad,
-              ciudad: caminante.ciudad,
-              direccion: caminante.direccion,
-              correo: caminante.correo,
-              estado_civil: caminante.estado_civil,
-              quien_invito: caminante.quien_invito,
+              cartas_recibidas: caminante.cartas_recibidas || 0,
+              fotos_recibidas: caminante.fotos_recibidas || 0,
             })
           }
         }
         columns = [
           { key: "mesa_numero", label: "Mesa #" },
-          { key: "mesa_nombre", label: "Mesa" },
-          { key: "nombre_completo", label: "Nombre" },
-          { key: "cedula", label: "Cédula" },
-          { key: "celular", label: "Celular" },
-          { key: "edad", label: "Edad" },
-          { key: "ciudad", label: "Ciudad" },
-          { key: "direccion", label: "Dirección" },
-          { key: "correo", label: "Correo" },
-          { key: "estado_civil", label: "Estado Civil" },
-          { key: "quien_invito", label: "Quien Invitó" },
+          { key: "mesa_nombre", label: "Nombre Mesa" },
+          { key: "nombre_completo", label: "Caminante" },
+          { key: "cartas_recibidas", label: "Cartas" },
+          { key: "fotos_recibidas", label: "Fotos" },
         ]
         title = "Cartas de Caminantes por Mesa"
         break
