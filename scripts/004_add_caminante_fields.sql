@@ -11,6 +11,6 @@ ADD COLUMN celular_contacto_2 TEXT,
 ADD COLUMN quien_invito TEXT,
 ADD COLUMN invitador_hizo_retiro BOOLEAN;
 
--- Update monto_total to 450000 (from the welcome text)
-UPDATE caminantes SET monto_total = 450000 WHERE monto_total = 250000;
-ALTER TABLE caminantes ALTER COLUMN monto_total SET DEFAULT 450000;
+-- Update monto_total to 490000 (from the welcome text)
+UPDATE caminantes SET monto_total = 490000 WHERE monto_total = 250000;
+ALTER TABLE caminantes ALTER COLUMN monto_total SET DEFAULT 490000;
