@@ -288,7 +288,7 @@ export function CaminanteRegistrationForm() {
       <Card>
         <CardHeader>
           <CardTitle>Contactos de Emergencia</CardTitle>
-          <CardDescription>Por favor proporciona dos contactos de emergencia</CardDescription>
+          <CardDescription>Por favor proporciona dos contactos de emergencia con los que podamos comunicarnos en cualquier eventualiad durante el retiro</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
@@ -482,7 +482,7 @@ export function CaminanteRegistrationForm() {
             </div>
 
               <div>
-                <Label htmlFor="imagen">Foto personal (opcional)</Label>
+                <Label htmlFor="imagen">Foto personal (opcional pero muy importante)</Label>
                 <div className="mt-2">
                   <AvatarUploader
                     id="caminante-imagen"
