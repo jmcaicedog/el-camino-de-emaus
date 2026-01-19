@@ -64,7 +64,7 @@ export function CaminanteRegistrationForm() {
         body: JSON.stringify({
           ...data,
           edad: age,
-          monto_total: 450000,
+          monto_total: 490000,
           sacramentos_recibidos: sacramentos,
           es_sorpresa: data.es_sorpresa === "si",
           ronca_al_dormir: data.ronca_al_dormir === "si",
@@ -134,7 +134,7 @@ export function CaminanteRegistrationForm() {
                   formalizar el pago; por favor léelo, imprímelo o guárdalo.
                 </li>
                 <li>
-                  Después de inscribirte, realiza la consignación de $450.000 en la cuenta FUNDACIÓN EMAÚS PARA EL DESARROLLO
+                  Después de inscribirte, realiza la consignación de $490.000 en la cuenta FUNDACIÓN EMAÚS PARA EL DESARROLLO
                   PROFESIONAL, SOCIAL Y COMUNITARIO, NIT 901 637364-9, Cuenta de ahorros #042863332, Banco de Occidente. La
                   consignación puede hacerse en efectivo, cheque o transferencia bancaria. También puedes pagar con tarjeta de
                   crédito en este link: www.opd.com.co/pagos.
