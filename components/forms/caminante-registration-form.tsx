@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
@@ -109,13 +110,13 @@ export function CaminanteRegistrationForm() {
             </Button>
           </DialogTrigger>
 
-          <DialogContent>
-            <DialogHeader>
+          <DialogContent className="max-h-[90vh] flex flex-col [&>button]:z-[60]">
+            <DialogHeader className="sticky top-0 bg-background z-50 pb-4 -mt-2">
               <DialogTitle>¡BIENVENIDO A EMAÚS!</DialogTitle>
               <DialogDescription>Por favor lee detenidamente antes de completar el formulario</DialogDescription>
             </DialogHeader>
 
-            <div className="mt-2 text-sm space-y-3 text-rose-800">
+            <div className="mt-2 text-sm space-y-3 text-rose-800 overflow-y-auto flex-1 pr-2">
               <p>
                 Para hacer tu pre-inscripción al retiro de Emaús Cristo Rey Hombres, por favor ten en cuenta lo siguiente:
               </p>
@@ -158,8 +159,10 @@ export function CaminanteRegistrationForm() {
               </ol>
             </div>
 
-            <DialogFooter>
-              <Button>Entendido</Button>
+            <DialogFooter className="sticky bottom-0 bg-background pt-4 z-50">
+              <DialogClose asChild>
+                <Button>Entendido</Button>
+              </DialogClose>
             </DialogFooter>
           </DialogContent>
         </Dialog>
