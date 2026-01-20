@@ -29,6 +29,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (forbidden) return NextResponse.json({ message: 'No autorizado para modificar ese campo' }, { status: 403 })
     }
 
+    // Si se está desasignando de una mesa (mesa_id = null), limpiar también tipo_servidor
+    if ('mesa_id' in body && body.mesa_id === null) {
+      body.tipo_servidor = null
+    }
+
     const { data, error } = await supabase.from("servidores").update(body).eq("id", id).select().single()
 
     if (error) {
