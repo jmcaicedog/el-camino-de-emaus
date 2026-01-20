@@ -206,6 +206,31 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         break
       }
 
+      case "tallas": {
+        const { data: caminantes } = await supabase.from("caminantes").select("nombre_completo, talla_camisa").order("nombre_completo")
+        const { data: servidores } = await supabase.from("servidores").select("nombre_completo, talla_camisa").order("nombre_completo")
+
+        data = [
+          ...(caminantes?.map((c) => ({
+            tipo: "Caminante",
+            nombre: c.nombre_completo,
+            talla: c.talla_camisa || "Sin especificar",
+          })) || []),
+          ...(servidores?.map((s) => ({
+            tipo: "Servidor",
+            nombre: s.nombre_completo,
+            talla: s.talla_camisa || "Sin especificar",
+          })) || []),
+        ]
+        columns = [
+          { key: "tipo", label: "Tipo" },
+          { key: "nombre", label: "Nombre" },
+          { key: "talla", label: "Talla de Camiseta" },
+        ]
+        title = "Tallas de Camiseta"
+        break
+      }
+
       default:
         return NextResponse.json({ message: "Tipo de reporte no válido" }, { status: 400 })
     }

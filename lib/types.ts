@@ -60,6 +60,7 @@ export interface Servidor {
   empresa?: string
   cargo?: string
   talla_camisa?: string
+  colores_camisa?: string[]
   nombre_contacto_emergencia: string
   parentesco_contacto: string
   celular_contacto: string

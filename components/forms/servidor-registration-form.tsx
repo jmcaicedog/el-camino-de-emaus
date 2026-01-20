@@ -21,6 +21,7 @@ export function ServidorRegistrationForm() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [coloresCamisa, setColoresCamisa] = useState<string[]>([])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -49,6 +50,7 @@ export function ServidorRegistrationForm() {
         // Convert known boolean-like radio fields
         ronca_al_dormir: (data.ronca_al_dormir as string) === "si",
         imagen: previewImage || null,
+        colores_camisa: coloresCamisa,
       }
 
       const response = await fetch("/api/servidores", {
@@ -157,20 +159,76 @@ export function ServidorRegistrationForm() {
             </div>
 
             {/* Profesión, empresa y cargo han sido movidos a Información Laboral */}
-            <div>
-              <Label htmlFor="talla_camisa">Talla de Camisa *</Label>
-              <Select name="talla_camisa" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona tu talla" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="S">S</SelectItem>
-                  <SelectItem value="M">M</SelectItem>
-                  <SelectItem value="L">L</SelectItem>
-                  <SelectItem value="XL">XL</SelectItem>
-                  <SelectItem value="XXL">XXL</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="talla_camisa">Talla de Camisa *</Label>
+                <Select name="talla_camisa" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu talla" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="S">S</SelectItem>
+                    <SelectItem value="M">M</SelectItem>
+                    <SelectItem value="L">L</SelectItem>
+                    <SelectItem value="XL">XL</SelectItem>
+                    <SelectItem value="XXL">XXL</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>¿Necesitas camisa?</Label>
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="camisa_roja"
+                      checked={coloresCamisa.includes("Roja")}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setColoresCamisa([...coloresCamisa, "Roja"])
+                        } else {
+                          setColoresCamisa(coloresCamisa.filter((c) => c !== "Roja"))
+                        }
+                      }}
+                    />
+                    <label htmlFor="camisa_roja" className="text-sm cursor-pointer">
+                      Roja
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="camisa_azul"
+                      checked={coloresCamisa.includes("Azul")}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setColoresCamisa([...coloresCamisa, "Azul"])
+                        } else {
+                          setColoresCamisa(coloresCamisa.filter((c) => c !== "Azul"))
+                        }
+                      }}
+                    />
+                    <label htmlFor="camisa_azul" className="text-sm cursor-pointer">
+                      Azul
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="camisa_blanca"
+                      checked={coloresCamisa.includes("Blanca")}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setColoresCamisa([...coloresCamisa, "Blanca"])
+                        } else {
+                          setColoresCamisa(coloresCamisa.filter((c) => c !== "Blanca"))
+                        }
+                      }}
+                    />
+                    <label htmlFor="camisa_blanca" className="text-sm cursor-pointer">
+                      Blanca
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -372,7 +430,7 @@ export function ServidorRegistrationForm() {
             <Textarea
               id="experiencia_servicio"
               name="experiencia_servicio"
-              placeholder="Describe tu experiencia previa en servicio o ministerios (opcional)"
+              placeholder="En qué parroquias has servido y en qué roles (opcional)"
               rows={4}
             />
           </div>
