@@ -27,7 +27,7 @@ export default function CaminanteRegistrationPage() {
           </div>
 
           <div className="mb-6 p-6 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-lg font-semibold mb-3">Valor del servicio: $490.000</p>
+            <p className="text-lg font-semibold mb-3">Inversión: $490.000</p>
             <div className="space-y-2 text-sm">
               <p>
                 Realiza la consignación en la cuenta <strong>FUNDACIÓN EMAÚS PARA EL DESARROLLO PROFESIONAL, SOCIAL Y COMUNITARIO</strong>, NIT 901 637364-9, Cuenta de ahorros #042863332, Banco de Occidente.
