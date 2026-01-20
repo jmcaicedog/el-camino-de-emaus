@@ -26,6 +26,24 @@ export default function ServidorRegistrationPage() {
             </div>
           </div>
 
+          <div className="mb-6 p-6 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p className="text-lg font-semibold mb-3">Valor del servicio: $400.000</p>
+            <div className="space-y-2 text-sm">
+              <p>
+                Realiza la consignación en la cuenta <strong>FUNDACIÓN EMAÚS PARA EL DESARROLLO PROFESIONAL, SOCIAL Y COMUNITARIO</strong>, NIT 901 637364-9, Cuenta de ahorros #042863332, Banco de Occidente.
+              </p>
+              <p>
+                La consignación puede hacerse en efectivo, cheque o transferencia bancaria. También puedes pagar con tarjeta de crédito en este link:{" "}
+                <a href="http://www.opd.com.co/pagos" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
+                  www.opd.com.co/pagos
+                </a>
+              </p>
+              <p>
+                También puedes transferir a través de la llave de Bre-b <strong>0037939865</strong>.
+              </p>
+            </div>
+          </div>
+
           <ServidorRegistrationForm />
         </div>
       </div>
