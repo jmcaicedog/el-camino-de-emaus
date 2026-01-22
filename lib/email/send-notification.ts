@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { createClient } from '@/lib/supabase/server'
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 const rawResendFrom = process.env.RESEND_FROM || ''
@@ -30,9 +31,34 @@ interface EmailNotificationParams {
   subject: string
   text: string
   html: string
+  includeSuperAdmins?: boolean // Nueva opción para incluir superadmins
 }
 
-export async function sendEmailNotification({ to, subject, text, html }: EmailNotificationParams): Promise<boolean> {
+/**
+ * Obtiene los correos de todos los superadministradores
+ */
+async function getSuperAdminEmails(): Promise<string[]> {
+  try {
+    const supabase = await createClient()
+    const { data: superAdmins } = await supabase
+      .from('admin_users')
+      .select('email')
+      .eq('is_super', true)
+
+    return superAdmins?.map(admin => admin.email).filter(Boolean) || []
+  } catch (error) {
+    console.error('[Email] Error fetching super admin emails:', error)
+    return []
+  }
+}
+
+export async function sendEmailNotification({ 
+  to, 
+  subject, 
+  text, 
+  html,
+  includeSuperAdmins = true 
+}: EmailNotificationParams): Promise<boolean> {
   if (!resendClient) {
     console.warn('[Email] Resend client not configured, skipping email send')
     return false
@@ -43,7 +69,15 @@ export async function sendEmailNotification({ to, subject, text, html }: EmailNo
     return false
   }
 
-  if (to.length === 0) {
+  // Combinar destinatarios originales con superadmins si se solicita
+  let allRecipients = [...to]
+  
+  if (includeSuperAdmins) {
+    const superAdminEmails = await getSuperAdminEmails()
+    allRecipients = [...new Set([...allRecipients, ...superAdminEmails])] // Eliminar duplicados
+  }
+
+  if (allRecipients.length === 0) {
     console.warn('[Email] No recipients provided')
     return false
   }
@@ -51,12 +85,12 @@ export async function sendEmailNotification({ to, subject, text, html }: EmailNo
   try {
     await resendClient.emails.send({
       from: RESEND_FROM,
-      to,
+      to: allRecipients,
       subject,
       text,
       html,
     })
-    console.log(`[Email] Sent to: ${to.join(', ')}`)
+    console.log(`[Email] Sent to: ${allRecipients.join(', ')}`)
     return true
   } catch (error) {
     console.error('[Email] Error sending notification:', error)

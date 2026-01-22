@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { sendEmailNotification } from "@/lib/email/send-notification"
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,6 +40,26 @@ export async function POST(request: NextRequest) {
       console.error("[v0] Error inserting servidor:", error)
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
+
+    // Enviar notificación a superadmins sobre nuevo registro
+    const subject = 'Nuevo servidor registrado'
+    const text = `Se ha registrado un nuevo servidor en la plataforma.\n\nNombre: ${data.nombre_completo}\nCédula: ${data.cedula}\nCelular: ${data.celular}\nCorreo: ${data.correo}\nEdad: ${data.edad} años\nRetiros anteriores: ${data.retiros_anteriores || 0}\n\nRevisa la plataforma para más detalles.`
+    const html = `
+      <h2>Nuevo servidor registrado</h2>
+      <p>Se ha registrado un nuevo servidor en la plataforma:</p>
+      <ul>
+        <li><strong>Nombre:</strong> ${data.nombre_completo}</li>
+        <li><strong>Cédula:</strong> ${data.cedula}</li>
+        <li><strong>Celular:</strong> ${data.celular}</li>
+        <li><strong>Correo:</strong> ${data.correo}</li>
+        <li><strong>Edad:</strong> ${data.edad} años</li>
+        <li><strong>Retiros anteriores:</strong> ${data.retiros_anteriores || 0}</li>
+      </ul>
+      <p>Revisa la plataforma para más detalles.</p>
+    `
+    
+    // Solo enviar a superadmins (to vacío, includeSuperAdmins por defecto es true)
+    await sendEmailNotification({ to: [], subject, text, html })
 
     return NextResponse.json(data, { status: 201 })
   } catch (error) {
