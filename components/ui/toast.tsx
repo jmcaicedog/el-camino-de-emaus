@@ -33,12 +33,8 @@ const toastVariants = cva(
     variants: {
       variant: {
         default: 'border bg-background text-foreground',
-        // Add an arbitrary color class to force the CSS variable for destructive
-        // text color in case other rules (inspector, user-agent, or external
-        // styles) are overriding the token. Tailwind arbitrary values are
-        // compiled to inline styles with higher specificity at build time.
         destructive:
-          'destructive group border-destructive bg-destructive [color:var(--destructive-foreground)]',
+          'destructive group border-destructive bg-destructive text-destructive-foreground',
       },
     },
     defaultVariants: {
@@ -101,7 +97,7 @@ const ToastTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Title
     ref={ref}
-    className={cn('text-sm font-semibold', className)}
+    className={cn('text-sm font-semibold [.group.destructive_&]:text-white', className)}
     {...props}
   />
 ))
@@ -113,7 +109,7 @@ const ToastDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Description
     ref={ref}
-    className={cn('text-sm opacity-90', className)}
+    className={cn('text-sm opacity-90 [.group.destructive_&]:text-white', className)}
     {...props}
   />
 ))

@@ -177,7 +177,9 @@ export function ServidorRegistrationForm() {
               </div>
 
               <div className="space-y-2">
-                <Label>¿Necesitas camisa?</Label>
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  ¿Necesitas camisa?
+                </label>
                 <div className="flex flex-col space-y-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
