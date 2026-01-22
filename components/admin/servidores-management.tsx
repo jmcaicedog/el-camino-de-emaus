@@ -242,18 +242,22 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                     <TableCell>{servidor.cedula}</TableCell>
                     <TableCell>{servidor.celular}</TableCell>
                     <TableCell>
-                      {/* Si es líder o colíder, mostrar badge. Sino, mostrar equipos (excluyendo Líderes y colíderes) */}
-                      {servidor.tipo_servidor === "lider" || servidor.tipo_servidor === "colider" ? (
-                        <Badge variant="default">{servidor.tipo_servidor === "lider" ? "Líder" : "Colíder"}</Badge>
-                      ) : (() => {
-                        const equiposFiltrados = servidor.equipos?.filter(equipo => equipo !== "Líderes y colíderes") || []
-                        
-                        if (equiposFiltrados.length > 0) {
-                          return <span className="text-sm">{equiposFiltrados.join(", ")}</span>
-                        } else {
-                          return <span className="text-sm text-muted-foreground">Sin equipos</span>
-                        }
-                      })()}
+                      {/* Mostrar badge si es líder o colíder, y luego los equipos separados por comas */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {(servidor.tipo_servidor === "lider" || servidor.tipo_servidor === "colider") && (
+                          <Badge variant="default">{servidor.tipo_servidor === "lider" ? "Líder" : "Colíder"}</Badge>
+                        )}
+                        {(() => {
+                          const equiposFiltrados = servidor.equipos?.filter(equipo => equipo !== "Líderes y colíderes") || []
+                          
+                          if (equiposFiltrados.length > 0) {
+                            return <span className="text-sm">{equiposFiltrados.join(", ")}</span>
+                          } else if (!servidor.tipo_servidor) {
+                            return <span className="text-sm text-muted-foreground">Sin equipos</span>
+                          }
+                          return null
+                        })()}
+                      </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {servidor.mesa_id ? (
