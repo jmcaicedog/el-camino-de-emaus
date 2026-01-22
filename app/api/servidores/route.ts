@@ -52,8 +52,6 @@ export async function POST(request: NextRequest) {
         <li><strong>Cédula:</strong> ${data.cedula}</li>
         <li><strong>Celular:</strong> ${data.celular}</li>
         <li><strong>Correo:</strong> ${data.correo}</li>
-        <li><strong>Edad:</strong> ${data.edad} años</li>
-        <li><strong>Retiros anteriores:</strong> ${data.retiros_anteriores || 0}</li>
       </ul>
       <p>Revisa la plataforma para más detalles.</p>
     `
