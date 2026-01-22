@@ -45,7 +45,7 @@ export function ServidorRegistrationForm() {
       const payload = {
         ...data,
         edad: age,
-        monto_total: 150000,
+        monto_total: 400000,
         retiros_anteriores: Number.parseInt((data.retiros_anteriores as string) || "0") || 0,
         // Convert known boolean-like radio fields
         ronca_al_dormir: (data.ronca_al_dormir as string) === "si",
