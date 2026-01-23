@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { sendEmailNotification } from "@/lib/email/send-notification"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -51,12 +52,40 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ message: "El servidor ya está en este equipo" }, { status: 400 })
     }
 
+    // Obtener información del equipo y servidor
+    const { data: equipo } = await supabase
+      .from("equipos")
+      .select("nombre")
+      .eq("id", id)
+      .single()
+
+    const { data: servidor } = await supabase
+      .from("servidores")
+      .select("nombre_completo, correo")
+      .eq("id", servidor_id)
+      .single()
+
     // Crear la relación
     const { error } = await supabase
       .from("servidor_equipo")
       .insert({ equipo_id: id, servidor_id })
 
     if (error) throw error
+
+    // Enviar notificación al servidor
+    if (servidor?.correo && equipo?.nombre) {
+      const subject = `Asignación a Equipo - El Camino de Emaús`
+      const text = `Hola ${servidor.nombre_completo},\n\nHas sido asignado(a) al equipo "${equipo.nombre}".\n\n¡Que Dios te bendiga en este servicio!\n\nEquipo El Camino de Emaús`
+      const html = `
+        <h2>Asignación a Equipo</h2>
+        <p>Hola <strong>${servidor.nombre_completo}</strong>,</p>
+        <p>Has sido asignado(a) al equipo <strong>"${equipo.nombre}"</strong>.</p>
+        <p>¡Que Dios te bendiga en este servicio!</p>
+        <br>
+        <p>Equipo El Camino de Emaús</p>
+      `
+      await sendEmailNotification({ to: [servidor.correo], subject, text, html, includeSuperAdmins: true })
+    }
 
     return NextResponse.json({ message: "Servidor agregado al equipo exitosamente" })
   } catch (error) {
@@ -77,6 +106,19 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     const supabase = await createClient()
 
+    // Obtener información del equipo y servidor antes de eliminar
+    const { data: equipo } = await supabase
+      .from("equipos")
+      .select("nombre")
+      .eq("id", id)
+      .single()
+
+    const { data: servidor } = await supabase
+      .from("servidores")
+      .select("nombre_completo, correo")
+      .eq("id", servidor_id)
+      .single()
+
     const { error } = await supabase
       .from("servidor_equipo")
       .delete()
@@ -84,6 +126,21 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       .eq("servidor_id", servidor_id)
 
     if (error) throw error
+
+    // Enviar notificación al servidor
+    if (servidor?.correo && equipo?.nombre) {
+      const subject = `Desasignación de Equipo - El Camino de Emaús`
+      const text = `Hola ${servidor.nombre_completo},\n\nHas sido removido(a) del equipo "${equipo.nombre}".\n\nSi tienes alguna pregunta, por favor contacta a los administradores.\n\nEquipo El Camino de Emaús`
+      const html = `
+        <h2>Desasignación de Equipo</h2>
+        <p>Hola <strong>${servidor.nombre_completo}</strong>,</p>
+        <p>Has sido removido(a) del equipo <strong>"${equipo.nombre}"</strong>.</p>
+        <p>Si tienes alguna pregunta, por favor contacta a los administradores.</p>
+        <br>
+        <p>Equipo El Camino de Emaús</p>
+      `
+      await sendEmailNotification({ to: [servidor.correo], subject, text, html, includeSuperAdmins: true })
+    }
 
     return NextResponse.json({ message: "Servidor removido del equipo exitosamente" })
   } catch (error) {
