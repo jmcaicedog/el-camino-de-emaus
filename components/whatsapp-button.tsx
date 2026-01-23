@@ -71,13 +71,12 @@ export function WhatsAppButton() {
 
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        size="lg"
-        className="h-16 w-16 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white p-0"
+        className="h-20 w-20 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white !p-0 flex items-center justify-center [&>svg]:scale-[2.5]"
       >
         {isOpen ? (
-          <X className="h-12 w-12" />
+          <X className="h-6 w-6" />
         ) : (
-          <MessageCircle className="h-12 w-12" />
+          <MessageCircle className="h-6 w-6" />
         )}
       </Button>
     </div>
