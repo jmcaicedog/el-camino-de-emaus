@@ -208,7 +208,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
       case "tallas": {
         const { data: caminantes } = await supabase.from("caminantes").select("nombre_completo, talla_camisa").order("nombre_completo")
-        const { data: servidores } = await supabase.from("servidores").select("nombre_completo, talla_camisa").order("nombre_completo")
 
         data = [
           ...(caminantes?.map((c) => ({
@@ -216,18 +215,40 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             nombre: c.nombre_completo,
             talla: c.talla_camisa || "Sin especificar",
           })) || []),
-          ...(servidores?.map((s) => ({
-            tipo: "Servidor",
-            nombre: s.nombre_completo,
-            talla: s.talla_camisa || "Sin especificar",
-          })) || []),
         ]
         columns = [
           { key: "tipo", label: "Tipo" },
           { key: "nombre", label: "Nombre" },
           { key: "talla", label: "Talla de Camiseta" },
         ]
-        title = "Tallas de Camiseta"
+        title = "Tallas de Camiseta (Caminantes)"
+        break
+      }
+
+      case "tallas-servidores": {
+        // Mostrar sólo servidores que marcaron al menos un color y listar esos colores
+        const { data: servidores } = await supabase
+          .from("servidores")
+          .select("nombre_completo, talla_camisa, colores_camisa")
+          .order("nombre_completo")
+
+        const servidoresConColores = (servidores || []).filter(
+          (s: any) => Array.isArray(s.colores_camisa) && s.colores_camisa.length > 0
+        )
+
+        data = servidoresConColores.map((s: any) => ({
+          nombre: s.nombre_completo,
+          talla: s.talla_camisa || "Sin especificar",
+          colores: (s.colores_camisa || []).join(", "),
+        }))
+
+        columns = [
+          { key: "nombre", label: "Nombre" },
+          { key: "talla", label: "Talla de Camiseta" },
+          { key: "colores", label: "Colores de Camiseta" },
+        ]
+
+        title = "Tallas y Colores (Servidores)"
         break
       }
 
