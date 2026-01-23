@@ -1,4 +1,5 @@
 import { ServidorRegistrationForm } from "@/components/forms/servidor-registration-form"
+import { WhatsAppButton } from "@/components/whatsapp-button"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -47,6 +48,8 @@ export default function ServidorRegistrationPage() {
           <ServidorRegistrationForm />
         </div>
       </div>
+      
+      <WhatsAppButton />
     </div>
   )
 }

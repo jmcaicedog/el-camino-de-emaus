@@ -1,4 +1,5 @@
 import { CaminanteRegistrationForm } from "@/components/forms/caminante-registration-form"
+import { WhatsAppButton } from "@/components/whatsapp-button"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -47,6 +48,8 @@ export default function CaminanteRegistrationPage() {
           <CaminanteRegistrationForm />
         </div>
       </div>
+      
+      <WhatsAppButton />
     </div>
   )
 }
