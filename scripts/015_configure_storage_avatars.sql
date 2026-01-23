@@ -7,12 +7,12 @@ VALUES (
   'avatars',
   'avatars',
   true, -- público para lectura
-  2097152, -- 2MB en bytes
+  3145728, -- 3MB en bytes (margen de seguridad)
   ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 )
 ON CONFLICT (id) DO UPDATE SET
   public = true,
-  file_size_limit = 2097152,
+  file_size_limit = 3145728,
   allowed_mime_types = ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 -- Eliminar políticas existentes si las hay

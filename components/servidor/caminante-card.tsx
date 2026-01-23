@@ -26,6 +26,64 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
   const [cartasCount, setCartasCount] = useState<number>(caminante.cartas_recibidas ?? 0)
   const [fotosCount, setFotosCount] = useState<number>(caminante.fotos_recibidas ?? 0)
 
+  async function compressImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      
+      reader.onload = (e) => {
+        const img = new Image()
+        
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          let width = img.width
+          let height = img.height
+          
+          const MAX_SIZE = 1200
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height = Math.round((height * MAX_SIZE) / width)
+              width = MAX_SIZE
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width = Math.round((width * MAX_SIZE) / height)
+              height = MAX_SIZE
+            }
+          }
+          
+          canvas.width = width
+          canvas.height = height
+          
+          const ctx = canvas.getContext('2d')
+          if (!ctx) {
+            reject(new Error('No se pudo obtener el contexto del canvas'))
+            return
+          }
+          
+          ctx.drawImage(img, 0, 0, width, height)
+          
+          let quality = 0.85
+          let dataUrl = canvas.toDataURL('image/jpeg', quality)
+          const maxSizeKB = 800
+          
+          while (dataUrl.length > maxSizeKB * 1024 * 1.37 && quality > 0.3) {
+            quality -= 0.05
+            dataUrl = canvas.toDataURL('image/jpeg', quality)
+          }
+          
+          console.log(`Imagen comprimida: ${Math.round(dataUrl.length / 1024)}KB, calidad: ${Math.round(quality * 100)}%`)
+          resolve(dataUrl)
+        }
+        
+        img.onerror = () => reject(new Error('Error al cargar la imagen'))
+        img.src = e.target?.result as string
+      }
+      
+      reader.onerror = () => reject(new Error('Error al leer el archivo'))
+      reader.readAsDataURL(file)
+    })
+  }
+
   const updateTracking = async (field: "cartas_recibidas" | "fotos_recibidas", increment: number) => {
     setIsUpdating(true)
     try {
@@ -74,14 +132,9 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
   const handleImageChange = async (file: File) => {
     setIsUpdating(true)
     try {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      await new Promise((resolve, reject) => {
-        reader.onload = () => resolve(null)
-        reader.onerror = reject
-      })
+      // Comprimir la imagen antes de subirla
+      const dataUrl = await compressImage(file)
 
-      const dataUrl = reader.result as string
       const uploadRes = await fetch('/api/uploads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
