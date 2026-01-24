@@ -13,7 +13,7 @@ import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { Label } from "@/components/ui/label"
 import { uiAvatarUrl } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, DollarSign, Trash, ShieldPlus } from "lucide-react"
+import { Loader2, Search, DollarSign, Trash, ShieldPlus, ShieldCheck } from "lucide-react"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { Servidor } from "@/lib/types"
 
@@ -24,6 +24,7 @@ interface ServidoresManagementProps {
 export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
   const { toast } = useToast()
   const [servidores, setServidores] = useState<Servidor[]>([])
+  const [admins, setAdmins] = useState<Set<string>>(new Set())
   const [mesas, setMesas] = useState<Array<{ id: string; numero: number }>>([])
   const [caminantes, setCaminantes] = useState<Array<any>>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -41,19 +42,23 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
 
   const loadServidores = async () => {
     try {
-      const [servidoresRes, mesasRes, caminantesRes] = await Promise.all([
+      const [servidoresRes, mesasRes, caminantesRes, adminsRes] = await Promise.all([
         fetch("/api/servidores"),
         fetch("/api/mesas"),
         fetch("/api/caminantes"),
+        fetch("/api/admins").catch(() => ({ ok: false, json: () => [] })),
       ])
-      const [servidoresData, mesasData, caminantesData] = await Promise.all([
+      const [servidoresData, mesasData, caminantesData, adminsData] = await Promise.all([
         servidoresRes.json(),
         mesasRes.json(),
         caminantesRes.json(),
+        adminsRes.ok ? adminsRes.json() : [],
       ])
       setServidores(servidoresData)
       setMesas(mesasData)
       setCaminantes(caminantesData)
+      // Crear set de IDs de administradores para verificación rápida
+      setAdmins(new Set(adminsData.map((admin: any) => admin.id)))
     } catch (error) {
       toast({
         title: "Error",
@@ -137,7 +142,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
 
       toast({ 
         title: 'Administrador agregado', 
-        description: `${servidor.nombre_completo} ahora tiene permisos de administrador.` 
+        description: `${servidor.nombre_completo} ahora tiene permisos de administrador. Las credenciales serán enviadas por correo.` 
       })
       
       await loadServidores()
@@ -384,7 +389,11 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {adminUser?.is_super && (
+                        {servidor.auth_user_id && admins.has(servidor.auth_user_id) ? (
+                          <div className="h-8 w-8 flex items-center justify-center" title="Administrador">
+                            <ShieldCheck className="h-4 w-4 text-black dark:text-white" />
+                          </div>
+                        ) : adminUser?.is_super ? (
                           <Button
                             size="sm"
                             variant="ghost"
@@ -398,7 +407,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                               <ShieldPlus className="h-4 w-4 text-green-600" />
                             )}
                           </Button>
-                        )}
+                        ) : null}
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
