@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, UserPlus, Trash, Shield } from "lucide-react"
+import { Loader2, Search, UserPlus, Trash, Shield, Mail } from "lucide-react"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { Servidor } from "@/lib/types"
 import { Label } from "@/components/ui/label"
@@ -32,6 +32,7 @@ export function AdminsManagement() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [resendingId, setResendingId] = useState<string | null>(null)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [selectedServidorId, setSelectedServidorId] = useState<string>("")
   const [servidorSearchTerm, setServidorSearchTerm] = useState("")
@@ -136,6 +137,31 @@ export function AdminsManagement() {
     } finally {
       setIsUpdating(false)
       setPendingDeleteId(null)
+    }
+  }
+
+  const resendCredentials = async (id: string) => {
+    setResendingId(id)
+    try {
+      const res = await fetch(`/api/admins/${id}/resend-credentials`, {
+        method: "POST",
+      })
+      const data = await res.json()
+      
+      if (!res.ok) throw new Error(data.message || "Error al reenviar credenciales")
+      
+      toast({ 
+        title: "Credenciales enviadas", 
+        description: "Se han enviado las nuevas credenciales por correo" 
+      })
+    } catch (error) {
+      toast({ 
+        title: "Error", 
+        description: error instanceof Error ? error.message : "Error al reenviar credenciales", 
+        variant: "destructive" 
+      })
+    } finally {
+      setResendingId(null)
     }
   }
 
@@ -298,17 +324,32 @@ export function AdminsManagement() {
                           {new Date(admin.created_at).toLocaleDateString('es-ES')}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              setPendingDeleteId(admin.id)
-                              setConfirmOpen(true)
-                            }}
-                            disabled={isUpdating || admin.is_super}
-                          >
-                            <Trash className="h-4 w-4 text-destructive" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => resendCredentials(admin.id)}
+                              disabled={resendingId === admin.id || admin.is_super}
+                              title="Reenviar credenciales"
+                            >
+                              {resendingId === admin.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Mail className="h-4 w-4 text-blue-600" />
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setPendingDeleteId(admin.id)
+                                setConfirmOpen(true)
+                              }}
+                              disabled={isUpdating || admin.is_super}
+                            >
+                              <Trash className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
