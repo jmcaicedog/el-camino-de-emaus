@@ -9,13 +9,17 @@ import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Search, Plus, X, Users } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
-import type { Equipo, Servidor } from "@/lib/types"
+import type { Equipo, Servidor, AdminUser } from "@/lib/types"
 
 interface EquipoConServidores extends Equipo {
   servidores: Servidor[]
 }
 
-export function EquiposManagement() {
+interface EquiposManagementProps {
+  adminUser: AdminUser
+}
+
+export function EquiposManagement({ adminUser }: EquiposManagementProps) {
   const { toast } = useToast()
   const [equipos, setEquipos] = useState<EquipoConServidores[]>([])
   const [servidoresDisponibles, setServidoresDisponibles] = useState<Servidor[]>([])
@@ -188,32 +192,35 @@ export function EquiposManagement() {
                             )}
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeServidorFromEquipo(equipo.id, servidor.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                        {adminUser.is_super && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeServidorFromEquipo(equipo.id, servidor.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
 
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => {
-                        setSelectedEquipo(equipo)
-                        setSearchTerm("")
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Agregar Servidor
-                    </Button>
-                  </DialogTrigger>
+                {adminUser.is_super && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          setSelectedEquipo(equipo)
+                          setSearchTerm("")
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Agregar Servidor
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Agregar Servidor a {equipo.nombre}</DialogTitle>
@@ -272,7 +279,8 @@ export function EquiposManagement() {
                       </div>
                     </div>
                   </DialogContent>
-                </Dialog>
+                  </Dialog>
+                )}
               </div>
             </CardContent>
           </Card>

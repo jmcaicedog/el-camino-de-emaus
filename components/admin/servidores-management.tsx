@@ -70,6 +70,23 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
     }
   }
 
+  const canEditServidor = (servidor: Servidor) => {
+    // Superadmin siempre puede editar
+    if (adminUser?.is_super) return true
+    
+    // Si no tiene mesa asignada, no puede editar (excepto superadmin)
+    if (!servidor.mesa_id || !adminUser) return false
+    
+    // Verificar si el admin es líder o colíder de la mesa del servidor
+    const mesaServidores = servidores.filter(s => s.mesa_id === servidor.mesa_id)
+    const isLiderOrColider = mesaServidores.some(s => 
+      s.auth_user_id === adminUser.id && 
+      (s.tipo_servidor === 'lider' || s.tipo_servidor === 'colider')
+    )
+    
+    return isLiderOrColider
+  }
+
   const updatePayment = async () => {
     if (!selectedServidor) return
 
@@ -225,7 +242,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                           <DialogHeader>
                             <DialogTitle>{servidor.nombre_completo}</DialogTitle>
                           </DialogHeader>
-                          <ServidorCard servidor={servidor} onUpdate={loadServidores} />
+                          <ServidorCard servidor={servidor} onUpdate={loadServidores} canEdit={canEditServidor(servidor)} />
                         </DialogContent>
                       </Dialog>
                     </TableCell>
@@ -238,7 +255,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                           <DialogHeader>
                             <DialogTitle>{servidor.nombre_completo}</DialogTitle>
                           </DialogHeader>
-                          <ServidorCard servidor={servidor} onUpdate={loadServidores} />
+                          <ServidorCard servidor={servidor} onUpdate={loadServidores} canEdit={canEditServidor(servidor)} />
                         </DialogContent>
                       </Dialog>
                     </TableCell>
@@ -304,7 +321,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                                                       <button className="text-sm underline underline-offset-2 text-primary/90">{s.nombre_completo}</button>
                                                     </DialogTrigger>
                                                     <DialogContent>
-                                                      <ServidorCard servidor={s} onUpdate={loadServidores} />
+                                                      <ServidorCard servidor={s} onUpdate={loadServidores} canEdit={canEditServidor(s)} />
                                                     </DialogContent>
                                                   </Dialog>
                                                 </li>
@@ -324,7 +341,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                                                       <button className="text-sm underline underline-offset-2 text-primary/90">{s.nombre_completo}</button>
                                                     </DialogTrigger>
                                                     <DialogContent>
-                                                      <ServidorCard servidor={s} onUpdate={loadServidores} />
+                                                      <ServidorCard servidor={s} onUpdate={loadServidores} canEdit={canEditServidor(s)} />
                                                     </DialogContent>
                                                   </Dialog>
                                                 </li>
@@ -344,7 +361,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                                                       <button className="text-sm underline underline-offset-2 text-primary/90">{s.nombre_completo}</button>
                                                     </DialogTrigger>
                                                     <DialogContent>
-                                                      <ServidorCard servidor={s} onUpdate={loadServidores} />
+                                                      <ServidorCard servidor={s} onUpdate={loadServidores} canEdit={canEditServidor(s)} />
                                                     </DialogContent>
                                                   </Dialog>
                                                 </li>
@@ -408,19 +425,20 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                             )}
                           </Button>
                         ) : null}
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedServidor(servidor)
-                                setPaymentAmount("")
-                              }}
-                            >
-                              <DollarSign className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
+                        {adminUser?.is_super && (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedServidor(servidor)
+                                  setPaymentAmount("")
+                                }}
+                              >
+                                <DollarSign className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
                           <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Registrar Pago - {servidor.nombre_completo}</DialogTitle>
@@ -468,6 +486,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                           </div>
                           </DialogContent>
                         </Dialog>
+                        )}
 
                         <Button size="sm" variant="ghost" onClick={() => { setPendingDeleteId(servidor.id); setConfirmOpen(true) }} disabled={isUpdating || !adminUser?.is_super}>
                           <Trash className="h-4 w-4 text-destructive" />

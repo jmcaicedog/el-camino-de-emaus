@@ -15,9 +15,10 @@ import type { Caminante } from "@/lib/types"
 interface CaminanteCardProps {
   caminante: Caminante
   onUpdate?: () => void
+  canEdit?: boolean
 }
 
-export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
+export function CaminanteCard({ caminante, onUpdate, canEdit = true }: CaminanteCardProps) {
   const { toast } = useToast()
   const [isUpdating, setIsUpdating] = useState(false)
   const [isEditingMedical, setIsEditingMedical] = useState(false)
@@ -284,7 +285,7 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-66 bg-transparent flex items-center justify-center gap-2">
                   <Clipboard className="w-4 h-4" />
-                  Ver/Editar Información Médica
+                  {canEdit ? 'Ver/Editar Información Médica' : 'Ver Información Médica'}
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -294,23 +295,25 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="medicamentos" className="pb-2"><Tablets className="h-4 w-4" />Medicamentos</Label>
-                    <Textarea id="medicamentos" value={medicamentos} onChange={(e) => setMedicamentos(e.target.value)} rows={4} />
+                    <Textarea id="medicamentos" value={medicamentos} onChange={(e) => setMedicamentos(e.target.value)} rows={4} disabled={!canEdit} />
                   </div>
 
                   <div>
                     <Label htmlFor="restricciones" className="pb-2"><UtensilsCrossed className="h-4 w-4" />Restricciones alimenticias</Label>
-                    <Textarea id="restricciones" value={restricciones} onChange={(e) => setRestricciones(e.target.value)} rows={4} />
+                    <Textarea id="restricciones" value={restricciones} onChange={(e) => setRestricciones(e.target.value)} rows={4} disabled={!canEdit} />
                   </div>
 
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsEditingMedical(false)} disabled={isUpdating}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={saveMedicalInfo} disabled={isUpdating}>
-                      {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Guardar Cambios
-                    </Button>
-                  </div>
+                  {canEdit && (
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setIsEditingMedical(false)} disabled={isUpdating}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={saveMedicalInfo} disabled={isUpdating}>
+                        {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Guardar Cambios
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </DialogContent>
             </Dialog>
@@ -335,29 +338,33 @@ export function CaminanteCard({ caminante, onUpdate }: CaminanteCardProps) {
                         alt={caminante.nombre_completo}
                         className="rounded-full h-36 w-36 object-cover shadow-lg"
                       />
-                      <input
-                        id={`caminante-file-input-${caminante.id}`}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const f = e.currentTarget.files?.[0]
-                          if (f) handleImageChange(f)
-                        }}
-                      />
+                      {canEdit && (
+                        <>
+                          <input
+                            id={`caminante-file-input-${caminante.id}`}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.currentTarget.files?.[0]
+                              if (f) handleImageChange(f)
+                            }}
+                          />
 
-                      <button
-                        type="button"
-                        aria-label={`Cambiar foto de ${caminante.nombre_completo}`}
-                        title="Cambiar foto"
-                        className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow hover:bg-neutral-100"
-                        onClick={() => {
-                          const el = document.getElementById(`caminante-file-input-${caminante.id}`) as HTMLInputElement | null
-                          if (el) el.click()
-                        }}
-                      >
-                        <ImageIcon className="h-5 w-5" />
-                      </button>
+                          <button
+                            type="button"
+                            aria-label={`Cambiar foto de ${caminante.nombre_completo}`}
+                            title="Cambiar foto"
+                            className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow hover:bg-neutral-100"
+                            onClick={() => {
+                              const el = document.getElementById(`caminante-file-input-${caminante.id}`) as HTMLInputElement | null
+                              if (el) el.click()
+                            }}
+                          >
+                            <ImageIcon className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex-1 grid md:grid-cols-2 gap-4">

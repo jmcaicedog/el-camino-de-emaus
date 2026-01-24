@@ -68,6 +68,22 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
     return servidores.filter((s) => s.mesa_id === mesaId)
   }
 
+  const canEditMesa = (mesaId: string) => {
+    // Superadmin siempre puede editar
+    if (adminUser?.is_super) return true
+    
+    // Si no es superadmin, verificar si es líder o colíder de la mesa
+    if (!adminUser) return false
+    
+    const mesaServidores = getServidoresByMesa(mesaId)
+    const isLiderOrColider = mesaServidores.some(s => 
+      s.auth_user_id === adminUser.id && 
+      (s.tipo_servidor === 'lider' || s.tipo_servidor === 'colider')
+    )
+    
+    return isLiderOrColider
+  }
+
   const assignToMesa = async (personId: string, mesaId: string, type: "caminante" | "servidor") => {
     setIsAssigning(true)
     try {
@@ -184,7 +200,7 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                               <DialogHeader>
                                 <DialogTitle>{lider.nombre_completo}</DialogTitle>
                               </DialogHeader>
-                              <ServidorCard servidor={lider} onUpdate={loadData} />
+                              <ServidorCard servidor={lider} onUpdate={loadData} canEdit={canEditMesa(mesa.id)} />
                             </DialogContent>
                           </Dialog>
                         ) : (
@@ -209,7 +225,7 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                               <DialogHeader>
                                 <DialogTitle>{colider.nombre_completo}</DialogTitle>
                               </DialogHeader>
-                              <ServidorCard servidor={colider} onUpdate={loadData} />
+                              <ServidorCard servidor={colider} onUpdate={loadData} canEdit={canEditMesa(mesa.id)} />
                             </DialogContent>
                           </Dialog>
                         ) : (
@@ -242,7 +258,7 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                               <DialogHeader>
                                 <DialogTitle>{c.nombre_completo}</DialogTitle>
                               </DialogHeader>
-                              <CaminanteCard caminante={c} onUpdate={loadData} />
+                              <CaminanteCard caminante={c} onUpdate={loadData} canEdit={canEditMesa(mesa.id)} />
                             </DialogContent>
                           </Dialog>
                           {adminUser?.is_super && (

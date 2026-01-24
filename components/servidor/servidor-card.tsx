@@ -15,9 +15,10 @@ import { useToast } from "@/hooks/use-toast"
 interface ServidorCardProps {
   servidor: Servidor
   onUpdate?: () => void
+  canEdit?: boolean
 }
 
-export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
+export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCardProps) {
   const { toast } = useToast()
   const [medicamentos, setMedicamentos] = useState(servidor.medicamentos || "")
   const [restricciones, setRestricciones] = useState(servidor.restricciones_alimenticias || "")
@@ -173,7 +174,7 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
             <DialogTrigger asChild>
               <Button variant="outline" className="w-66 bg-transparent flex items-center justify-center gap-2">
                 <Pill className="h-4 w-4" />
-                Ver/Editar Información Médica
+                {canEdit ? 'Ver/Editar Información Médica' : 'Ver Información Médica'}
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -184,7 +185,7 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="medicamentos" className="pb-2"><Tablets className="h-4 w-4" />Medicamentos</Label>
-                  <Textarea id="medicamentos" value={medicamentos} onChange={(e) => setMedicamentos(e.target.value)} rows={4} />
+                  <Textarea id="medicamentos" value={medicamentos} onChange={(e) => setMedicamentos(e.target.value)} rows={4} disabled={!canEdit} />
                 </div>
 
                 <div>
@@ -194,18 +195,20 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
                       Restricciones Alimenticias
                     </div>
                   </Label>
-                  <Textarea id="restricciones" value={restricciones} onChange={(e) => setRestricciones(e.target.value)} rows={4} />
+                  <Textarea id="restricciones" value={restricciones} onChange={(e) => setRestricciones(e.target.value)} rows={4} disabled={!canEdit} />
                 </div>
 
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsEditing(false)} disabled={isUpdating}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={updateMedicalInfo} disabled={isUpdating}>
-                    {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Guardar Cambios
-                  </Button>
-                </div>
+                {canEdit && (
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setIsEditing(false)} disabled={isUpdating}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={updateMedicalInfo} disabled={isUpdating}>
+                      {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Guardar Cambios
+                    </Button>
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>
@@ -221,7 +224,7 @@ export function ServidorCard({ servidor, onUpdate }: ServidorCardProps) {
               <DialogHeader>
                 <DialogTitle>{servidor.nombre_completo}</DialogTitle>
               </DialogHeader>
-              <ServidorDetails servidor={servidor} onImageChange={handleImageChange} />
+              <ServidorDetails servidor={servidor} onImageChange={handleImageChange} canEdit={canEdit} />
             </DialogContent>
           </Dialog>
         </div>

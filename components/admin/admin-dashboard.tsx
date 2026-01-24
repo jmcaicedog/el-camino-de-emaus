@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MesasManagement } from "@/components/admin/mesas-management"
 import { CaminantesManagement } from "@/components/admin/caminantes-management"
@@ -8,8 +8,9 @@ import { ServidoresManagement } from "@/components/admin/servidores-management"
 import { EquiposManagement } from "@/components/admin/equipos-management"
 import { ReportsManagement } from "@/components/admin/reports-management"
 import { AdminsManagement } from "@/components/admin/admins-management"
+import { MesaReport } from "@/components/admin/mesa-report"
 import { Button } from "@/components/ui/button"
-import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck } from "lucide-react"
+import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -22,6 +23,29 @@ interface AdminDashboardProps {
 export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const router = useRouter()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isLiderOrColider, setIsLiderOrColider] = useState(false)
+
+  useEffect(() => {
+    // Verificar si el admin es líder o colíder de alguna mesa
+    const checkIfLiderOrColider = async () => {
+      try {
+        const res = await fetch("/api/servidores")
+        const servidores = await res.json()
+        const isLC = servidores.some(
+          (s: any) => s.auth_user_id === adminUser.id && 
+          (s.tipo_servidor === 'lider' || s.tipo_servidor === 'colider') &&
+          s.mesa_id
+        )
+        setIsLiderOrColider(isLC)
+      } catch (error) {
+        console.error("Error checking lider/colider status:", error)
+      }
+    }
+    
+    if (!adminUser.is_super) {
+      checkIfLiderOrColider()
+    }
+  }, [adminUser])
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -52,7 +76,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="equipos" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 h-auto">
+          <TabsList className={`grid w-full h-auto ${adminUser.is_super ? 'grid-cols-6' : isLiderOrColider ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="equipos" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
               <UsersRound className="h-4 w-4 md:mr-0" />
               <span className="hidden sm:inline">Equipos</span>
@@ -75,14 +99,22 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                 <span className="hidden sm:inline">Admins</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="reportes" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
-              <FileText className="h-4 w-4 md:mr-0" />
-              <span className="hidden sm:inline">Reportes</span>
-            </TabsTrigger>
+            {!adminUser.is_super && isLiderOrColider && (
+              <TabsTrigger value="mi-mesa" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
+                <ClipboardList className="h-4 w-4 md:mr-0" />
+                <span className="hidden sm:inline">Mi Mesa</span>
+              </TabsTrigger>
+            )}
+            {adminUser.is_super && (
+              <TabsTrigger value="reportes" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
+                <FileText className="h-4 w-4 md:mr-0" />
+                <span className="hidden sm:inline">Reportes</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="equipos">
-            <EquiposManagement />
+            <EquiposManagement adminUser={adminUser} />
           </TabsContent>
 
           <TabsContent value="mesas">
@@ -103,9 +135,17 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             </TabsContent>
           )}
 
-          <TabsContent value="reportes">
-            <ReportsManagement />
-          </TabsContent>
+          {!adminUser.is_super && isLiderOrColider && (
+            <TabsContent value="mi-mesa">
+              <MesaReport adminUser={adminUser} />
+            </TabsContent>
+          )}
+
+          {adminUser.is_super && (
+            <TabsContent value="reportes">
+              <ReportsManagement />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>

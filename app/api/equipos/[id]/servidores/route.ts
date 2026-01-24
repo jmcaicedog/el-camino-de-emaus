@@ -40,6 +40,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const supabase = await createClient()
 
+    // Verificar que el usuario es superadmin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ message: "No autenticado" }, { status: 401 })
+    }
+
+    const { data: adminUser } = await supabase
+      .from("admin_users")
+      .select("is_super")
+      .eq("id", user.id)
+      .single()
+
+    if (!adminUser?.is_super) {
+      return NextResponse.json({ message: "No autorizado. Solo superadmin puede gestionar equipos" }, { status: 403 })
+    }
+
     // Verificar si la relación ya existe
     const { data: existing } = await supabase
       .from("servidor_equipo")
@@ -105,6 +121,22 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const supabase = await createClient()
+
+    // Verificar que el usuario es superadmin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ message: "No autenticado" }, { status: 401 })
+    }
+
+    const { data: adminUser } = await supabase
+      .from("admin_users")
+      .select("is_super")
+      .eq("id", user.id)
+      .single()
+
+    if (!adminUser?.is_super) {
+      return NextResponse.json({ message: "No autorizado. Solo superadmin puede gestionar equipos" }, { status: 403 })
+    }
 
     // Obtener información del equipo y servidor antes de eliminar
     const { data: equipo } = await supabase

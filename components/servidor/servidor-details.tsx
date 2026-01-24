@@ -7,9 +7,10 @@ import type { Servidor } from "@/lib/types"
 interface Props {
   servidor: Servidor
   onImageChange?: (file?: File) => void
+  canEdit?: boolean
 }
 
-export default function ServidorDetails({ servidor, onImageChange }: Props) {
+export default function ServidorDetails({ servidor, onImageChange, canEdit = true }: Props) {
   const inputId = `servidor-file-input-${servidor.id}`
   // Debug: ayuda a verificar en la consola del navegador qué datos llegan
   if (typeof window !== 'undefined') console.debug('ServidorDetails props:', servidor)
@@ -25,29 +26,33 @@ export default function ServidorDetails({ servidor, onImageChange }: Props) {
             className="rounded-full h-36 w-36 object-cover shadow-lg"
           />
 
-          <input
-            id={inputId}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.currentTarget.files?.[0]
-              if (f && onImageChange) onImageChange(f)
-            }}
-          />
+          {canEdit && (
+            <>
+              <input
+                id={inputId}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.currentTarget.files?.[0]
+                  if (f && onImageChange) onImageChange(f)
+                }}
+              />
 
-          <button
-            type="button"
-            aria-label={`Cambiar foto de ${servidor.nombre_completo}`}
-            title="Cambiar foto"
-            className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow hover:bg-neutral-100"
-            onClick={() => {
-              const el = document.getElementById(inputId) as HTMLInputElement | null
-              if (el) el.click()
-            }}
-          >
-            <ImageIcon className="h-5 w-5" />
-          </button>
+              <button
+                type="button"
+                aria-label={`Cambiar foto de ${servidor.nombre_completo}`}
+                title="Cambiar foto"
+                className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow hover:bg-neutral-100"
+                onClick={() => {
+                  const el = document.getElementById(inputId) as HTMLInputElement | null
+                  if (el) el.click()
+                }}
+              >
+                <ImageIcon className="h-5 w-5" />
+              </button>
+            </>
+          )}
         </div>
 
   <div className="flex-1 min-w-0 grid md:grid-cols-2 gap-4">

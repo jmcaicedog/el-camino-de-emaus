@@ -64,6 +64,23 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
     }
   }
 
+  const canEditCaminante = (caminante: Caminante) => {
+    // Superadmin siempre puede editar
+    if (adminUser?.is_super) return true
+    
+    // Si no tiene mesa asignada, no puede editar (excepto superadmin)
+    if (!caminante.mesa_id || !adminUser) return false
+    
+    // Verificar si el admin es líder o colíder de la mesa del caminante
+    const mesaServidores = servidores.filter(s => s.mesa_id === caminante.mesa_id)
+    const isLiderOrColider = mesaServidores.some(s => 
+      s.auth_user_id === adminUser.id && 
+      (s.tipo_servidor === 'lider' || s.tipo_servidor === 'colider')
+    )
+    
+    return isLiderOrColider
+  }
+
   const updatePayment = async () => {
     if (!selectedCaminante) return
 
@@ -186,7 +203,7 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                           <DialogHeader>
                             <DialogTitle>{caminante.nombre_completo}</DialogTitle>
                           </DialogHeader>
-                          <CaminanteCard caminante={caminante} onUpdate={loadCaminantes} />
+                          <CaminanteCard caminante={caminante} onUpdate={loadCaminantes} canEdit={canEditCaminante(caminante)} />
                         </DialogContent>
                       </Dialog>
                     </TableCell>
@@ -199,7 +216,7 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                           <DialogHeader>
                             <DialogTitle>{caminante.nombre_completo}</DialogTitle>
                           </DialogHeader>
-                          <CaminanteCard caminante={caminante} onUpdate={loadCaminantes} />
+                          <CaminanteCard caminante={caminante} onUpdate={loadCaminantes} canEdit={canEditCaminante(caminante)} />
                         </DialogContent>
                       </Dialog>
                     </TableCell>
@@ -314,7 +331,7 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                                             <button className="text-sm underline underline-offset-2 text-primary/90">{c.nombre_completo}</button>
                                           </DialogTrigger>
                                           <DialogContent>
-                                            <CaminanteCard caminante={c} onUpdate={loadCaminantes} />
+                                            <CaminanteCard caminante={c} onUpdate={loadCaminantes} canEdit={canEditCaminante(c)} />
                                           </DialogContent>
                                         </Dialog>
                                       </li>
@@ -335,19 +352,20 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedCaminante(caminante)
-                                setPaymentAmount("")
-                              }}
-                            >
-                              <DollarSign className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
+                        {adminUser?.is_super && (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedCaminante(caminante)
+                                  setPaymentAmount("")
+                                }}
+                              >
+                                <DollarSign className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
                           <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Registrar Pago - {caminante.nombre_completo}</DialogTitle>
@@ -399,6 +417,7 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                           </div>
                           </DialogContent>
                         </Dialog>
+                        )}
 
                         <Button size="sm" variant="ghost" onClick={() => { setPendingDeleteId(caminante.id); setConfirmOpen(true) }} disabled={isUpdating || !adminUser?.is_super}>
                           <Trash className="h-4 w-4 text-destructive" />
