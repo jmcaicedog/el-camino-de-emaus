@@ -220,7 +220,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                   <TableHead>Celular</TableHead>
                   <TableHead>Equipos</TableHead>
                   <TableHead>Mesa</TableHead>
-                  <TableHead>Pago</TableHead>
+                  {adminUser?.is_super && <TableHead>Pago</TableHead>}
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -399,11 +399,13 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                         <Badge variant="outline">Sin asignar</Badge>
                       )}
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={servidor.monto_pagado >= servidor.monto_total ? "default" : "secondary"}>
-                        ${servidor.monto_pagado.toLocaleString()} / ${servidor.monto_total.toLocaleString()}
-                      </Badge>
-                    </TableCell>
+                    {adminUser?.is_super && (
+                      <TableCell>
+                        <Badge variant={servidor.monto_pagado >= servidor.monto_total ? "default" : "secondary"}>
+                          ${servidor.monto_pagado.toLocaleString()} / ${servidor.monto_total.toLocaleString()}
+                        </Badge>
+                      </TableCell>
+                    )}
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {servidor.auth_user_id && admins.has(servidor.auth_user_id) ? (
