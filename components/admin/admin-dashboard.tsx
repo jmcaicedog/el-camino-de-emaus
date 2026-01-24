@@ -7,8 +7,9 @@ import { CaminantesManagement } from "@/components/admin/caminantes-management"
 import { ServidoresManagement } from "@/components/admin/servidores-management"
 import { EquiposManagement } from "@/components/admin/equipos-management"
 import { ReportsManagement } from "@/components/admin/reports-management"
+import { AdminsManagement } from "@/components/admin/admins-management"
 import { Button } from "@/components/ui/button"
-import { LogOut, Users, Table2, UserCog, FileText, UsersRound } from "lucide-react"
+import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -51,7 +52,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="equipos" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 h-auto">
+          <TabsList className="grid w-full grid-cols-6 h-auto">
             <TabsTrigger value="equipos" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
               <UsersRound className="h-4 w-4 md:mr-0" />
               <span className="hidden sm:inline">Equipos</span>
@@ -68,6 +69,12 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
               <UserCog className="h-4 w-4 md:mr-0" />
               <span className="hidden sm:inline">Servidores</span>
             </TabsTrigger>
+            {adminUser.is_super && (
+              <TabsTrigger value="admins" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
+                <ShieldCheck className="h-4 w-4 md:mr-0" />
+                <span className="hidden sm:inline">Admins</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="reportes" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
               <FileText className="h-4 w-4 md:mr-0" />
               <span className="hidden sm:inline">Reportes</span>
@@ -89,6 +96,12 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           <TabsContent value="servidores">
             <ServidoresManagement adminUser={adminUser} />
           </TabsContent>
+
+          {adminUser.is_super && (
+            <TabsContent value="admins">
+              <AdminsManagement />
+            </TabsContent>
+          )}
 
           <TabsContent value="reportes">
             <ReportsManagement />

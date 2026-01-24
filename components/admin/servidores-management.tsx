@@ -13,7 +13,7 @@ import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { Label } from "@/components/ui/label"
 import { uiAvatarUrl } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, DollarSign, Trash, Mail } from "lucide-react"
+import { Loader2, Search, DollarSign, Trash, ShieldPlus } from "lucide-react"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { Servidor } from "@/lib/types"
 
@@ -31,7 +31,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
   const [selectedServidor, setSelectedServidor] = useState<Servidor | null>(null)
   const [paymentAmount, setPaymentAmount] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
-  const [inviteLoadingId, setInviteLoadingId] = useState<string | null>(null)
+  const [promoteLoadingId, setPromoteLoadingId] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
@@ -120,37 +120,35 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
     }
   }
 
-  const sendInvite = async (servidor: Servidor) => {
+  const promoteToAdmin = async (servidor: Servidor) => {
     if (!servidor) return
-    setInviteLoadingId(servidor.id)
+    setPromoteLoadingId(servidor.id)
     try {
-      const res = await fetch('/api/admins/invite', {
+      const res = await fetch('/api/admins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: servidor.correo }),
+        body: JSON.stringify({ servidor_id: servidor.id }),
       })
       const data = await res.json().catch(() => ({}))
-      if (data?.alreadyAdmin) {
-        toast({ title: 'Usuario ya es administrador', description: `${servidor.nombre_completo} ya tiene permisos de administrador.`, variant: 'default' })
-        return
-      }
-      if (!res.ok) throw new Error('No se pudo crear la invitación')
-      const token = data?.token
-
-      // Copy token to clipboard if available
-      try {
-        if (token && typeof navigator !== 'undefined' && navigator.clipboard) {
-          await navigator.clipboard.writeText(token)
-        }
-      } catch (e) {
-        // ignore clipboard errors
+      
+      if (!res.ok) {
+        throw new Error(data.message || 'Error al promover servidor')
       }
 
-      toast({ title: 'Invitación creada', description: 'Token copiado al portapapeles. Se envió la invitación por correo (si el servidor la procesó).' })
+      toast({ 
+        title: 'Administrador agregado', 
+        description: `${servidor.nombre_completo} ahora tiene permisos de administrador.` 
+      })
+      
+      await loadServidores()
     } catch (error) {
-      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Error creando invitación', variant: 'destructive' })
+      toast({ 
+        title: 'Error', 
+        description: error instanceof Error ? error.message : 'Error al promover a administrador', 
+        variant: 'destructive' 
+      })
     } finally {
-      setInviteLoadingId(null)
+      setPromoteLoadingId(null)
     }
   }
 
@@ -385,19 +383,22 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                                      <div className="flex items-center gap-2">
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() => sendInvite(servidor)}
-                                          disabled={isUpdating || inviteLoadingId === servidor.id || !adminUser?.is_super}
-                                        >
-                                          {inviteLoadingId === servidor.id ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <Mail className="h-4 w-4 text-muted-foreground" />
-                                          )}
-                                        </Button>
+                      <div className="flex items-center gap-2">
+                        {adminUser?.is_super && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => promoteToAdmin(servidor)}
+                            disabled={isUpdating || promoteLoadingId === servidor.id}
+                            title="Promover a administrador"
+                          >
+                            {promoteLoadingId === servidor.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <ShieldPlus className="h-4 w-4 text-green-600" />
+                            )}
+                          </Button>
+                        )}
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
