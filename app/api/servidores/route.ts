@@ -1,11 +1,24 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const supabase = await createClient()
+    
+    // Usar Service Role Key para bypasear RLS en registro público
+    // Esto permite que usuarios anónimos puedan registrarse sin autenticación
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // If imagen is a data URL, upload to Storage and replace with public URL
     if (body.imagen && typeof body.imagen === 'string' && body.imagen.startsWith('data:')) {
