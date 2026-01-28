@@ -452,7 +452,7 @@ export function CaminanteRegistrationForm() {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="parroquia">Parroquia</Label>
-            <Input id="parroquia" name="parroquia" placeholder="Nombre de la parroquia" />
+            <Input id="parroquia" name="parroquia" placeholder="Nombre de la parroquia (Si asistes a una)" />
           </div>
 
           <div>
