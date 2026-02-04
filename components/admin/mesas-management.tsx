@@ -252,7 +252,14 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                         <div key={c.id} className="flex items-center justify-between">
                           <Dialog>
                             <DialogTrigger asChild>
-                              <button className="text-left text-sm underline underline-offset-2 text-primary/90">{c.nombre_completo}</button>
+                              <div className="flex items-center gap-2 cursor-pointer">
+                                <button className="text-left text-sm underline underline-offset-2 text-primary/90">{c.nombre_completo}</button>
+                                {c.es_sorpresa && (
+                                  <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">
+                                    Sorpresa
+                                  </Badge>
+                                )}
+                              </div>
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                               <DialogHeader>

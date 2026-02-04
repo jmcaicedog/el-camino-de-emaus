@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { ImageIcon, Phone, Loader2, Pill, Eye, Clipboard, UtensilsCrossed, Tablets } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
@@ -224,7 +225,14 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
               className="w-full h-full object-cover"
             />
           </div>
-          <CardTitle className="text-lg">{caminante.nombre_completo}</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-lg">{caminante.nombre_completo}</CardTitle>
+            {caminante.es_sorpresa && (
+              <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">
+                Sorpresa
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -476,7 +484,13 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
 
                       <div>
                         <div className="font-medium">Retiro sorpresa</div>
-                        <div>{caminante.es_sorpresa ? 'Sí' : 'No'}</div>
+                        {caminante.es_sorpresa ? (
+                          <div className="inline-block">
+                            <Badge className="bg-amber-100 text-amber-800 border-amber-300 border">Sí, es sorpresa</Badge>
+                          </div>
+                        ) : (
+                          <div>No</div>
+                        )}
                       </div>
                     </div>
                   </section>
@@ -521,6 +535,22 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                       <div>
                         <div className="font-medium">Cargo</div>
                         <div className="truncate">{caminante.cargo || '-'}</div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="pt-4 border-t">
+                    <h3 className="font-semibold mb-2">Información de Invitación</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="font-medium">¿Quién lo invitó?</div>
+                        <div className="truncate">{caminante.quien_invito || '-'}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">¿El invitador ya hizo el retiro?</div>
+                        <div>
+                          {caminante.invitador_hizo_retiro === true ? 'Sí' : caminante.invitador_hizo_retiro === false ? 'No' : '-'}
+                        </div>
                       </div>
                     </div>
                   </section>

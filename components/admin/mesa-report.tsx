@@ -162,7 +162,16 @@ export function MesaReport({ adminUser }: MesaReportProps) {
               <TableBody>
                 {caminantes.map((caminante) => (
                   <TableRow key={caminante.id}>
-                    <TableCell className="font-medium">{caminante.nombre_completo}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <span>{caminante.nombre_completo}</span>
+                        {caminante.es_sorpresa && (
+                          <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">
+                            Sorpresa
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{caminante.cedula}</TableCell>
                     <TableCell>{caminante.edad}</TableCell>
                     <TableCell className="max-w-xs truncate" title={caminante.correo}>
