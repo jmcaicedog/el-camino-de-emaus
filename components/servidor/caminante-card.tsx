@@ -465,6 +465,11 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                         <div className="font-medium">EPS</div>
                         <div className="truncate">{caminante.eps || '-'}</div>
                       </div>
+
+                      <div className="md:col-span-2">
+                        <div className="font-medium">Observaciones (líderes)</div>
+                        <div className="text-muted-foreground whitespace-pre-wrap break-words" title={caminante.observaciones || '-'}>{caminante.observaciones || '-'}</div>
+                      </div>
                     </div>
                   </section>
 
