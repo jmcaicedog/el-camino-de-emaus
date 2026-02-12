@@ -32,6 +32,7 @@ export interface Caminante {
   tipo_sangre: string
   medicamentos?: string
   restricciones_alimenticias?: string
+  observaciones?: string
   parroquia: string
   parroco: string
   monto_pagado: number

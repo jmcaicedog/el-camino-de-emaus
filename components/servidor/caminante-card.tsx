@@ -25,6 +25,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
   const [isEditingMedical, setIsEditingMedical] = useState(false)
   const [medicamentos, setMedicamentos] = useState(caminante.medicamentos || "")
   const [restricciones, setRestricciones] = useState(caminante.restricciones_alimenticias || "")
+  const [observaciones, setObservaciones] = useState(caminante.observaciones || "")
   const [cartasCount, setCartasCount] = useState<number>(caminante.cartas_recibidas ?? 0)
   const [fotosCount, setFotosCount] = useState<number>(caminante.fotos_recibidas ?? 0)
 
@@ -115,7 +116,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
       const res = await fetch(`/api/caminantes/${caminante.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ medicamentos, restricciones_alimenticias: restricciones }),
+        body: JSON.stringify({ medicamentos, restricciones_alimenticias: restricciones, observaciones }),
       })
 
       if (!res.ok) throw new Error('Error al actualizar información médica')
@@ -309,6 +310,11 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                   <div>
                     <Label htmlFor="restricciones" className="pb-2"><UtensilsCrossed className="h-4 w-4" />Restricciones alimenticias</Label>
                     <Textarea id="restricciones" value={restricciones} onChange={(e) => setRestricciones(e.target.value)} rows={4} disabled={!canEdit} />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="observaciones" className="pb-2"><Clipboard className="h-4 w-4" />Observaciones (líderes)</Label>
+                    <Textarea id="observaciones" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} rows={4} disabled={!canEdit} />
                   </div>
 
                   {canEdit && (
