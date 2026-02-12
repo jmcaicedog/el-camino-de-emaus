@@ -1,16 +1,31 @@
 -- Agregar políticas RLS específicas para el campo observaciones
 -- Solo el líder y colíder de la mesa pueden editar observaciones
 
--- Política para que líderes y colíderes puedan ver y editar observaciones de su mesa
--- Esta política se aplica cuando se actualiza específicamente el campo de observaciones
--- Se utiliza junto con la política existente "Servidores pueden actualizar tracking de su mesa"
+-- Crear una política más específica que permita a líderes y colíderes actualizar el campo observaciones
+-- Esto complementa la política existente "Servidores pueden actualizar tracking de su mesa"
+-- pero es más específica para el campo de observaciones
 
--- Nota: Las políticas RLS existentes ya permiten a servidores actualizar caminantes de su mesa
--- El campo observaciones seguirá este mismo control: solo líderes y colíderes de la mesa
--- pueden actualizar cualquier campo (incluyendo observaciones) de los caminantes de su mesa
+-- Nota: Si la política existente no funciona, ejecutar esta política adicional:
+-- CREATE POLICY "Servidores pueden actualizar observaciones de su mesa"
+-- ON caminantes
+-- FOR UPDATE
+-- TO authenticated
+-- USING (
+--   EXISTS (
+--     SELECT 1 FROM servidores
+--     WHERE servidores.auth_user_id = auth.uid()
+--     AND servidores.mesa_id = caminantes.mesa_id
+--     AND servidores.mesa_id IS NOT NULL
+--     AND (servidores.tipo_servidor = 'lider' OR servidores.tipo_servidor = 'colider')
+--   )
+-- )
+-- WITH CHECK (
+--   EXISTS (
+--     SELECT 1 FROM servidores
+--     WHERE servidores.auth_user_id = auth.uid()
+--     AND servidores.mesa_id = caminantes.mesa_id
+--     AND servidores.mesa_id IS NOT NULL
+--     AND (servidores.tipo_servidor = 'lider' OR servidores.tipo_servidor = 'colider')
+--   )
+-- );
 
--- No es necesario crear políticas específicas adicionales ya que la política existente
--- "Servidores pueden actualizar tracking de su mesa" ya controla el acceso:
--- - Solo permite UPDATE a usuarios autenticados que sean servidores de esa mesa
--- - La verificación se hace por mesa_id, lo que garantiza que solo el líder/colíder
---   pueden editar observaciones de sus caminantes

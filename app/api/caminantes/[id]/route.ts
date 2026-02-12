@@ -21,6 +21,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       const allowedFields = [
         'medicamentos',
         'restricciones_alimenticias',
+        'observaciones',
         'imagen',
         'cartas_recibidas',
         'fotos_recibidas',
