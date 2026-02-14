@@ -4,9 +4,9 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Download } from "lucide-react"
+import { CaminanteGridView } from "@/components/servidor/caminante-grid-view"
 import type { AdminUser, Caminante, Servidor } from "@/lib/types"
 
 interface MesaReportProps {
@@ -144,59 +144,7 @@ export function MesaReport({ adminUser }: MesaReportProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Documento</TableHead>
-                  <TableHead>Edad</TableHead>
-                  <TableHead>Correo</TableHead>
-                  <TableHead>Teléfono</TableHead>
-                  <TableHead>Restricciones</TableHead>
-                  <TableHead>Medicamentos</TableHead>
-                  <TableHead>Condiciones</TableHead>
-                  <TableHead className="text-center">Cartas</TableHead>
-                  <TableHead className="text-center">Fotos</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {caminantes.map((caminante) => (
-                  <TableRow key={caminante.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <span>{caminante.nombre_completo}</span>
-                        {caminante.es_sorpresa && (
-                          <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">
-                            Sorpresa
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{caminante.cedula}</TableCell>
-                    <TableCell>{caminante.edad}</TableCell>
-                    <TableCell className="max-w-xs truncate" title={caminante.correo}>
-                      {caminante.correo}
-                    </TableCell>
-                    <TableCell>{caminante.celular}</TableCell>
-                    <TableCell className="max-w-xs">
-                      <div className="truncate" title={caminante.restricciones_alimenticias || "-"}>
-                        {caminante.restricciones_alimenticias || "-"}
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-xs">
-                      <div className="truncate" title={caminante.medicamentos || "-"}>
-                        {caminante.medicamentos || "-"}
-                      </div>
-                    </TableCell>
-                    <TableCell>{caminante.ronca_al_dormir ? "Ronca al dormir" : "-"}</TableCell>
-                    <TableCell className="text-center">{caminante.cartas_recibidas || 0}</TableCell>
-                    <TableCell className="text-center">{caminante.fotos_recibidas || 0}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <CaminanteGridView caminantes={caminantes} onUpdate={loadData} canEdit={true} />
         </CardContent>
       </Card>
     </div>

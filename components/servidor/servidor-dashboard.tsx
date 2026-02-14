@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import type { Servidor, Mesa, Caminante } from "@/lib/types"
-import { CaminanteCard } from "@/components/servidor/caminante-card"
+import { CaminanteGridView } from "@/components/servidor/caminante-grid-view"
 import { Badge } from "@/components/ui/badge"
 
 interface ServidorDashboardProps {
@@ -91,11 +91,11 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2">
-                {caminantes.map((caminante) => (
-                  <CaminanteCard key={caminante.id} caminante={caminante} onUpdate={refreshCaminantes} />
-                ))}
-              </div>
+              <Card>
+                <CardContent className="pt-6">
+                  <CaminanteGridView caminantes={caminantes} onUpdate={refreshCaminantes} canEdit={true} />
+                </CardContent>
+              </Card>
             )}
           </div>
         )}
