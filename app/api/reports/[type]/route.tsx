@@ -377,8 +377,98 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       let html = '';
       if (type === "caminantes") {
         html = generateFichaHTML(data, title);
+      } else if (type === "servidores") {
+        html = generateFichaServidoresHTML(data, title);
       } else {
         html = generateHTML(data, columns, title);
+      }
+      // Genera HTML tipo ficha por servidor, una por página, con sombra y formato fácil de imprimir
+      function generateFichaServidoresHTML(data: any[], title: string): string {
+        return `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>${escapeHtml(title)}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+              h1 { color: #333; }
+              .header { margin-bottom: 20px; }
+              .date { color: #666; font-size: 14px; }
+              .ficha {
+                background: #fff;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+                border-radius: 10px;
+                padding: 24px 32px;
+                margin-bottom: 40px;
+                page-break-after: always;
+                max-width: 800px;
+                margin-left: auto;
+                margin-right: auto;
+              }
+              .ficha:last-child { page-break-after: auto; }
+              .campo {
+                display: flex;
+                margin-bottom: 8px;
+              }
+              .campo-label {
+                width: 220px;
+                font-weight: bold;
+                color: #444;
+              }
+              .campo-valor {
+                flex: 1;
+                color: #222;
+              }
+              @media print {
+                button { display: none; }
+                body { background: #fff; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>${escapeHtml(title)}</h1>
+              <p class="date">Fecha: ${new Date().toLocaleDateString("es-CO")}</p>
+              <button onclick="window.print()">Imprimir / Guardar como PDF</button>
+            </div>
+            ${data.map((servidor, idx) => `
+              <div class="ficha">
+                <h2 style="margin-top:0;margin-bottom:18px;">Servidor #${idx + 1}</h2>
+                ${renderCampo('Nombre completo', servidor.nombre_completo)}
+                ${renderCampo('Cédula', servidor.cedula)}
+                ${renderCampo('Edad', servidor.edad)}
+                ${renderCampo('Correo', servidor.correo)}
+                ${renderCampo('Teléfono', servidor.celular)}
+                ${renderCampo('Dirección', servidor.direccion)}
+                ${renderCampo('Ciudad', servidor.ciudad)}
+                ${renderCampo('Estado civil', servidor.estado_civil)}
+                ${renderCampo('Profesión', servidor.profesion)}
+                ${renderCampo('Empresa', servidor.empresa)}
+                ${renderCampo('Cargo', servidor.cargo)}
+                ${renderCampo('Tipo de servidor', servidor.tipo_servidor)}
+                ${renderCampo('Mesa', servidor.mesa_id)}
+                ${renderCampo('Contacto emergencia 1', servidor.nombre_contacto_emergencia)}
+                ${renderCampo('Parentesco contacto 1', servidor.parentesco_contacto)}
+                ${renderCampo('Celular contacto 1', servidor.celular_contacto)}
+                ${renderCampo('Contacto emergencia 2', servidor.nombre_contacto_emergencia_2)}
+                ${renderCampo('Parentesco contacto 2', servidor.parentesco_contacto_2)}
+                ${renderCampo('Celular contacto 2', servidor.celular_contacto_2)}
+                ${renderCampo('Restricciones alimenticias', servidor.restricciones_alimenticias)}
+                ${renderCampo('Medicamentos', servidor.medicamentos)}
+                ${renderCampo('Condición especial', servidor.condicion_especial)}
+                ${renderCampo('EPS', servidor.eps)}
+                ${renderCampo('Tipo de sangre', servidor.tipo_sangre)}
+                ${renderCampo('¿Ronca al dormir?', servidor.ronca_al_dormir ? 'Sí' : 'No')}
+                ${renderCampo('Talla de camisa', servidor.talla_camisa)}
+                ${renderCampo('Colores de camisa', Array.isArray(servidor.colores_camisa) ? servidor.colores_camisa.join(', ') : servidor.colores_camisa)}
+                ${renderCampo('¿Es super admin?', servidor.is_super_admin ? 'Sí' : 'No')}
+                ${renderCampo('Observaciones', servidor.observaciones)}
+              </div>
+            `).join('')}
+          </body>
+          </html>
+        `;
       }
       return new NextResponse(html, {
         headers: {
