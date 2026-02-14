@@ -41,11 +41,8 @@ export function CaminanteGridView({ caminantes, onUpdate, canEdit = true }: Cami
               </div>
               {/* Nombre */}
               <div className="text-center">
-                <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors max-w-24 truncate">
-                  {caminante.nombre_completo.split(" ")[0]}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {caminante.nombre_completo.split(" ").slice(1).join(" ")}
+                <p className="text-xs font-medium text-foreground group-hover:text-primary transition-colors max-w-28 line-clamp-2 leading-tight uppercase">
+                  {caminante.nombre_completo}
                 </p>
               </div>
             </div>
