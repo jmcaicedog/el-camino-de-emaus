@@ -16,19 +16,48 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     switch (type) {
       case "caminantes": {
-        const { data: caminantes } = await supabase.from("caminantes").select("*").order("nombre_completo")
+        const mesaParam = searchParams.get("mesa")
+        let query = supabase.from("caminantes").select("*").order("nombre_completo")
+        if (mesaParam) {
+          query = query.eq("mesa_id", mesaParam)
+        }
+        const { data: caminantes } = await query
         data = caminantes || []
         title = "Reporte de Caminantes"
-        // If we have data, build columns dynamically to include all fields
-        if (data.length > 0) {
-          columns = Object.keys(data[0]).map((k) => ({ key: k, label: humanize(k) }))
-        } else {
-          columns = [
-            { key: "nombre_completo", label: "Nombre" },
-            { key: "cedula", label: "Cédula" },
-          ]
-        }
-        title = "Reporte de Caminantes"
+        // Mostrar solo los campos relevantes y completos
+        columns = [
+          { key: "nombre_completo", label: "Nombre completo" },
+          { key: "cedula", label: "Cédula" },
+          { key: "edad", label: "Edad" },
+          { key: "correo", label: "Correo" },
+          { key: "celular", label: "Teléfono" },
+          { key: "direccion", label: "Dirección" },
+          { key: "ciudad", label: "Ciudad" },
+          { key: "estado_civil", label: "Estado civil" },
+          { key: "profesion", label: "Profesión" },
+          { key: "empresa", label: "Empresa" },
+          { key: "cargo", label: "Cargo" },
+          { key: "nombre_contacto_emergencia", label: "Contacto emergencia 1" },
+          { key: "parentesco_contacto", label: "Parentesco contacto 1" },
+          { key: "celular_contacto", label: "Celular contacto 1" },
+          { key: "nombre_contacto_emergencia_2", label: "Contacto emergencia 2" },
+          { key: "parentesco_contacto_2", label: "Parentesco contacto 2" },
+          { key: "celular_contacto_2", label: "Celular contacto 2" },
+          { key: "restricciones_alimenticias", label: "Restricciones alimenticias" },
+          { key: "medicamentos", label: "Medicamentos" },
+          { key: "condicion_especial", label: "Condición especial" },
+          { key: "eps", label: "EPS" },
+          { key: "tipo_sangre", label: "Tipo de sangre" },
+          { key: "ronca_al_dormir", label: "¿Ronca al dormir?" },
+          { key: "talla_camisa", label: "Talla de camisa" },
+          { key: "sacramentos_recibidos", label: "Sacramentos recibidos" },
+          { key: "es_sorpresa", label: "¿Es sorpresa?" },
+          { key: "quien_invito", label: "¿Quién lo invitó?" },
+          { key: "invitador_hizo_retiro", label: "¿El invitador ya hizo el retiro?" },
+          { key: "observaciones", label: "Observaciones" },
+          { key: "cartas_recibidas", label: "Cartas recibidas" },
+          { key: "fotos_recibidas", label: "Fotos recibidas" },
+        ];
         break
       }
 
@@ -345,13 +374,113 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         })
       }
     } else {
-      const html = generateHTML(data, columns, title)
+      let html = '';
+      if (type === "caminantes") {
+        html = generateFichaHTML(data, title);
+      } else {
+        html = generateHTML(data, columns, title);
+      }
       return new NextResponse(html, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
         },
       })
     }
+  // Genera HTML tipo ficha por caminante, una por página, con sombra y formato fácil de imprimir
+  function generateFichaHTML(data: any[], title: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>${escapeHtml(title)}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+          h1 { color: #333; }
+          .header { margin-bottom: 20px; }
+          .date { color: #666; font-size: 14px; }
+          .ficha {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            border-radius: 10px;
+            padding: 24px 32px;
+            margin-bottom: 40px;
+            page-break-after: always;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+          }
+          .ficha:last-child { page-break-after: auto; }
+          .campo {
+            display: flex;
+            margin-bottom: 8px;
+          }
+          .campo-label {
+            width: 220px;
+            font-weight: bold;
+            color: #444;
+          }
+          .campo-valor {
+            flex: 1;
+            color: #222;
+          }
+          @media print {
+            button { display: none; }
+            body { background: #fff; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${escapeHtml(title)}</h1>
+          <p class="date">Fecha: ${new Date().toLocaleDateString("es-CO")}</p>
+          <button onclick="window.print()">Imprimir / Guardar como PDF</button>
+        </div>
+        ${data.map((caminante, idx) => `
+          <div class="ficha">
+            <h2 style="margin-top:0;margin-bottom:18px;">Caminante #${idx + 1}</h2>
+            ${renderCampo('Nombre completo', caminante.nombre_completo)}
+            ${renderCampo('Cédula', caminante.cedula)}
+            ${renderCampo('Edad', caminante.edad)}
+            ${renderCampo('Correo', caminante.correo)}
+            ${renderCampo('Teléfono', caminante.celular)}
+            ${renderCampo('Dirección', caminante.direccion)}
+            ${renderCampo('Ciudad', caminante.ciudad)}
+            ${renderCampo('Estado civil', caminante.estado_civil)}
+            ${renderCampo('Profesión', caminante.profesion)}
+            ${renderCampo('Empresa', caminante.empresa)}
+            ${renderCampo('Cargo', caminante.cargo)}
+            ${renderCampo('Contacto emergencia 1', caminante.nombre_contacto_emergencia)}
+            ${renderCampo('Parentesco contacto 1', caminante.parentesco_contacto)}
+            ${renderCampo('Celular contacto 1', caminante.celular_contacto)}
+            ${renderCampo('Contacto emergencia 2', caminante.nombre_contacto_emergencia_2)}
+            ${renderCampo('Parentesco contacto 2', caminante.parentesco_contacto_2)}
+            ${renderCampo('Celular contacto 2', caminante.celular_contacto_2)}
+            ${renderCampo('Restricciones alimenticias', caminante.restricciones_alimenticias)}
+            ${renderCampo('Medicamentos', caminante.medicamentos)}
+            ${renderCampo('Condición especial', caminante.condicion_especial)}
+            ${renderCampo('EPS', caminante.eps)}
+            ${renderCampo('Tipo de sangre', caminante.tipo_sangre)}
+            ${renderCampo('¿Ronca al dormir?', caminante.ronca_al_dormir ? 'Sí' : 'No')}
+            ${renderCampo('Talla de camisa', caminante.talla_camisa)}
+            ${renderCampo('Sacramentos recibidos', Array.isArray(caminante.sacramentos_recibidos) ? caminante.sacramentos_recibidos.join(', ') : caminante.sacramentos_recibidos)}
+            ${renderCampo('¿Es sorpresa?', caminante.es_sorpresa ? 'Sí' : 'No')}
+            ${renderCampo('¿Quién lo invitó?', caminante.quien_invito)}
+            ${renderCampo('¿El invitador ya hizo el retiro?', caminante.invitador_hizo_retiro === true ? 'Sí' : caminante.invitador_hizo_retiro === false ? 'No' : '-')}
+            ${renderCampo('Observaciones', caminante.observaciones)}
+            ${renderCampo('Cartas recibidas', caminante.cartas_recibidas)}
+            ${renderCampo('Fotos recibidas', caminante.fotos_recibidas)}
+          </div>
+        `).join('')}
+      </body>
+      </html>
+    `;
+  }
+
+  function renderCampo(label: string, valor: any) {
+    if (valor === undefined || valor === null || valor === "") return "";
+    return `<div class="campo"><div class="campo-label">${escapeHtml(label)}:</div><div class="campo-valor">${escapeHtml(String(valor))}</div></div>`;
+  }
   } catch (error) {
     console.error("[v0] Error generating report:", error)
     return NextResponse.json({ message: "Error al generar el reporte" }, { status: 500 })

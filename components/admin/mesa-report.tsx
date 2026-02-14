@@ -18,6 +18,7 @@ export function MesaReport({ adminUser }: MesaReportProps) {
   const [caminantes, setCaminantes] = useState<Caminante[]>([])
   const [servidores, setServidores] = useState<Servidor[]>([])
   const [mesaNumero, setMesaNumero] = useState<number | null>(null)
+  const [mesaId, setMesaId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -42,11 +43,12 @@ export function MesaReport({ adminUser }: MesaReportProps) {
       )
 
       if (adminServidor?.mesa_id) {
-        // Obtener número de mesa
+        // Obtener número de mesa y guardar id
         const mesaRes = await fetch(`/api/mesas`)
         const mesasData = await mesaRes.json()
         const mesa = mesasData.find((m: any) => m.id === adminServidor.mesa_id)
         setMesaNumero(mesa?.numero || null)
+        setMesaId(mesa?.id || null)
 
         // Filtrar caminantes de la mesa
         const caminantesDeMesa = caminantesData.filter(
@@ -66,47 +68,32 @@ export function MesaReport({ adminUser }: MesaReportProps) {
     }
   }
 
-  const downloadCSV = () => {
-    const headers = [
-      "Nombre",
-      "Documento",
-      "Edad",
-      "Correo",
-      "Teléfono",
-      "Restricciones alimenticias",
-      "Medicamentos",
-      "Condiciones especiales",
-      "Cartas",
-      "Fotos"
-    ]
-
-    const rows = caminantes.map(c => [
-      c.nombre_completo,
-      c.cedula,
-      c.edad.toString(),
-      c.correo,
-      c.celular,
-      c.restricciones_alimenticias || "-",
-      c.medicamentos || "-",
-      c.ronca_al_dormir ? "Ronca al dormir" : "-",
-      (c.cartas_recibidas || 0).toString(),
-      (c.fotos_recibidas || 0).toString()
-    ])
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
-    ].join("\n")
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    const url = URL.createObjectURL(blob)
-    link.setAttribute("href", url)
-    link.setAttribute("download", `caminantes_mesa_${mesaNumero || 'sin_numero'}.csv`)
-    link.style.visibility = "hidden"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  const downloadReport = () => {
+    if (!mesaId) return;
+    // Abrir ventana sincronamente para evitar bloqueadores
+    let win = window.open("", "_blank");
+    if (!win) return;
+    win.document.open();
+    win.document.write(
+      `<!doctype html><html><head><meta charset=\"utf-8\"><title>Generando reporte...</title></head><body><p>Generando reporte, por favor espere...</p></body></html>`
+    );
+    win.document.close();
+    fetch(`/api/reports/caminantes?format=pdf&mesa=${encodeURIComponent(mesaId)}`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Error al generar reporte");
+        const html = await response.text();
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+        try {
+          win.focus();
+          win.print();
+        } catch (e) {}
+      })
+      .catch(() => {
+        try { if (win && !win.closed) win.close(); } catch (e) {}
+        toast({ title: "Error", description: "Error al generar el reporte", variant: "destructive" });
+      });
   }
 
   if (isLoading) {
@@ -137,9 +124,9 @@ export function MesaReport({ adminUser }: MesaReportProps) {
               <CardTitle>Reporte de Caminantes - Mesa {mesaNumero}</CardTitle>
               <CardDescription>Total: {caminantes.length} caminantes</CardDescription>
             </div>
-            <Button onClick={downloadCSV} variant="outline">
+            <Button onClick={downloadReport} variant="outline">
               <Download className="h-4 w-4 mr-2" />
-              Descargar CSV
+              Descargar reporte
             </Button>
           </div>
         </CardHeader>
