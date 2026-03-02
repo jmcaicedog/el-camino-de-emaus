@@ -13,7 +13,9 @@ import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { Label } from "@/components/ui/label"
 import { uiAvatarUrl } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, DollarSign, Trash, ShieldPlus, ShieldCheck } from "lucide-react"
+import { Loader2, Search, DollarSign, Trash, ShieldPlus, ShieldCheck, FileDown } from "lucide-react"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { Servidor } from "@/lib/types"
 
@@ -181,6 +183,40 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
       s.correo.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
+  const exportarPDF = () => {
+    const doc = new jsPDF()
+    doc.setFontSize(16)
+    doc.text("Servidores Registrados", 14, 20)
+    doc.setFontSize(10)
+    doc.text(`Total: ${filteredServidores.length} servidores`, 14, 28)
+    doc.text(`Fecha: ${new Date().toLocaleDateString("es-CO")}`, 14, 34)
+
+    const headers = ["#", "Nombre", "Cédula", "Celular", "Equipos", "Mesa"]
+    const data = filteredServidores.map((s, i) => [
+      i + 1,
+      s.nombre_completo,
+      s.cedula,
+      s.celular,
+      (() => {
+        const roles = s.tipo_servidor === "lider" ? "Líder" : s.tipo_servidor === "colider" ? "Colíder" : ""
+        const equipos = s.equipos?.filter(e => e !== "Líderes y colíderes").join(", ") || ""
+        return [roles, equipos].filter(Boolean).join(" - ") || "Sin equipos"
+      })(),
+      s.mesa_id ? mesas.find(m => m.id === s.mesa_id)?.numero?.toString() || "—" : "Sin asignar",
+    ])
+
+    autoTable(doc, {
+      head: [headers],
+      body: data,
+      startY: 40,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    })
+
+    doc.save("servidores.pdf")
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -193,9 +229,17 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
     <>
       <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Servidores Registrados</CardTitle>
-          <CardDescription>Total: {servidores.length} servidores</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Servidores Registrados</CardTitle>
+            <CardDescription>Total: {servidores.length} servidores</CardDescription>
+          </div>
+          {adminUser?.is_super && (
+            <Button variant="outline" size="sm" onClick={exportarPDF}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Exportar PDF
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <div className="mb-4">

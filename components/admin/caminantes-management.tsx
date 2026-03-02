@@ -13,7 +13,9 @@ import { ServidorCard } from "@/components/servidor/servidor-card"
 import { uiAvatarUrl } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, DollarSign, Trash } from "lucide-react"
+import { Loader2, Search, DollarSign, Trash, FileDown } from "lucide-react"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { Caminante, Servidor } from "@/lib/types"
 
@@ -143,6 +145,35 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
       c.correo.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
+  const exportarPDF = () => {
+    const doc = new jsPDF()
+    doc.setFontSize(16)
+    doc.text("Caminantes Registrados", 14, 20)
+    doc.setFontSize(10)
+    doc.text(`Total: ${filteredCaminantes.length} caminantes`, 14, 28)
+    doc.text(`Fecha: ${new Date().toLocaleDateString("es-CO")}`, 14, 34)
+
+    const headers = ["#", "Nombre", "Cédula", "Celular", "Mesa"]
+    const data = filteredCaminantes.map((c, i) => [
+      i + 1,
+      c.nombre_completo,
+      c.cedula,
+      c.celular,
+      c.mesa_id ? mesas.find(m => m.id === c.mesa_id)?.numero?.toString() || "\u2014" : "Sin asignar",
+    ])
+
+    autoTable(doc, {
+      head: [headers],
+      body: data,
+      startY: 40,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    })
+
+    doc.save("caminantes.pdf")
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -155,9 +186,17 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
     <>
       <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Caminantes Registrados</CardTitle>
-          <CardDescription>Total: {caminantes.length} caminantes</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Caminantes Registrados</CardTitle>
+            <CardDescription>Total: {caminantes.length} caminantes</CardDescription>
+          </div>
+          {adminUser?.is_super && (
+            <Button variant="outline" size="sm" onClick={exportarPDF}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Exportar PDF
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <div className="mb-4">
