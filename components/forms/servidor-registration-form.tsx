@@ -374,7 +374,7 @@ export function ServidorRegistrationForm() {
           </div>
 
           <div className="space-y-2">
-            <Label>¿Ronca al dormir? *</Label>
+            <Label>¿Roncas al dormir? *</Label>
             <RadioGroup name="ronca_al_dormir" defaultValue="no" required>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="si" id="ronca-si" />
