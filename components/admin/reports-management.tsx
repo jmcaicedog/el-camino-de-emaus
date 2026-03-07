@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { FileSpreadsheet, FileText, Loader2 } from "lucide-react"
 
-export function ReportsManagement() {
+export function ReportsManagement({ onlyCartas }: { onlyCartas?: boolean } = {}) {
   const { toast } = useToast()
   const [isExporting, setIsExporting] = useState<string | null>(null)
 
@@ -151,6 +151,8 @@ export function ReportsManagement() {
     },
   ]
 
+  const filteredReports = onlyCartas ? reports.filter(r => r.id === 'cartas') : reports
+
   return (
     <div className="space-y-6">
       <div>
@@ -159,7 +161,7 @@ export function ReportsManagement() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {reports.map((report) => {
+        {filteredReports.map((report) => {
           const Icon = report.icon
           return (
             <Card key={report.id}>

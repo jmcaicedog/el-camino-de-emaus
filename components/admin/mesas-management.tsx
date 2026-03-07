@@ -72,9 +72,13 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
     // Superadmin siempre puede editar
     if (adminUser?.is_super) return true
     
-    // Si no es superadmin, verificar si es líder o colíder de la mesa
     if (!adminUser) return false
-    
+
+    // Miembros del equipo Cartas pueden editar cartas/fotos de cualquier mesa
+    const myServidor = servidores.find(s => s.auth_user_id === adminUser.id)
+    if (myServidor?.equipos?.includes('Cartas')) return true
+
+    // Verificar si es líder o colíder de la mesa
     const mesaServidores = getServidoresByMesa(mesaId)
     const isLiderOrColider = mesaServidores.some(s => 
       s.auth_user_id === adminUser.id && 

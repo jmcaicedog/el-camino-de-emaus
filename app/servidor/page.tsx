@@ -20,19 +20,46 @@ export default async function ServidorPage() {
     redirect("/auth/login")
   }
 
+  // Check if servidor belongs to "Cartas" equipo
+  let isCartasTeam = false
+  const { data: cartasEquipo } = await supabase.from("equipos").select("id").eq("nombre", "Cartas").single()
+  if (cartasEquipo) {
+    const { data: membership } = await supabase
+      .from("servidor_equipo")
+      .select("id")
+      .eq("servidor_id", servidorData.id)
+      .eq("equipo_id", cartasEquipo.id)
+      .maybeSingle()
+    isCartasTeam = !!membership
+  }
+
   // Get mesa data if assigned
   let mesaData = null
-  let caminantesData = []
+  let caminantesData: any[] = []
+  let allMesas: any[] = []
 
-  if (servidorData.mesa_id) {
+  if (isCartasTeam) {
+    // Cartas team sees ALL caminantes and mesas
+    const { data: mesas } = await supabase.from("mesas").select("*").order("numero")
+    allMesas = mesas || []
+
+    const { data: caminantes } = await supabase.from("caminantes").select("*")
+    caminantesData = caminantes || []
+  } else if (servidorData.mesa_id) {
     const { data: mesa } = await supabase.from("mesas").select("*").eq("id", servidorData.mesa_id).single()
-
     mesaData = mesa
 
     const { data: caminantes } = await supabase.from("caminantes").select("*").eq("mesa_id", servidorData.mesa_id)
-
     caminantesData = caminantes || []
   }
 
-  return <ServidorDashboard servidor={servidorData} mesa={mesaData} caminantes={caminantesData} />
+  return (
+    <ServidorDashboard
+      servidor={servidorData}
+      mesa={mesaData}
+      caminantes={caminantesData}
+      isCartasTeam={isCartasTeam}
+      allMesas={allMesas}
+    />
+  )
 }

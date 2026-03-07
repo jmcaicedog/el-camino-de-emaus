@@ -31,18 +31,54 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       const forbidden = Object.keys(body).some((k) => !allowedFields.includes(k))
       if (forbidden) return NextResponse.json({ message: 'No autorizado para modificar ese campo' }, { status: 403 })
 
-      // Check that the user is líder/colíder of the caminante's mesa
-      const { data: caminanteData } = await supabase.from("caminantes").select("mesa_id").eq("id", id).single()
-      if (caminanteData?.mesa_id) {
-        const { data: servidorData } = await supabase
+      // Check if user belongs to the "Cartas" equipo
+      const { data: cartasEquipo } = await supabase
+        .from("equipos")
+        .select("id")
+        .eq("nombre", "Cartas")
+        .single()
+
+      let isCartasTeam = false
+      if (cartasEquipo) {
+        const { data: servidorRecord } = await supabase
           .from("servidores")
           .select("id")
           .eq("auth_user_id", currentUser.id)
-          .eq("mesa_id", caminanteData.mesa_id)
-          .in("tipo_servidor", ["lider", "colider"])
-          .maybeSingle()
-        if (!servidorData) {
-          return NextResponse.json({ message: 'No autorizado para editar caminantes de otra mesa' }, { status: 403 })
+          .single()
+
+        if (servidorRecord) {
+          const { data: membership } = await supabase
+            .from("servidor_equipo")
+            .select("id")
+            .eq("servidor_id", servidorRecord.id)
+            .eq("equipo_id", cartasEquipo.id)
+            .maybeSingle()
+          isCartasTeam = !!membership
+        }
+      }
+
+      // Cartas team can only edit cartas_recibidas and fotos_recibidas
+      if (isCartasTeam) {
+        const cartasAllowed = ['cartas_recibidas', 'fotos_recibidas']
+        const cartasForbidden = Object.keys(body).some((k) => !cartasAllowed.includes(k))
+        if (cartasForbidden) {
+          return NextResponse.json({ message: 'El equipo de Cartas solo puede modificar cartas y fotos' }, { status: 403 })
+        }
+        // Cartas team is authorized for any caminante, skip mesa check
+      } else {
+        // Check that the user is líder/colíder of the caminante's mesa
+        const { data: caminanteData } = await supabase.from("caminantes").select("mesa_id").eq("id", id).single()
+        if (caminanteData?.mesa_id) {
+          const { data: servidorData } = await supabase
+            .from("servidores")
+            .select("id")
+            .eq("auth_user_id", currentUser.id)
+            .eq("mesa_id", caminanteData.mesa_id)
+            .in("tipo_servidor", ["lider", "colider"])
+            .maybeSingle()
+          if (!servidorData) {
+            return NextResponse.json({ message: 'No autorizado para editar caminantes de otra mesa' }, { status: 403 })
+          }
         }
       }
     }

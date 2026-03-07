@@ -70,8 +70,14 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
     // Superadmin siempre puede editar
     if (adminUser?.is_super) return true
     
+    if (!adminUser) return false
+
+    // Miembros del equipo Cartas pueden editar cartas/fotos de cualquier caminante
+    const myServidor = servidores.find(s => s.auth_user_id === adminUser.id)
+    if (myServidor?.equipos?.includes('Cartas')) return true
+
     // Si no tiene mesa asignada, no puede editar (excepto superadmin)
-    if (!caminante.mesa_id || !adminUser) return false
+    if (!caminante.mesa_id) return false
     
     // Verificar si el admin es líder o colíder de la mesa del caminante
     const mesaServidores = servidores.filter(s => s.mesa_id === caminante.mesa_id)
