@@ -287,14 +287,14 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
               <div className="flex items-center gap-3 justify-center">
                 <Label className="text-sm w-20 text-right">Cartas:</Label>
                 <div className="flex items-center gap-2">
-                  <Input type="number" value={cartasCount} onChange={(e) => setCartasCount(Number(e.target.value))} onBlur={onCartasInputBlur} className="w-16 text-center" />
+                  <Input type="number" value={cartasCount} onChange={(e) => setCartasCount(Number(e.target.value))} onBlur={onCartasInputBlur} className="w-16 text-center" disabled={!canEdit} />
                 </div>
               </div>
 
               <div className="flex items-center gap-3 justify-center">
                 <Label className="text-sm w-20 text-right">Fotos:</Label>
                 <div className="flex items-center gap-2">                  
-                  <Input type="number" value={fotosCount} onChange={(e) => setFotosCount(Number(e.target.value))} onBlur={onFotosInputBlur} className="w-16 text-center" />
+                  <Input type="number" value={fotosCount} onChange={(e) => setFotosCount(Number(e.target.value))} onBlur={onFotosInputBlur} className="w-16 text-center" disabled={!canEdit} />
                 </div>
               </div>
             </div>

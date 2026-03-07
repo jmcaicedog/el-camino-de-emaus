@@ -26,11 +26,25 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         'cartas_recibidas',
         'fotos_recibidas',
         'monto_pagado',
-        'fotos_recibidas',
       ]
       // If body contains keys outside allowedFields, deny
       const forbidden = Object.keys(body).some((k) => !allowedFields.includes(k))
       if (forbidden) return NextResponse.json({ message: 'No autorizado para modificar ese campo' }, { status: 403 })
+
+      // Check that the user is líder/colíder of the caminante's mesa
+      const { data: caminanteData } = await supabase.from("caminantes").select("mesa_id").eq("id", id).single()
+      if (caminanteData?.mesa_id) {
+        const { data: servidorData } = await supabase
+          .from("servidores")
+          .select("id")
+          .eq("auth_user_id", currentUser.id)
+          .eq("mesa_id", caminanteData.mesa_id)
+          .in("tipo_servidor", ["lider", "colider"])
+          .maybeSingle()
+        if (!servidorData) {
+          return NextResponse.json({ message: 'No autorizado para editar caminantes de otra mesa' }, { status: 403 })
+        }
+      }
     }
 
     // Get the current caminante data before update
