@@ -18,10 +18,12 @@ interface ServidorDashboardProps {
   mesa: Mesa | null
   caminantes: Caminante[]
   isCartasTeam?: boolean
+  isSnacksTeam?: boolean
+  isLogisticaTeam?: boolean
   allMesas?: Mesa[]
 }
 
-export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminantes, isCartasTeam = false, allMesas = [] }: ServidorDashboardProps) {
+export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminantes, isCartasTeam = false, isSnacksTeam = false, isLogisticaTeam = false, allMesas = [] }: ServidorDashboardProps) {
   const router = useRouter()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [caminantes, setCaminantes] = useState(initialCaminantes)
@@ -68,6 +70,10 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
                   {servidor.nombre_completo} -{" "}
                   {isCartasTeam ? (
                     <Badge variant="secondary">Equipo de Cartas</Badge>
+                  ) : isSnacksTeam ? (
+                    <Badge variant="secondary">Equipo de Snacks</Badge>
+                  ) : isLogisticaTeam ? (
+                    <Badge variant="secondary">Equipo de Logística</Badge>
                   ) : (
                     <Badge variant="secondary">{servidor.tipo_servidor === "lider" ? "Líder" : "Colíder"}</Badge>
                   )}
@@ -83,7 +89,34 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {isCartasTeam ? (
+        {isLogisticaTeam && !isCartasTeam && !isSnacksTeam ? (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Reportes</h2>
+              <p className="text-muted-foreground">Genera y descarga reportes</p>
+            </div>
+            <LogisticaReports />
+          </div>
+        ) : isSnacksTeam && !isCartasTeam ? (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Reportes</h2>
+              <p className="text-muted-foreground">Genera y descarga el reporte de restricciones alimenticias</p>
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Restricciones Alimenticias y Medicamentos
+                </CardTitle>
+                <CardDescription>Información médica y restricciones de caminantes y servidores</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SingleReportExport reportType="restricciones" />
+              </CardContent>
+            </Card>
+          </div>
+        ) : isCartasTeam ? (
           <Tabs defaultValue="cartas" className="space-y-6">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="cartas" className="flex items-center gap-2">
@@ -143,7 +176,7 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
                     <CardDescription>Número de cartas y fotos recibidas por cada caminante, organizado por mesa</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <CartasReportOnly />
+                    <SingleReportExport reportType="cartas" />
                   </CardContent>
                 </Card>
               </div>
@@ -192,13 +225,13 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
   )
 }
 
-// Component that shows only the "Cartas" report from ReportsManagement
-function CartasReportOnly() {
+// Reusable component for exporting a single report type
+function SingleReportExport({ reportType }: { reportType: string }) {
   const { toast } = useToast()
   const [isExporting, setIsExporting] = useState<string | null>(null)
 
   const exportReport = async (format: "excel" | "pdf") => {
-    setIsExporting(`cartas-${format}`)
+    setIsExporting(`${reportType}-${format}`)
     let win: Window | null = null
     try {
       if (format === "pdf") {
@@ -211,7 +244,7 @@ function CartasReportOnly() {
         win.document.close()
       }
 
-      const response = await fetch(`/api/reports/cartas?format=${format}`)
+      const response = await fetch(`/api/reports/${encodeURIComponent(reportType)}?format=${format}`)
       if (!response.ok) throw new Error("Error al generar reporte")
 
       if (format === "excel") {
@@ -219,7 +252,7 @@ function CartasReportOnly() {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `cartas-${new Date().toISOString().split("T")[0]}.xlsx`
+        a.download = `${reportType}-${new Date().toISOString().split("T")[0]}.xlsx`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
@@ -249,9 +282,9 @@ function CartasReportOnly() {
         variant="outline"
         className="flex-1 bg-transparent"
         onClick={() => exportReport("excel")}
-        disabled={isExporting === "cartas-excel"}
+        disabled={isExporting === `${reportType}-excel`}
       >
-        {isExporting === "cartas-excel" ? (
+        {isExporting === `${reportType}-excel` ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           <FileSpreadsheet className="mr-2 h-4 w-4" />
@@ -262,15 +295,49 @@ function CartasReportOnly() {
         variant="outline"
         className="flex-1 bg-transparent"
         onClick={() => exportReport("pdf")}
-        disabled={isExporting === "cartas-pdf"}
+        disabled={isExporting === `${reportType}-pdf`}
       >
-        {isExporting === "cartas-pdf" ? (
+        {isExporting === `${reportType}-pdf` ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           <FileText className="mr-2 h-4 w-4" />
         )}
         PDF
       </Button>
+    </div>
+  )
+}
+
+// All reports view for Logística team
+function LogisticaReports() {
+  const reports = [
+    { id: "caminantes", title: "Reporte de Caminantes", description: "Lista completa de caminantes con toda su información" },
+    { id: "servidores", title: "Reporte de Servidores", description: "Lista completa de servidores con toda su información" },
+    { id: "mesas", title: "Reporte de Mesas", description: "Organización de mesas con caminantes y servidores asignados" },
+    { id: "pagos", title: "Reporte de Pagos", description: "Estado de pagos de caminantes y servidores" },
+    { id: "cartas", title: "Cartas de Caminantes por Mesa", description: "Número de cartas y fotos recibidas por cada caminante, organizado por mesa" },
+    { id: "restricciones", title: "Restricciones Alimenticias y Medicamentos", description: "Información médica y restricciones de caminantes y servidores" },
+    { id: "equipos-servidores", title: "Equipos y Servidores", description: "Listado de equipos con sus servidores asignados" },
+    { id: "tallas", title: "Tallas de Camiseta (Caminantes)", description: "Listado de caminantes con sus tallas de camiseta" },
+    { id: "tallas-servidores", title: "Tallas y Colores (Servidores)", description: "Servidores que marcaron colores en el formulario y sus tallas/colores" },
+  ]
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {reports.map((report) => (
+        <Card key={report.id}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {report.title}
+            </CardTitle>
+            <CardDescription>{report.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SingleReportExport reportType={report.id} />
+          </CardContent>
+        </Card>
+      ))}
     </div>
   )
 }

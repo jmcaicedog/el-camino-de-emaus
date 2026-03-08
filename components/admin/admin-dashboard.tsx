@@ -25,6 +25,8 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isLiderOrColider, setIsLiderOrColider] = useState(false)
   const [isCartasTeam, setIsCartasTeam] = useState(false)
+  const [isSnacksTeam, setIsSnacksTeam] = useState(false)
+  const [isLogisticaTeam, setIsLogisticaTeam] = useState(false)
 
   useEffect(() => {
     const checkRoles = async () => {
@@ -40,10 +42,17 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
         )
         setIsLiderOrColider(isLC)
 
-        // Check Cartas team
+        // Check equipo memberships
         const myServidor = servidores.find((s: any) => s.auth_user_id === adminUser.id)
-        if (myServidor?.equipos?.includes('Cartas')) {
+        const myEquipos: string[] = (myServidor?.equipos || []).map((e: string) => e.normalize('NFC').toLowerCase())
+        if (myEquipos.includes('cartas')) {
           setIsCartasTeam(true)
+        }
+        if (myEquipos.includes('snacks')) {
+          setIsSnacksTeam(true)
+        }
+        if (myEquipos.some((e: string) => e.includes('log'))) {
+          setIsLogisticaTeam(true)
         }
       } catch (error) {
         console.error("Error checking roles:", error)
@@ -84,7 +93,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="equipos" className="space-y-6">
-          <TabsList className={`grid w-full h-auto ${adminUser.is_super ? 'grid-cols-6' : (isLiderOrColider || isCartasTeam) ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <TabsList className={`grid w-full h-auto ${adminUser.is_super ? 'grid-cols-6' : (isLiderOrColider || isCartasTeam || isSnacksTeam || isLogisticaTeam) ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="equipos" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
               <UsersRound className="h-4 w-4 md:mr-0" />
               <span className="hidden sm:inline">Equipos</span>
@@ -113,7 +122,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                 <span className="hidden sm:inline">Mi Mesa</span>
               </TabsTrigger>
             )}
-            {(adminUser.is_super || isCartasTeam) && (
+            {(adminUser.is_super || isCartasTeam || isSnacksTeam || isLogisticaTeam) && (
               <TabsTrigger value="reportes" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
                 <FileText className="h-4 w-4 md:mr-0" />
                 <span className="hidden sm:inline">Reportes</span>
@@ -149,12 +158,14 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             </TabsContent>
           )}
 
-          {(adminUser.is_super || isCartasTeam) && (
+          {(adminUser.is_super || isCartasTeam || isSnacksTeam || isLogisticaTeam) && (
             <TabsContent value="reportes">
-              {adminUser.is_super ? (
+              {adminUser.is_super || isLogisticaTeam ? (
                 <ReportsManagement />
-              ) : (
+              ) : isCartasTeam ? (
                 <ReportsManagement onlyCartas />
+              ) : (
+                <ReportsManagement onlyRestricciones />
               )}
             </TabsContent>
           )}

@@ -20,18 +20,17 @@ export default async function ServidorPage() {
     redirect("/auth/login")
   }
 
-  // Check if servidor belongs to "Cartas" equipo
-  let isCartasTeam = false
-  const { data: cartasEquipo } = await supabase.from("equipos").select("id").eq("nombre", "Cartas").single()
-  if (cartasEquipo) {
-    const { data: membership } = await supabase
-      .from("servidor_equipo")
-      .select("id")
-      .eq("servidor_id", servidorData.id)
-      .eq("equipo_id", cartasEquipo.id)
-      .maybeSingle()
-    isCartasTeam = !!membership
-  }
+  // Check equipo memberships
+  const { data: equipoMemberships } = await supabase
+    .from("servidor_equipo")
+    .select("equipos (nombre)")
+    .eq("servidor_id", servidorData.id)
+  const myEquipos = (equipoMemberships || [])
+    .map((r: any) => (r.equipos?.nombre || '').normalize('NFC').toLowerCase())
+    .filter(Boolean)
+  const isCartasTeam = myEquipos.includes('cartas')
+  const isSnacksTeam = myEquipos.includes('snacks')
+  const isLogisticaTeam = myEquipos.some((e: string) => e.includes('log'))
 
   // Get mesa data if assigned
   let mesaData = null
@@ -59,6 +58,8 @@ export default async function ServidorPage() {
       mesa={mesaData}
       caminantes={caminantesData}
       isCartasTeam={isCartasTeam}
+      isSnacksTeam={isSnacksTeam}
+      isLogisticaTeam={isLogisticaTeam}
       allMesas={allMesas}
     />
   )
