@@ -9,6 +9,7 @@ import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { ServidorCard } from "@/components/servidor/servidor-card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { CircularProgress } from "@/components/ui/circular-progress"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Users, UserCog } from "lucide-react"
 import type { Mesa, Caminante, Servidor } from "@/lib/types"
@@ -66,6 +67,25 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
 
   const getServidoresByMesa = (mesaId: string) => {
     return servidores.filter((s) => s.mesa_id === mesaId)
+  }
+
+  const getContactProgressPercentage = (mesaId: string) => {
+    const mesaCaminantes = getCaminantesByMesa(mesaId)
+    
+    if (mesaCaminantes.length === 0) return 0
+    
+    // Calculate total points: each caminante has 2 fields (caminante_contactado + familiares_contactados)
+    const totalPoints = mesaCaminantes.length * 2
+    
+    // Calculate achieved points
+    let achievedPoints = 0
+    mesaCaminantes.forEach((caminante) => {
+      if (caminante.caminantes_contactados) achievedPoints += 1
+      if (caminante.familiares_contactados) achievedPoints += 1
+    })
+    
+    // Calculate percentage
+    return (achievedPoints / totalPoints) * 100
   }
 
   const canEditMesa = (mesaId: string) => {
@@ -179,9 +199,12 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Mesa {mesa.numero}
-                  <Badge variant={mesaCaminantes.length > 0 ? "default" : "secondary"}>
-                    {mesaCaminantes.length} / 7
-                  </Badge>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={mesaCaminantes.length > 0 ? "default" : "secondary"}>
+                      {mesaCaminantes.length} / 7
+                    </Badge>
+                    <CircularProgress percentage={getContactProgressPercentage(mesa.id)} />
+                  </div>
                 </CardTitle>
                 <CardDescription>{mesa.nombre}</CardDescription>
               </CardHeader>
