@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { MAX_CAMINANTES, isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,6 +46,28 @@ export async function POST(request: NextRequest) {
         // invalid data url
         return NextResponse.json({ message: 'Formato de imagen inválido' }, { status: 400 })
       }
+    }
+
+    // Enforce available slots for caminantes. If capacity is full, stop public registration.
+    const { count, error: countError } = await supabase
+      .from("caminantes")
+      .select("id", { count: "exact", head: true })
+
+    if (countError) {
+      console.error("[v0] Error counting caminantes:", countError)
+      return NextResponse.json({ message: "No fue posible validar el cupo disponible" }, { status: 500 })
+    }
+
+    const currentCount = count ?? 0
+    if (!isCaminanteRegistrationOpen(currentCount)) {
+      return NextResponse.json(
+        {
+          message: "Nuestro cupo para este retiro se ha completado. Déjanos tus datos para agregarte a una lista de espera.",
+          currentCount,
+          maxCupo: MAX_CAMINANTES,
+        },
+        { status: 409 },
+      )
     }
 
     // Insert caminante (no auth required for public registration)

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,13 +26,49 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { MAX_CAMINANTES } from "@/lib/caminantes-capacity"
 
 export function CaminanteRegistrationForm() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [isCapacityLoading, setIsCapacityLoading] = useState(true)
+  const [isWaitlistLoading, setIsWaitlistLoading] = useState(false)
+  const [registrationOpen, setRegistrationOpen] = useState(true)
+  const [currentCount, setCurrentCount] = useState(0)
   const [sacramentos, setSacramentos] = useState<string[]>([])
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+
+  const loadCapacity = useCallback(async () => {
+    try {
+      const response = await fetch("/api/caminantes/cupo", { cache: "no-store" })
+      if (!response.ok) {
+        throw new Error("No fue posible consultar el estado del cupo")
+      }
+
+      const cupo = await response.json()
+      setCurrentCount(cupo.currentCount ?? 0)
+      setRegistrationOpen(Boolean(cupo.registrationOpen))
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No fue posible consultar el estado del cupo",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCapacityLoading(false)
+    }
+  }, [toast])
+
+  useEffect(() => {
+    void loadCapacity()
+
+    const interval = window.setInterval(() => {
+      void loadCapacity()
+    }, 30000)
+
+    return () => window.clearInterval(interval)
+  }, [loadCapacity])
 
   const handleSacramentoChange = (sacramento: string, checked: boolean) => {
     if (checked) {
@@ -75,8 +111,11 @@ export function CaminanteRegistrationForm() {
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Error al registrar")
+        const error = await response.json().catch(() => null)
+        if (response.status === 409) {
+          await loadCapacity()
+        }
+        throw new Error(error?.message || "Error al registrar")
       }
 
       toast({
@@ -96,6 +135,101 @@ export function CaminanteRegistrationForm() {
     }
   }
 
+  const handleWaitlistSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsWaitlistLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const data = Object.fromEntries(formData.entries())
+
+    try {
+      const response = await fetch("/api/lista-espera", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre_completo: data.nombre_completo,
+          celular: data.celular,
+          correo: data.correo,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        if (response.status === 409) {
+          await loadCapacity()
+        }
+        throw new Error(error?.message || "Error al guardar en lista de espera")
+      }
+
+      toast({
+        title: "Datos recibidos",
+        description: "Te agregamos a la lista de espera. Te contactaremos si se libera un cupo.",
+      })
+
+      e.currentTarget.reset()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al guardar en lista de espera",
+        variant: "destructive",
+      })
+    } finally {
+      setIsWaitlistLoading(false)
+    }
+  }
+
+  if (isCapacityLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!registrationOpen) {
+    return (
+      <div className="space-y-6">
+        <Alert className="bg-amber-50 border-amber-200">
+          <AlertDescription className="text-amber-900 text-sm leading-relaxed">
+            Nuestro cupo para este retiro se ha completado. Sin embargo algunas personas tal vez no puedan asistir por
+            motivos de fuerza mayor, déjanos tus datos para agregarte a una lista de espera.
+          </AlertDescription>
+        </Alert>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Lista de Espera</CardTitle>
+            <CardDescription>
+              Registros confirmados: {currentCount}/{MAX_CAMINANTES}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleWaitlistSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="nombre_completo">Nombre *</Label>
+                <Input id="nombre_completo" name="nombre_completo" required placeholder="Tu nombre completo" />
+              </div>
+              <div>
+                <Label htmlFor="celular">Teléfono *</Label>
+                <Input id="celular" name="celular" type="tel" required placeholder="Número de teléfono" />
+              </div>
+              <div>
+                <Label htmlFor="correo">Correo electrónico *</Label>
+                <Input id="correo" name="correo" type="email" required placeholder="correo@ejemplo.com" />
+              </div>
+              <div className="flex justify-end">
+                <Button type="submit" disabled={isWaitlistLoading}>
+                  {isWaitlistLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Unirme a la lista de espera
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Alert className="bg-rose-50 border-rose-200 flex items-start justify-between">
@@ -110,7 +244,7 @@ export function CaminanteRegistrationForm() {
             </Button>
           </DialogTrigger>
 
-          <DialogContent className="max-h-[90vh] flex flex-col [&>button]:z-[60]">
+          <DialogContent className="max-h-[90vh] flex flex-col [&>button]:z-60">
             <DialogHeader className="sticky top-0 bg-background z-50 pb-4 -mt-2">
               <DialogTitle>¡BIENVENIDO A EMAÚS!</DialogTitle>
               <DialogDescription>Por favor lee detenidamente antes de completar el formulario</DialogDescription>

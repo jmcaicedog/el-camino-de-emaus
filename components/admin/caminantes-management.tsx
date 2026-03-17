@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { CaminanteCard } from "@/components/servidor/caminante-card"
-import type { AdminUser } from "@/lib/types"
+import type { AdminUser, Caminante, ListaEspera, Servidor } from "@/lib/types"
 import { ServidorCard } from "@/components/servidor/servidor-card"
 import { uiAvatarUrl } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
@@ -17,7 +17,6 @@ import { Loader2, Search, DollarSign, Trash, FileDown } from "lucide-react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import type { Caminante, Servidor } from "@/lib/types"
 
 interface CaminantesManagementProps {
   adminUser?: AdminUser
@@ -26,6 +25,7 @@ interface CaminantesManagementProps {
 export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
   const { toast } = useToast()
   const [caminantes, setCaminantes] = useState<Caminante[]>([])
+  const [listaEspera, setListaEspera] = useState<ListaEspera[]>([])
   const [mesas, setMesas] = useState<Array<{ id: string; numero: number }>>([])
   const [servidores, setServidores] = useState<Servidor[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -42,19 +42,22 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
 
   const loadCaminantes = async () => {
     try {
-      const [caminantesRes, mesasRes, servidoresRes] = await Promise.all([
+      const [caminantesRes, mesasRes, servidoresRes, listaEsperaRes] = await Promise.all([
         fetch("/api/caminantes"),
         fetch("/api/mesas"),
         fetch("/api/servidores"),
+        fetch("/api/lista-espera"),
       ])
-      const [caminantesData, mesasData, servidoresData] = await Promise.all([
+      const [caminantesData, mesasData, servidoresData, listaEsperaData] = await Promise.all([
         caminantesRes.json(),
         mesasRes.json(),
         servidoresRes.json(),
+        listaEsperaRes.json(),
       ])
       setCaminantes(caminantesData)
       setMesas(mesasData)
       setServidores(servidoresData)
+      setListaEspera(Array.isArray(listaEsperaData) ? listaEsperaData : [])
     } catch (error) {
       toast({
         title: "Error",
@@ -478,6 +481,45 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                     </TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Espera</CardTitle>
+          <CardDescription>Total: {listaEspera.length} personas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Teléfono</TableHead>
+                  <TableHead>Correo</TableHead>
+                  <TableHead>Fecha de registro</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {listaEspera.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      No hay personas en lista de espera.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  listaEspera.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.nombre_completo}</TableCell>
+                      <TableCell>{item.celular}</TableCell>
+                      <TableCell>{item.correo}</TableCell>
+                      <TableCell>{new Date(item.created_at).toLocaleString("es-CO")}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

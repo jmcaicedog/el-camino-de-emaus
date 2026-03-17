@@ -45,6 +45,15 @@ export interface Caminante {
   updated_at: string
 }
 
+export interface ListaEspera {
+  id: string
+  nombre_completo: string
+  celular: string
+  correo: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Servidor {
   id: string
   auth_user_id?: string
