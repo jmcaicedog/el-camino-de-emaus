@@ -206,7 +206,7 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                     <CircularProgress percentage={getContactProgressPercentage(mesa.id)} />
                   </div>
                 </CardTitle>
-                <CardDescription>{mesa.nombre}</CardDescription>
+              
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
