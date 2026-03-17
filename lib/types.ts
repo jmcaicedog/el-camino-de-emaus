@@ -40,6 +40,8 @@ export interface Caminante {
   imagen?: string | null
   cartas_recibidas: number
   fotos_recibidas: number
+  caminantes_contactados?: boolean
+  familiares_contactados?: boolean
   mesa_id?: string
   created_at: string
   updated_at: string

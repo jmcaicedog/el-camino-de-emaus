@@ -25,6 +25,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         'imagen',
         'cartas_recibidas',
         'fotos_recibidas',
+        'caminantes_contactados',
+        'familiares_contactados',
         'monto_pagado',
       ]
       // If body contains keys outside allowedFields, deny
@@ -57,12 +59,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         }
       }
 
-      // Cartas team can only edit cartas_recibidas and fotos_recibidas
+      // Cartas team can only edit cartas_recibidas, fotos_recibidas, and contact fields
       if (isCartasTeam) {
-        const cartasAllowed = ['cartas_recibidas', 'fotos_recibidas']
+        const cartasAllowed = ['cartas_recibidas', 'fotos_recibidas', 'caminantes_contactados', 'familiares_contactados']
         const cartasForbidden = Object.keys(body).some((k) => !cartasAllowed.includes(k))
         if (cartasForbidden) {
-          return NextResponse.json({ message: 'El equipo de Cartas solo puede modificar cartas y fotos' }, { status: 403 })
+          return NextResponse.json({ message: 'El equipo de Cartas solo puede modificar cartas, fotos y estado de contactos' }, { status: 403 })
         }
         // Cartas team is authorized for any caminante, skip mesa check
       } else {

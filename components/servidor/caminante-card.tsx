@@ -28,6 +28,8 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
   const [observaciones, setObservaciones] = useState(caminante.observaciones || "")
   const [cartasCount, setCartasCount] = useState<number>(caminante.cartas_recibidas ?? 0)
   const [fotosCount, setFotosCount] = useState<number>(caminante.fotos_recibidas ?? 0)
+  const [caminantesContactados, setCaminantesContactados] = useState<boolean>(caminante.caminantes_contactados ?? false)
+  const [familiaresContactados, setFamiliaresContactados] = useState<boolean>(caminante.familiares_contactados ?? false)
 
   async function compressImage(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -215,6 +217,43 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
     saveTrackingValue('fotos_recibidas', v)
   }
 
+  const saveContactField = async (field: 'caminantes_contactados' | 'familiares_contactados', value: boolean) => {
+    setIsUpdating(true)
+    try {
+      const res = await fetch(`/api/caminantes/${caminante.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      })
+
+      if (!res.ok) throw new Error('Error al actualizar')
+
+      const labelMap = {
+        'caminantes_contactados': 'Caminantes contactados',
+        'familiares_contactados': 'Familiares contactados'
+      }
+      toast({ title: 'Actualizado', description: `${labelMap[field]} actualizado correctamente` })
+      if (typeof onUpdate === 'function') onUpdate()
+    } catch (e) {
+      console.error(e)
+      toast({ title: 'Error', description: 'No se pudo actualizar', variant: 'destructive' })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleCaminantesContactados = (checked: boolean | 'indeterminate') => {
+    const value = checked === true
+    setCaminantesContactados(value)
+    saveContactField('caminantes_contactados', value)
+  }
+
+  const handleFamiliaresContactados = (checked: boolean | 'indeterminate') => {
+    const value = checked === true
+    setFamiliaresContactados(value)
+    saveContactField('familiares_contactados', value)
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -283,7 +322,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
 
           <div>
             {/* Controles de tracking (columna derecha) */}
-            <div className="flex flex-col gap-3 items-center justify-start pt-2">
+            <div className="flex flex-col gap-3 pt-2 w-full">
               <div className="flex items-center gap-3 justify-center">
                 <Label className="text-sm w-20 text-right">Cartas:</Label>
                 <div className="flex items-center gap-2">
@@ -299,9 +338,34 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Botones centrados que abarcan ambas columnas */}
-          <div className="md:col-span-2 flex flex-col items-center gap-2 mt-4">
+        <div className="flex items-center gap-0.5 justify-between mt-4 w-full">
+          <button
+            onClick={() => canEdit && handleCaminantesContactados(!caminantesContactados)}
+            disabled={!canEdit}
+            className={`px-2 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer whitespace-nowrap flex-1 min-h-11 flex items-center justify-center ${
+              caminantesContactados
+                ? 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-200'
+                : 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200'
+            } ${!canEdit ? 'opacity-50 cursor-not-allowed hover:bg-inherit' : ''}`}
+          >
+            Caminante contactado {caminantesContactados ? '✓' : '✗'}
+          </button>
+          <button
+            onClick={() => canEdit && handleFamiliaresContactados(!familiaresContactados)}
+            disabled={!canEdit}
+            className={`px-2 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer whitespace-nowrap flex-1 min-h-11 flex items-center justify-center ${
+              familiaresContactados
+                ? 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-200'
+                : 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200'
+            } ${!canEdit ? 'opacity-50 cursor-not-allowed hover:bg-inherit' : ''}`}
+          >
+            Familiares contactados {familiaresContactados ? '✓' : '✗'}
+          </button>
+        </div>
+
+        <div className="mt-4 flex flex-col items-center gap-2">
             <Dialog open={isEditingMedical} onOpenChange={setIsEditingMedical}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-66 bg-transparent flex items-center justify-center gap-2">
@@ -597,7 +661,6 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                 </div>
               </DialogContent>
             </Dialog>
-          </div>
         </div>
       </CardContent>
     </Card>
