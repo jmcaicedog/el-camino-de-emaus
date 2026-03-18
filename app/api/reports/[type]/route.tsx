@@ -10,6 +10,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const supabase = await createClient()
 
+    if (type === "evolucion-mesas") {
+      const { data: userData } = await supabase.auth.getUser()
+      const currentUser = userData?.user
+      if (!currentUser) return NextResponse.json({ message: "No autenticado" }, { status: 401 })
+
+      const { data: adminRecord } = await supabase
+        .from("admin_users")
+        .select("is_super")
+        .eq("id", currentUser.id)
+        .maybeSingle()
+
+      if (!adminRecord?.is_super) {
+        return NextResponse.json({ message: "No autorizado" }, { status: 403 })
+      }
+    }
+
   let data: any[] = []
   let columns: { key: string; label: string }[] = []
   let title = ""
@@ -278,6 +294,77 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         ]
 
         title = "Tallas y Colores (Servidores)"
+        break
+      }
+
+      case "evolucion-mesas": {
+        const TARGET_MESA_PAYMENT = 490000
+        const { data: mesas } = await supabase.from("mesas").select("id, numero").order("numero")
+        const { data: caminantes } = await supabase
+          .from("caminantes")
+          .select("mesa_id, nombre_completo, cartas_recibidas, monto_pagado, caminantes_contactados, familiares_contactados")
+
+        const caminantesByMesa = new Map<string, any[]>()
+        for (const caminante of caminantes || []) {
+          if (!caminante.mesa_id) continue
+          const arr = caminantesByMesa.get(caminante.mesa_id) || []
+          arr.push(caminante)
+          caminantesByMesa.set(caminante.mesa_id, arr)
+        }
+
+        data = (mesas || []).map((mesa) => {
+          const mesaCaminantes = caminantesByMesa.get(mesa.id) || []
+          const totalCaminantes = mesaCaminantes.length
+
+          let progresoContacto = 0
+          let progresoCartas = 0
+          let progresoPagos = 0
+
+          if (totalCaminantes > 0) {
+            const totalContactoPuntos = totalCaminantes * 2
+            let puntosContacto = 0
+            let caminantesConCartas = 0
+            let totalPagado = 0
+
+            for (const c of mesaCaminantes) {
+              if (c.caminantes_contactados) puntosContacto += 1
+              if (c.familiares_contactados) puntosContacto += 1
+              if ((c.cartas_recibidas ?? 0) > 0) caminantesConCartas += 1
+              totalPagado += Math.min(Number(c.monto_pagado) || 0, TARGET_MESA_PAYMENT)
+            }
+
+            progresoContacto = (puntosContacto / totalContactoPuntos) * 100
+            progresoCartas = (caminantesConCartas / totalCaminantes) * 100
+            progresoPagos = (totalPagado / (totalCaminantes * TARGET_MESA_PAYMENT)) * 100
+          }
+
+          const detalleCaminantes = mesaCaminantes.length
+            ? mesaCaminantes
+                .map(
+                  (c) =>
+                    `${c.nombre_completo} | Cartas: ${c.cartas_recibidas ?? 0} | Pagado: $${Number(c.monto_pagado || 0).toLocaleString("es-CO")}`,
+                )
+                .join("\n")
+            : "Sin caminantes asignados"
+
+          return {
+            mesa_numero: mesa.numero,
+            avance_contacto: Number(progresoContacto.toFixed(2)),
+            avance_cartas: Number(progresoCartas.toFixed(2)),
+            avance_pagos: Number(progresoPagos.toFixed(2)),
+            caminantes_detalle: detalleCaminantes,
+          }
+        })
+
+        columns = [
+          { key: "mesa_numero", label: "Mesa" },
+          { key: "avance_contacto", label: "% Avance Contacto" },
+          { key: "avance_cartas", label: "% Avance Cartas" },
+          { key: "avance_pagos", label: "% Avance Pagos" },
+          { key: "caminantes_detalle", label: "Caminantes (Nombre | Cartas | Pagado)" },
+        ]
+
+        title = "Evolución de mesas"
         break
       }
 

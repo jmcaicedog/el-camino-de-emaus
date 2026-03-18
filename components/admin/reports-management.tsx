@@ -6,11 +6,32 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { FileSpreadsheet, FileText, Loader2 } from "lucide-react"
 
-export function ReportsManagement({ onlyCartas, onlyRestricciones }: { onlyCartas?: boolean; onlyRestricciones?: boolean } = {}) {
+export function ReportsManagement({
+  onlyCartas,
+  onlyRestricciones,
+  isSuperAdmin,
+}: {
+  onlyCartas?: boolean
+  onlyRestricciones?: boolean
+  isSuperAdmin?: boolean
+} = {}) {
   const { toast } = useToast()
   const [isExporting, setIsExporting] = useState<string | null>(null)
 
-  const exportReport = async (type: "caminantes" | "servidores" | "mesas" | "pagos" | "cartas" | "restricciones" | "equipos-servidores" | "tallas" | "tallas-servidores", format: "excel" | "pdf") => {
+  const exportReport = async (
+    type:
+      | "caminantes"
+      | "servidores"
+      | "mesas"
+      | "pagos"
+      | "cartas"
+      | "restricciones"
+      | "equipos-servidores"
+      | "tallas"
+      | "tallas-servidores"
+      | "evolucion-mesas",
+    format: "excel" | "pdf",
+  ) => {
     setIsExporting(`${type}-${format}`)
     let win: Window | null = null
     try {
@@ -149,6 +170,17 @@ export function ReportsManagement({ onlyCartas, onlyRestricciones }: { onlyCarta
       description: "Servidores que marcaron colores en el formulario y sus tallas/colores",
       icon: FileText,
     },
+    ...(isSuperAdmin
+      ? [
+          {
+            id: "evolucion-mesas",
+            title: "Evolución de mesas",
+            description:
+              "Avance por mesa en contacto, cartas y pagos, con detalle de caminantes, cartas y valor pagado",
+            icon: FileSpreadsheet,
+          },
+        ]
+      : []),
   ]
 
   const filteredReports = onlyCartas

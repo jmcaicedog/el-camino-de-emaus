@@ -22,6 +22,7 @@ interface MesasManagementProps {
 
 export function MesasManagement({ adminUser }: MesasManagementProps) {
   const { toast } = useToast()
+  const TARGET_MESA_PAYMENT = 490000
   const [mesas, setMesas] = useState<Mesa[]>([])
   const [caminantes, setCaminantes] = useState<Caminante[]>([])
   const [servidores, setServidores] = useState<Servidor[]>([])
@@ -86,6 +87,33 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
     
     // Calculate percentage
     return (achievedPoints / totalPoints) * 100
+  }
+
+  const getCardsProgressPercentage = (mesaId: string) => {
+    const mesaCaminantes = getCaminantesByMesa(mesaId)
+
+    if (mesaCaminantes.length === 0) return 0
+
+    const caminantesConCartas = mesaCaminantes.filter(
+      (caminante) => (caminante.cartas_recibidas ?? 0) > 0,
+    ).length
+
+    return (caminantesConCartas / mesaCaminantes.length) * 100
+  }
+
+  const getPaymentsProgressPercentage = (mesaId: string) => {
+    const mesaCaminantes = getCaminantesByMesa(mesaId)
+
+    if (mesaCaminantes.length === 0) return 0
+
+    const totalEsperado = mesaCaminantes.length * TARGET_MESA_PAYMENT
+    const totalPagado = mesaCaminantes.reduce((acc, caminante) => {
+      const pagado = Number(caminante.monto_pagado) || 0
+      // Cap contribution per person at target to avoid values above 100%
+      return acc + Math.min(pagado, TARGET_MESA_PAYMENT)
+    }, 0)
+
+    return (totalPagado / totalEsperado) * 100
   }
 
   const canEditMesa = (mesaId: string) => {
@@ -197,15 +225,26 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
           return (
             <Card key={mesa.id}>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Mesa {mesa.numero}
-                  <div className="flex items-center gap-3">
-                    <Badge variant={mesaCaminantes.length > 0 ? "default" : "secondary"}>
-                      {mesaCaminantes.length} / 7
-                    </Badge>
-                    <CircularProgress percentage={getContactProgressPercentage(mesa.id)} />
+                <CardTitle>Mesa {mesa.numero}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Badge variant={mesaCaminantes.length > 0 ? "default" : "secondary"}>
+                    {mesaCaminantes.length} / 7
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  <div className="flex flex-col items-center gap-1">
+                    <CircularProgress percentage={getContactProgressPercentage(mesa.id)} size={44} strokeWidth={2.5} />
+                    <span className="text-[11px] text-muted-foreground">Contacto</span>
                   </div>
-                </CardTitle>
+                  <div className="flex flex-col items-center gap-1">
+                    <CircularProgress percentage={getCardsProgressPercentage(mesa.id)} size={44} strokeWidth={2.5} />
+                    <span className="text-[11px] text-muted-foreground">Cartas</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <CircularProgress percentage={getPaymentsProgressPercentage(mesa.id)} size={44} strokeWidth={2.5} />
+                    <span className="text-[11px] text-muted-foreground">Pagos</span>
+                  </div>
+                </div>
               
               </CardHeader>
               <CardContent className="space-y-4">

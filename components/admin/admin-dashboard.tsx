@@ -161,11 +161,11 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           {(adminUser.is_super || isCartasTeam || isSnacksTeam || isLogisticaTeam) && (
             <TabsContent value="reportes">
               {adminUser.is_super || isLogisticaTeam ? (
-                <ReportsManagement />
+                <ReportsManagement isSuperAdmin={adminUser.is_super} />
               ) : isCartasTeam ? (
-                <ReportsManagement onlyCartas />
+                <ReportsManagement onlyCartas isSuperAdmin={adminUser.is_super} />
               ) : (
-                <ReportsManagement onlyRestricciones />
+                <ReportsManagement onlyRestricciones isSuperAdmin={adminUser.is_super} />
               )}
             </TabsContent>
           )}
