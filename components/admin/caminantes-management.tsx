@@ -247,7 +247,7 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                             />
                           </button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogContent className="!max-w-md max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>{caminante.nombre_completo}</DialogTitle>
                           </DialogHeader>
@@ -267,7 +267,7 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                             )}
                           </div>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogContent className="!max-w-md max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>{caminante.nombre_completo}</DialogTitle>
                           </DialogHeader>

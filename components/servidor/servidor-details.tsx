@@ -18,12 +18,12 @@ export default function ServidorDetails({ servidor, onImageChange, canEdit = tru
   return (
     <div className="space-y-4 text-sm">
       {/* Top: avatar + basic info grid (profesión movida a Información Laboral). On md use a 36%/rest split (~+30%) */}
-      <div className="grid grid-cols-1 md:grid-cols-[36%_1fr] gap-6 items-start">
-        <div className="relative flex-shrink-0">
+      <div className="grid grid-cols-1 md:grid-cols-[36%_1fr] gap-4 md:gap-6 items-start">
+        <div className="relative flex-shrink-0 flex justify-center md:justify-start">
           <img
             src={servidor.imagen || uiAvatarUrl(servidor.nombre_completo, 512)}
             alt={servidor.nombre_completo}
-            className="rounded-full h-36 w-36 object-cover shadow-lg"
+            className="rounded-full h-24 w-24 md:h-36 md:w-36 object-cover shadow-lg"
           />
 
           {canEdit && (
@@ -55,7 +55,7 @@ export default function ServidorDetails({ servidor, onImageChange, canEdit = tru
           )}
         </div>
 
-  <div className="flex-1 min-w-0 grid md:grid-cols-2 gap-4">
+  <div className="flex-1 min-w-0 grid grid-cols-2 gap-2 md:gap-4">
           <div>
             <div className="font-medium">Cédula</div>
             <div className="truncate" title={String(servidor.cedula ?? '-')}>{String(servidor.cedula ?? '-')}</div>
@@ -94,7 +94,7 @@ export default function ServidorDetails({ servidor, onImageChange, canEdit = tru
       {/* Información Médica */}
       <section className="pt-4 border-t">
         <h3 className="font-semibold mb-2">Información Médica</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2 md:gap-4">
           <div>
             <div className="font-medium">Medicamentos</div>
             <div className="text-muted-foreground whitespace-pre-wrap break-words" title={servidor.medicamentos || '-'}>{servidor.medicamentos || '-'}</div>
@@ -170,7 +170,7 @@ export default function ServidorDetails({ servidor, onImageChange, canEdit = tru
       {/* Información Espiritual (sección vertical, contenido en 1-2 columnas) */}
       <section className="pt-4 border-t">
         <h3 className="font-semibold mb-2">Información Espiritual</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2 md:gap-4">
           <div>
             <div className="font-medium">Parroquia</div>
             <div className="truncate" title={servidor.parroquia ?? '-'}>{servidor.parroquia ?? '-'}</div>
@@ -204,7 +204,7 @@ export default function ServidorDetails({ servidor, onImageChange, canEdit = tru
       {/* Información de Servicio (sección vertical, contenido en hasta 2 columnas) */}
       <section className="pt-4 border-t">
         <h3 className="font-semibold mb-2">Información de Servicio</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2 md:gap-4">
           <div>
             <div className="font-medium">Retiros anteriores</div>
             <div className="truncate" title={String(servidor.retiros_anteriores ?? '-')}>{String(servidor.retiros_anteriores ?? '-')}</div>

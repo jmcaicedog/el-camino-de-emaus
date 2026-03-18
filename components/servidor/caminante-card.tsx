@@ -296,55 +296,61 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            {/* Medicamentos y Restricciones (columna izquierda) */}
-            <div className="pt-2">
-              {caminante.medicamentos ? (
-                <div className="text-sm">
-                  <div className="font-medium">Medicamentos</div>
-                  <div className="text-muted-foreground whitespace-pre-wrap break-words">{caminante.medicamentos}</div>
-                </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">Sin medicamentos registrados</div>
-              )}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 md:gap-4 items-start">
+          <div className="space-y-3 pt-2 min-w-0">
+            {caminante.medicamentos ? (
+              <div className="text-sm">
+                <div className="font-medium">Medicamentos</div>
+                <div className="text-muted-foreground whitespace-pre-wrap break-words">{caminante.medicamentos}</div>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">Sin medicamentos registrados</div>
+            )}
 
-              {caminante.restricciones_alimenticias ? (
-                <div className="text-sm mt-2">
-                  <div className="font-medium">Restricciones alimenticias</div>
-                  <div className="text-muted-foreground whitespace-pre-wrap break-words">{caminante.restricciones_alimenticias}</div>
-                </div>
-              ) : (
-                <div className="text-sm mt-2 text-muted-foreground">Sin restricciones registradas</div>
-              )}
-            </div>
+            {caminante.restricciones_alimenticias ? (
+              <div className="text-sm">
+                <div className="font-medium">Restricciones alimenticias</div>
+                <div className="text-muted-foreground whitespace-pre-wrap break-words">{caminante.restricciones_alimenticias}</div>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">Sin restricciones registradas</div>
+            )}
           </div>
 
-          <div>
-            {/* Controles de tracking (columna derecha) */}
-            <div className="flex flex-col gap-3 pt-2 w-full">
-              <div className="flex items-center gap-3 justify-center">
-                <Label className="text-sm w-20 text-right">Cartas:</Label>
-                <div className="flex items-center gap-2">
-                  <Input type="number" value={cartasCount} onChange={(e) => setCartasCount(Number(e.target.value))} onBlur={onCartasInputBlur} className="w-16 text-center" disabled={!canEdit} />
-                </div>
+          <div className="pt-2">
+            <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-[auto_auto] items-center gap-2 justify-start">
+                <Label className="text-xs md:text-sm w-12 text-right">Cartas:</Label>
+                <Input
+                  type="number"
+                  value={cartasCount}
+                  onChange={(e) => setCartasCount(Number(e.target.value))}
+                  onBlur={onCartasInputBlur}
+                  className="w-16 md:w-20 text-center text-sm"
+                  disabled={!canEdit}
+                />
               </div>
 
-              <div className="flex items-center gap-3 justify-center">
-                <Label className="text-sm w-20 text-right">Fotos:</Label>
-                <div className="flex items-center gap-2">                  
-                  <Input type="number" value={fotosCount} onChange={(e) => setFotosCount(Number(e.target.value))} onBlur={onFotosInputBlur} className="w-16 text-center" disabled={!canEdit} />
-                </div>
+              <div className="grid grid-cols-[auto_auto] items-center gap-2 justify-start">
+                <Label className="text-xs md:text-sm w-12 text-right">Fotos:</Label>
+                <Input
+                  type="number"
+                  value={fotosCount}
+                  onChange={(e) => setFotosCount(Number(e.target.value))}
+                  onBlur={onFotosInputBlur}
+                  className="w-16 md:w-20 text-center text-sm"
+                  disabled={!canEdit}
+                />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-0.5 justify-between mt-4 w-full">
+        <div className="flex flex-col gap-2 mt-4 w-full">
           <button
             onClick={() => canEdit && handleCaminantesContactados(!caminantesContactados)}
             disabled={!canEdit}
-            className={`px-2 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer whitespace-nowrap flex-1 min-h-11 flex items-center justify-center ${
+            className={`px-3 py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all cursor-pointer whitespace-normal flex items-center justify-center ${
               caminantesContactados
                 ? 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-200'
                 : 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200'
@@ -355,7 +361,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
           <button
             onClick={() => canEdit && handleFamiliaresContactados(!familiaresContactados)}
             disabled={!canEdit}
-            className={`px-2 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer whitespace-nowrap flex-1 min-h-11 flex items-center justify-center ${
+            className={`px-3 py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all cursor-pointer whitespace-normal flex items-center justify-center ${
               familiaresContactados
                 ? 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-200'
                 : 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200'
@@ -368,14 +374,14 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
         <div className="mt-4 flex flex-col items-center gap-2">
             <Dialog open={isEditingMedical} onOpenChange={setIsEditingMedical}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-66 bg-transparent flex items-center justify-center gap-2">
+                <Button variant="outline" className="w-full md:w-66 bg-transparent flex items-center justify-center gap-2">
                   <Clipboard className="w-4 h-4" />
                   {canEdit ? 'Ver/Editar Información Médica' : 'Ver Información Médica'}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
                 <DialogHeader>
-                  <DialogTitle>Información Médica - {caminante.nombre_completo}</DialogTitle>
+                  <DialogTitle className="text-lg md:text-xl">Información Médica - {caminante.nombre_completo}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
@@ -410,23 +416,23 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
 
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-56 bg-transparent flex items-center justify-center gap-2">
+                <Button variant="outline" className="w-full md:w-56 bg-transparent flex items-center justify-center gap-2">
                   <Eye className="w-4 h-4" />
                   Ver información completa
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
                 <DialogHeader>
-                  <DialogTitle>{caminante.nombre_completo}</DialogTitle>
+                  <DialogTitle className="text-lg md:text-xl">{caminante.nombre_completo}</DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-1 text-sm">
-                  <div className="grid grid-cols-1 md:grid-cols-[36%_1fr] gap-6 items-start">
-                    <div className="relative flex-shrink-0">
+                <div className="space-y-1 text-sm overflow-x-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-[36%_1fr] gap-4 md:gap-6 items-start">
+                    <div className="relative flex-shrink-0 flex justify-center md:justify-start">
                       <img
                         src={caminante.imagen || uiAvatarUrl(caminante.nombre_completo, 512)}
                         alt={caminante.nombre_completo}
-                        className="rounded-full h-36 w-36 object-cover shadow-lg"
+                        className="rounded-full h-24 w-24 md:h-36 md:w-36 object-cover shadow-lg"
                       />
                       {canEdit && (
                         <>
@@ -457,7 +463,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                       )}
                     </div>
 
-                    <div className="flex-1 grid md:grid-cols-2 gap-4">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                       <div>
                         <div className="font-medium">Cédula</div>
                         <div className="truncate">{caminante.cedula}</div>
@@ -491,7 +497,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                   <section className="pt-4 border-t">
                     <h3 className="font-semibold mb-2">Contactos de emergencia</h3>
                     <div className="space-y-3">
-                      <div className="grid md:grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         <div>
                           <div className="font-medium">Nombre</div>
                           <div className="truncate">{caminante.nombre_contacto_emergencia || '-'}</div>

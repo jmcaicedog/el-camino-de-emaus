@@ -223,9 +223,9 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                             <DialogTrigger asChild>
                               <button className="text-left text-sm underline underline-offset-2 text-primary/90">{lider.nombre_completo}</button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                            <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
                               <DialogHeader>
-                                <DialogTitle>{lider.nombre_completo}</DialogTitle>
+                                <DialogTitle className="text-lg md:text-xl">{lider.nombre_completo}</DialogTitle>
                               </DialogHeader>
                               <ServidorCard servidor={lider} onUpdate={loadData} canEdit={canEditMesa(mesa.id)} />
                             </DialogContent>
@@ -248,9 +248,9 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                             <DialogTrigger asChild>
                               <button className="text-left text-sm underline underline-offset-2 text-primary/90">{colider.nombre_completo}</button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                            <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
                               <DialogHeader>
-                                <DialogTitle>{colider.nombre_completo}</DialogTitle>
+                                <DialogTitle className="text-lg md:text-xl">{colider.nombre_completo}</DialogTitle>
                               </DialogHeader>
                               <ServidorCard servidor={colider} onUpdate={loadData} canEdit={canEditMesa(mesa.id)} />
                             </DialogContent>
@@ -288,9 +288,9 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                                 )}
                               </div>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                            <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
                               <DialogHeader>
-                                <DialogTitle>{c.nombre_completo}</DialogTitle>
+                                <DialogTitle className="text-lg md:text-xl">{c.nombre_completo}</DialogTitle>
                               </DialogHeader>
                               <CaminanteCard caminante={c} onUpdate={loadData} canEdit={canEditMesa(mesa.id)} />
                             </DialogContent>
@@ -315,9 +315,9 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                         Asignar Personas
                       </Button>
                     </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
                     <DialogHeader>
-                      <DialogTitle>Asignar a Mesa {mesa.numero}</DialogTitle>
+                      <DialogTitle className="text-lg md:text-xl">Asignar a Mesa {mesa.numero}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-6">
                       <div>

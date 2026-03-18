@@ -282,7 +282,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                             />
                           </button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogContent className="!max-w-md max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>{servidor.nombre_completo}</DialogTitle>
                           </DialogHeader>
@@ -295,7 +295,7 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
                         <DialogTrigger asChild>
                           <button className="text-left text-sm underline underline-offset-2 text-primary/90">{servidor.nombre_completo}</button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogContent className="!max-w-md max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>{servidor.nombre_completo}</DialogTitle>
                           </DialogHeader>

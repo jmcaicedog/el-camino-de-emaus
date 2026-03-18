@@ -181,14 +181,14 @@ export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCar
         <div className="md:col-span-2 flex flex-col items-center gap-2 mt-4">
           <Dialog open={isEditing} onOpenChange={setIsEditing}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-66 bg-transparent flex items-center justify-center gap-2">
+              <Button variant="outline" className="w-full md:w-66 bg-transparent flex items-center justify-center gap-2">
                 <Pill className="h-4 w-4" />
                 {canEdit ? 'Ver/Editar Información Médica' : 'Ver Información Médica'}
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
               <DialogHeader>
-                <DialogTitle>Información Médica - {servidor.nombre_completo}</DialogTitle>
+                <DialogTitle className="text-lg md:text-xl">Información Médica - {servidor.nombre_completo}</DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4">
@@ -224,14 +224,14 @@ export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCar
 
           <Dialog open={isViewing} onOpenChange={setIsViewing}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-56 bg-transparent flex items-center justify-center gap-2">
+              <Button variant="outline" className="w-full md:w-56 bg-transparent flex items-center justify-center gap-2">
                 <Eye className="h-4 w-4" />
                 Ver información completa
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
               <DialogHeader>
-                <DialogTitle>{servidor.nombre_completo}</DialogTitle>
+                <DialogTitle className="text-lg md:text-xl">{servidor.nombre_completo}</DialogTitle>
               </DialogHeader>
               <ServidorDetails servidor={servidor} onImageChange={handleImageChange} canEdit={canEdit} />
             </DialogContent>
