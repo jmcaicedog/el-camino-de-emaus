@@ -28,6 +28,27 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [caminantes, setCaminantes] = useState(initialCaminantes)
 
+  const parseMoney = (value: unknown) => {
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0
+    if (typeof value === "string") {
+      const digitsOnly = value.replace(/[^\d-]/g, "")
+      const parsed = Number.parseInt(digitsOnly, 10)
+      return Number.isFinite(parsed) ? parsed : 0
+    }
+    return 0
+  }
+
+  const montoPagado = parseMoney(servidor.monto_pagado)
+  const montoTotal = parseMoney(servidor.monto_total)
+  const pagoServidor = `$${montoPagado.toLocaleString("es-CO")} / $${montoTotal.toLocaleString("es-CO")}`
+  const paymentStatus = montoPagado <= 0 ? "zero" : montoPagado >= montoTotal ? "complete" : "partial"
+
+  const getPaymentBadgeClass = () => {
+    if (paymentStatus === "zero") return "bg-red-100 text-red-800 border-red-300"
+    if (paymentStatus === "complete") return "bg-emerald-100 text-emerald-800 border-emerald-300"
+    return "bg-amber-100 text-amber-800 border-amber-300"
+  }
+
   const handleLogout = async () => {
     setIsLoggingOut(true)
     const supabase = createClient()
@@ -61,13 +82,16 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Image src="/logo.png" alt="El Camino de Emaús" width={50} height={50} className="object-contain" />
-              <div>
-                <h1 className="text-2xl font-bold">Panel de Servidor</h1>
-                <p className="text-sm text-muted-foreground">
-                  {servidor.nombre_completo} -{" "}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <Image src="/logo.png" alt="El Camino de Emaús" width={40} height={40} className="object-contain flex-shrink-0 md:w-[50px] md:h-[50px]" />
+              <div className="min-w-0">
+                <h1 className="text-lg md:text-2xl font-bold">Panel de Servidor</h1>
+                <div className="mt-0.5 flex flex-col items-start gap-1 text-xs md:text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-2">
+                  <span className="max-w-[170px] truncate sm:max-w-none">{servidor.nombre_completo}</span>
+                  <Badge variant="secondary" className={getPaymentBadgeClass()}>
+                    {pagoServidor}
+                  </Badge>
                   {isCartasTeam ? (
                     <Badge variant="secondary">Equipo de Cartas</Badge>
                   ) : isSnacksTeam ? (
@@ -77,12 +101,12 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
                   ) : (
                     <Badge variant="secondary">{servidor.tipo_servidor === "lider" ? "Líder" : "Colíder"}</Badge>
                   )}
-                </p>
+                </div>
               </div>
             </div>
-            <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Cerrar Sesión
+            <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
+              <LogOut className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Cerrar Sesión</span>
             </Button>
           </div>
         </div>

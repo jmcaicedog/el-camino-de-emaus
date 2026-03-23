@@ -10,6 +10,7 @@ import { ReportsManagement } from "@/components/admin/reports-management"
 import { AdminsManagement } from "@/components/admin/admins-management"
 import { MesaReport } from "@/components/admin/mesa-report"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -27,6 +28,23 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const [isCartasTeam, setIsCartasTeam] = useState(false)
   const [isSnacksTeam, setIsSnacksTeam] = useState(false)
   const [isLogisticaTeam, setIsLogisticaTeam] = useState(false)
+  const [pagoServidor, setPagoServidor] = useState<{ text: string; status: "zero" | "partial" | "complete" } | null>(null)
+
+  const getPaymentBadgeClass = (status: "zero" | "partial" | "complete") => {
+    if (status === "zero") return "bg-red-100 text-red-800 border-red-300"
+    if (status === "complete") return "bg-emerald-100 text-emerald-800 border-emerald-300"
+    return "bg-amber-100 text-amber-800 border-amber-300"
+  }
+
+  const parseMoney = (value: unknown) => {
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0
+    if (typeof value === "string") {
+      const digitsOnly = value.replace(/[^\d-]/g, "")
+      const parsed = Number.parseInt(digitsOnly, 10)
+      return Number.isFinite(parsed) ? parsed : 0
+    }
+    return 0
+  }
 
   useEffect(() => {
     const checkRoles = async () => {
@@ -44,6 +62,15 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
 
         // Check equipo memberships
         const myServidor = servidores.find((s: any) => s.auth_user_id === adminUser.id)
+        if (myServidor) {
+          const montoPagado = parseMoney(myServidor.monto_pagado)
+          const montoTotal = parseMoney(myServidor.monto_total)
+          const status = montoPagado <= 0 ? "zero" : montoPagado >= montoTotal ? "complete" : "partial"
+          setPagoServidor({
+            text: `$${montoPagado.toLocaleString("es-CO")} / $${montoTotal.toLocaleString("es-CO")}`,
+            status,
+          })
+        }
         const myEquipos: string[] = (myServidor?.equipos || []).map((e: string) => e.normalize('NFC').toLowerCase())
         if (myEquipos.includes('cartas')) {
           setIsCartasTeam(true)
@@ -80,7 +107,14 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
               <Image src="/logo.png" alt="El Camino de Emaús" width={40} height={40} className="object-contain flex-shrink-0 md:w-[50px] md:h-[50px]" />
               <div className="min-w-0 flex-1">
                 <h1 className="text-lg md:text-2xl font-bold truncate">Panel de Administración</h1>
-                <p className="text-xs md:text-sm text-muted-foreground truncate">Bienvenido, {adminUser.nombre_completo}</p>
+                <div className="mt-0.5 flex flex-col items-start gap-1 text-xs md:text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-2">
+                  <span className="max-w-[170px] truncate sm:max-w-none">{adminUser.nombre_completo}</span>
+                  {pagoServidor ? (
+                    <Badge variant="secondary" className={getPaymentBadgeClass(pagoServidor.status)}>
+                      {pagoServidor.text}
+                    </Badge>
+                  ) : null}
+                </div>
               </div>
             </div>
             <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
