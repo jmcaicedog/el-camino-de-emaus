@@ -36,6 +36,30 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
+  const parseMoney = (value: unknown) => {
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0
+    if (typeof value === "string") {
+      const digitsOnly = value.replace(/[^\d-]/g, "")
+      const parsed = Number.parseInt(digitsOnly, 10)
+      return Number.isFinite(parsed) ? parsed : 0
+    }
+    return 0
+  }
+
+  const getPaymentStatus = (montoPagado: unknown, montoTotal: unknown) => {
+    const pagado = parseMoney(montoPagado)
+    const total = parseMoney(montoTotal)
+    if (pagado <= 0) return "zero"
+    if (pagado >= total) return "complete"
+    return "partial"
+  }
+
+  const getPaymentBadgeClass = (status: "zero" | "partial" | "complete") => {
+    if (status === "zero") return "bg-red-100 text-red-800 border-red-300"
+    if (status === "complete") return "bg-emerald-100 text-emerald-800 border-emerald-300"
+    return "bg-amber-100 text-amber-800 border-amber-300"
+  }
+
   useEffect(() => {
     loadCaminantes()
   }, [])
@@ -401,7 +425,10 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={caminante.monto_pagado >= caminante.monto_total ? "default" : "secondary"}>
+                      <Badge
+                        variant="secondary"
+                        className={getPaymentBadgeClass(getPaymentStatus(caminante.monto_pagado, caminante.monto_total))}
+                      >
                         {`$${caminante.monto_pagado.toLocaleString()} / $${caminante.monto_total.toLocaleString()}`}
                       </Badge>
                     </TableCell>
