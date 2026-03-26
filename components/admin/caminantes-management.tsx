@@ -35,6 +35,8 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
   const [isUpdating, setIsUpdating] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [waitlistConfirmOpen, setWaitlistConfirmOpen] = useState(false)
+  const [pendingWaitlistDeleteId, setPendingWaitlistDeleteId] = useState<string | null>(null)
 
   const parseMoney = (value: unknown) => {
     if (typeof value === "number") return Number.isFinite(value) ? value : 0
@@ -168,6 +170,26 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
     } finally {
       setIsUpdating(false)
       setPendingDeleteId(null)
+    }
+  }
+
+  const deleteWaitlistItem = async (id?: string) => {
+    if (!id) return
+    setIsUpdating(true)
+    try {
+      const res = await fetch(`/api/lista-espera/${id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Error al eliminar de lista de espera")
+      toast({ title: "Eliminado", description: "Persona eliminada de lista de espera" })
+      await loadCaminantes()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al eliminar de lista de espera",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+      setPendingWaitlistDeleteId(null)
     }
   }
 
@@ -528,12 +550,13 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                   <TableHead>Teléfono</TableHead>
                   <TableHead>Correo</TableHead>
                   <TableHead>Fecha de registro</TableHead>
+                  <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {listaEspera.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
                       No hay personas en lista de espera.
                     </TableCell>
                   </TableRow>
@@ -544,6 +567,19 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                       <TableCell>{item.celular}</TableCell>
                       <TableCell>{item.correo}</TableCell>
                       <TableCell>{new Date(item.created_at).toLocaleString("es-CO")}</TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setPendingWaitlistDeleteId(item.id)
+                            setWaitlistConfirmOpen(true)
+                          }}
+                          disabled={isUpdating || !adminUser?.is_super}
+                        >
+                          <Trash className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -562,6 +598,17 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
       cancelLabel="Cancelar"
       onConfirm={async () => {
         await deleteCaminante(pendingDeleteId || undefined)
+      }}
+    />
+    <ConfirmDialog
+      open={waitlistConfirmOpen}
+      onOpenChange={(open: boolean) => setWaitlistConfirmOpen(open)}
+      title="Confirmar eliminación"
+      description="¿Estás seguro de que deseas eliminar esta persona de la lista de espera?"
+      confirmLabel="Eliminar"
+      cancelLabel="Cancelar"
+      onConfirm={async () => {
+        await deleteWaitlistItem(pendingWaitlistDeleteId || undefined)
       }}
     />
     </>
