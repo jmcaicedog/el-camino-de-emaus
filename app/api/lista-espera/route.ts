@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
+import { formatPersonName } from "@/lib/utils"
+import { sendEmailNotification } from "@/lib/email/send-notification"
 
 function normalizeText(value: unknown): string {
   return typeof value === "string" ? value.trim() : ""
@@ -14,9 +16,10 @@ function isValidEmail(email: string): boolean {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const nombre_completo = normalizeText(body?.nombre_completo)
+    const nombre_completo = formatPersonName(normalizeText(body?.nombre_completo))
     const celular = normalizeText(body?.celular)
     const correo = normalizeText(body?.correo).toLowerCase()
+    const formData = body && typeof body === "object" ? body : {}
 
     if (!nombre_completo || !celular || !correo) {
       return NextResponse.json(
@@ -63,7 +66,19 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("lista_espera")
-      .insert([{ nombre_completo, celular, correo }])
+      .insert([
+        {
+          nombre_completo,
+          celular,
+          correo,
+          form_data: {
+            ...formData,
+            nombre_completo,
+            celular,
+            correo,
+          },
+        },
+      ])
       .select()
       .single()
 
@@ -71,6 +86,22 @@ export async function POST(request: NextRequest) {
       console.error("[v0] Error inserting lista_espera:", error)
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
+
+    // Enviar notificación a superadmins sobre nuevo registro en lista de espera
+    const subject = "Nuevo registro en lista de espera"
+    const text = `Se registró una nueva persona en la lista de espera.\n\nNombre: ${data.nombre_completo}\nCelular: ${data.celular}\nCorreo: ${data.correo}\n\nRevisa la plataforma para más detalles.`
+    const html = `
+      <h2>Nuevo registro en lista de espera</h2>
+      <p>Se registró una nueva persona en la lista de espera:</p>
+      <ul>
+        <li><strong>Nombre:</strong> ${data.nombre_completo}</li>
+        <li><strong>Celular:</strong> ${data.celular}</li>
+        <li><strong>Correo:</strong> ${data.correo}</li>
+      </ul>
+      <p>Revisa la plataforma para más detalles.</p>
+    `
+
+    await sendEmailNotification({ to: [], subject, text, html })
 
     return NextResponse.json(data, { status: 201 })
   } catch (error) {
@@ -89,7 +120,12 @@ export async function GET() {
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
-    return NextResponse.json(data, { status: 200 })
+    const normalized = (data || []).map((item) => ({
+      ...item,
+      nombre_completo: formatPersonName(item.nombre_completo),
+    }))
+
+    return NextResponse.json(normalized, { status: 200 })
   } catch (error) {
     console.error("[v0] Error in GET /api/lista-espera:", error)
     return NextResponse.json({ message: "Error al procesar la solicitud" }, { status: 500 })

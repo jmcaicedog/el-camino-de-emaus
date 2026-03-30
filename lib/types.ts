@@ -52,6 +52,7 @@ export interface ListaEspera {
   nombre_completo: string
   celular: string
   correo: string
+  form_data?: Record<string, unknown>
   created_at: string
   updated_at: string
 }

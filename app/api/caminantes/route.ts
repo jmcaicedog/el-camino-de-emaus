@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
+import { buildNuevoCaminanteRegistradoNotification } from "@/lib/email/caminante-notification"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { MAX_CAMINANTES, isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
 import { formatPersonName } from "@/lib/utils"
@@ -81,23 +82,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Enviar notificación a superadmins sobre nuevo registro
-    const subject = 'Nuevo caminante registrado'
-    const text = `Se ha registrado un nuevo caminante en la plataforma.\n\nNombre: ${data.nombre_completo}\nCédula: ${data.cedula}\nCelular: ${data.celular}\nCorreo: ${data.correo}\nEdad: ${data.edad} años\n\nRevisa la plataforma para más detalles.`
-    const html = `
-      <h2>Nuevo caminante registrado</h2>
-      <p>Se ha registrado un nuevo caminante en la plataforma:</p>
-      <ul>
-        <li><strong>Nombre:</strong> ${data.nombre_completo}</li>
-        <li><strong>Cédula:</strong> ${data.cedula}</li>
-        <li><strong>Celular:</strong> ${data.celular}</li>
-        <li><strong>Correo:</strong> ${data.correo}</li>
-        <li><strong>Edad:</strong> ${data.edad} años</li>
-      </ul>
-      <p>Revisa la plataforma para más detalles.</p>
-    `
+    const notification = buildNuevoCaminanteRegistradoNotification(data)
     
     // Solo enviar a superadmins (to vacío, includeSuperAdmins por defecto es true)
-    await sendEmailNotification({ to: [], subject, text, html })
+    await sendEmailNotification({ to: [], ...notification })
 
     return NextResponse.json(data, { status: 201 })
   } catch (error) {

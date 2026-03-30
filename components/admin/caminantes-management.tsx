@@ -13,7 +13,7 @@ import { ServidorCard } from "@/components/servidor/servidor-card"
 import { uiAvatarUrl } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, DollarSign, Trash, FileDown } from "lucide-react"
+import { Loader2, Search, DollarSign, Trash, FileDown, ArrowRightLeft } from "lucide-react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -37,6 +37,7 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [waitlistConfirmOpen, setWaitlistConfirmOpen] = useState(false)
   const [pendingWaitlistDeleteId, setPendingWaitlistDeleteId] = useState<string | null>(null)
+  const [movingId, setMovingId] = useState<string | null>(null)
 
   const parseMoney = (value: unknown) => {
     if (typeof value === "number") return Number.isFinite(value) ? value : 0
@@ -190,6 +191,48 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
     } finally {
       setIsUpdating(false)
       setPendingWaitlistDeleteId(null)
+    }
+  }
+
+  const moveWaitlistToCaminantes = async (id?: string) => {
+    if (!id) return
+    setMovingId(`waitlist-${id}`)
+    try {
+      const res = await fetch(`/api/lista-espera/${id}/mover-a-caminantes`, { method: "POST" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.message || "Error al mover a caminantes")
+
+      toast({ title: "Traslado exitoso", description: "La persona fue movida a caminantes registrados" })
+      await loadCaminantes()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al mover a caminantes",
+        variant: "destructive",
+      })
+    } finally {
+      setMovingId(null)
+    }
+  }
+
+  const moveCaminanteToWaitlist = async (id?: string) => {
+    if (!id) return
+    setMovingId(`caminante-${id}`)
+    try {
+      const res = await fetch(`/api/caminantes/${id}/mover-a-lista-espera`, { method: "POST" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.message || "Error al mover a lista de espera")
+
+      toast({ title: "Traslado exitoso", description: "El caminante fue movido a la lista de espera" })
+      await loadCaminantes()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al mover a lista de espera",
+        variant: "destructive",
+      })
+    } finally {
+      setMovingId(null)
     }
   }
 
@@ -526,6 +569,20 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                         <Button size="sm" variant="ghost" onClick={() => { setPendingDeleteId(caminante.id); setConfirmOpen(true) }} disabled={isUpdating || !adminUser?.is_super}>
                           <Trash className="h-4 w-4 text-destructive" />
                         </Button>
+
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => moveCaminanteToWaitlist(caminante.id)}
+                          disabled={movingId === `caminante-${caminante.id}` || !adminUser?.is_super}
+                          title="Mover a lista de espera"
+                        >
+                          {movingId === `caminante-${caminante.id}` ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ArrowRightLeft className="h-4 w-4" />
+                          )}
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -568,17 +625,33 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
                       <TableCell>{item.correo}</TableCell>
                       <TableCell>{new Date(item.created_at).toLocaleString("es-CO")}</TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setPendingWaitlistDeleteId(item.id)
-                            setWaitlistConfirmOpen(true)
-                          }}
-                          disabled={isUpdating || !adminUser?.is_super}
-                        >
-                          <Trash className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => moveWaitlistToCaminantes(item.id)}
+                            disabled={movingId === `waitlist-${item.id}` || !adminUser?.is_super}
+                            title="Mover a caminantes"
+                          >
+                            {movingId === `waitlist-${item.id}` ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <ArrowRightLeft className="h-4 w-4" />
+                            )}
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setPendingWaitlistDeleteId(item.id)
+                              setWaitlistConfirmOpen(true)
+                            }}
+                            disabled={isUpdating || !adminUser?.is_super}
+                          >
+                            <Trash className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
