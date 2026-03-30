@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const supabase = await createClient()
 
-    if (type === "evolucion-mesas") {
+    if (type === "evolucion-mesas" || type === "caminantes-roncan") {
       const { data: userData } = await supabase.auth.getUser()
       const currentUser = userData?.user
       if (!currentUser) return NextResponse.json({ message: "No autenticado" }, { status: 401 })
@@ -22,7 +22,29 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         .maybeSingle()
 
       if (!adminRecord?.is_super) {
-        return NextResponse.json({ message: "No autorizado" }, { status: 403 })
+        const { data: servidorRecord } = await supabase
+          .from("servidores")
+          .select("id")
+          .eq("auth_user_id", currentUser.id)
+          .maybeSingle()
+
+        let isLogisticaTeam = false
+        if (servidorRecord?.id) {
+          const { data: relaciones } = await supabase
+            .from("servidor_equipo")
+            .select("equipos(nombre)")
+            .eq("servidor_id", servidorRecord.id)
+
+          isLogisticaTeam =
+            (relaciones || []).some((r: any) =>
+              String(r?.equipos?.nombre || "").toLowerCase().includes("log"),
+            )
+        }
+
+        const canAccess = type === "caminantes-roncan" ? isLogisticaTeam : false
+        if (!canAccess) {
+          return NextResponse.json({ message: "No autorizado" }, { status: 403 })
+        }
       }
     }
 
@@ -74,6 +96,41 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           { key: "cartas_recibidas", label: "Cartas recibidas" },
           { key: "fotos_recibidas", label: "Fotos recibidas" },
         ];
+        break
+      }
+
+      case "caminantes-roncan": {
+        const { data: caminantes } = await supabase
+          .from("caminantes")
+          .select("nombre_completo, edad, mesa_id, ronca_al_dormir")
+          .eq("ronca_al_dormir", true)
+          .order("nombre_completo")
+
+        const { data: mesas } = await supabase.from("mesas").select("id, numero")
+        const mesaById = new Map((mesas || []).map((mesa) => [mesa.id, mesa.numero]))
+
+        data = (caminantes || [])
+          .map((c) => ({
+            nombre_completo: c.nombre_completo,
+            edad: c.edad,
+            mesa_numero: c.mesa_id ? mesaById.get(c.mesa_id) ?? "Sin mesa" : "Sin mesa",
+            ronca_al_dormir: c.ronca_al_dormir ? "Sí" : "No",
+          }))
+          .sort((a, b) => {
+            const mesaA = typeof a.mesa_numero === "number" ? a.mesa_numero : Number.MAX_SAFE_INTEGER
+            const mesaB = typeof b.mesa_numero === "number" ? b.mesa_numero : Number.MAX_SAFE_INTEGER
+
+            if (mesaA !== mesaB) return mesaA - mesaB
+            return String(a.nombre_completo).localeCompare(String(b.nombre_completo), "es")
+          })
+
+        columns = [
+          { key: "nombre_completo", label: "Nombre completo" },
+          { key: "edad", label: "Edad" },
+          { key: "mesa_numero", label: "Mesa" },
+          { key: "ronca_al_dormir", label: "¿Ronca al dormir?" },
+        ]
+        title = "Caminantes que roncan"
         break
       }
 

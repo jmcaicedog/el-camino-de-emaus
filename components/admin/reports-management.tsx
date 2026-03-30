@@ -10,10 +10,12 @@ export function ReportsManagement({
   onlyCartas,
   onlyRestricciones,
   isSuperAdmin,
+  isLogisticaTeam,
 }: {
   onlyCartas?: boolean
   onlyRestricciones?: boolean
   isSuperAdmin?: boolean
+  isLogisticaTeam?: boolean
 } = {}) {
   const { toast } = useToast()
   const [isExporting, setIsExporting] = useState<string | null>(null)
@@ -21,6 +23,7 @@ export function ReportsManagement({
   const exportReport = async (
     type:
       | "caminantes"
+      | "caminantes-roncan"
       | "servidores"
       | "mesas"
       | "pagos"
@@ -170,8 +173,14 @@ export function ReportsManagement({
       description: "Servidores que marcaron colores en el formulario y sus tallas/colores",
       icon: FileText,
     },
-    ...(isSuperAdmin
+    ...(isSuperAdmin || isLogisticaTeam
       ? [
+          {
+            id: "caminantes-roncan",
+            title: "Caminantes que roncan",
+            description: "Listado de caminantes que reportaron que roncan al dormir",
+            icon: FileSpreadsheet,
+          },
           {
             id: "evolucion-mesas",
             title: "Evolución de mesas",
