@@ -1,11 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
+import { formatPersonName } from "@/lib/utils"
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const body = await request.json()
+    if (typeof body.nombre_completo === "string") {
+      body.nombre_completo = formatPersonName(body.nombre_completo)
+    }
     const supabase = await createClient()
 
     // Get current user and admin record to check permissions

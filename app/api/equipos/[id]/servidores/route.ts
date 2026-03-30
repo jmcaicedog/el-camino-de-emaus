@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
+import { formatPersonName } from "@/lib/utils"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -23,7 +24,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (error) throw error
 
-    const servidoresList = servidores?.map((r: any) => r.servidores).filter(Boolean) || []
+    const servidoresList =
+      servidores
+        ?.map((r: any) => r.servidores)
+        .filter(Boolean)
+        .map((s: any) => ({
+          ...s,
+          nombre_completo: formatPersonName(s.nombre_completo),
+        })) || []
 
     return NextResponse.json(servidoresList)
   } catch (error) {
@@ -91,10 +99,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Enviar notificación al servidor
     if (servidor?.correo && equipo?.nombre) {
       const subject = `Asignación a Equipo - El Camino de Emaús`
-      const text = `Hola ${servidor.nombre_completo},\n\nHas sido asignado(a) al equipo "${equipo.nombre}".\n\n¡Que Dios te bendiga en este servicio!\n\nEquipo El Camino de Emaús`
+      const nombreServidor = formatPersonName(servidor.nombre_completo)
+      const text = `Hola ${nombreServidor},\n\nHas sido asignado(a) al equipo "${equipo.nombre}".\n\n¡Que Dios te bendiga en este servicio!\n\nEquipo El Camino de Emaús`
       const html = `
         <h2>Asignación a Equipo</h2>
-        <p>Hola <strong>${servidor.nombre_completo}</strong>,</p>
+        <p>Hola <strong>${nombreServidor}</strong>,</p>
         <p>Has sido asignado(a) al equipo <strong>"${equipo.nombre}"</strong>.</p>
         <p>¡Que Dios te bendiga en este servicio!</p>
         <br>
@@ -162,10 +171,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     // Enviar notificación al servidor
     if (servidor?.correo && equipo?.nombre) {
       const subject = `Desasignación de Equipo - El Camino de Emaús`
-      const text = `Hola ${servidor.nombre_completo},\n\nHas sido removido(a) del equipo "${equipo.nombre}".\n\nSi tienes alguna pregunta, por favor contacta a los administradores.\n\nEquipo El Camino de Emaús`
+      const nombreServidor = formatPersonName(servidor.nombre_completo)
+      const text = `Hola ${nombreServidor},\n\nHas sido removido(a) del equipo "${equipo.nombre}".\n\nSi tienes alguna pregunta, por favor contacta a los administradores.\n\nEquipo El Camino de Emaús`
       const html = `
         <h2>Desasignación de Equipo</h2>
-        <p>Hola <strong>${servidor.nombre_completo}</strong>,</p>
+        <p>Hola <strong>${nombreServidor}</strong>,</p>
         <p>Has sido removido(a) del equipo <strong>"${equipo.nombre}"</strong>.</p>
         <p>Si tienes alguna pregunta, por favor contacta a los administradores.</p>
         <br>

@@ -2,10 +2,12 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { formatPersonName } from "@/lib/utils"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    body.nombre_completo = formatPersonName(body.nombre_completo)
     
     // Usar Service Role Key para bypasear RLS en registro público
     // Esto permite que usuarios anónimos puedan registrarse sin autenticación
@@ -107,6 +109,7 @@ export async function GET(request: NextRequest) {
 
         return {
           ...servidor,
+          nombre_completo: formatPersonName(servidor.nombre_completo),
           equipos,
         }
       })

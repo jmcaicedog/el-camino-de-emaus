@@ -3,10 +3,12 @@ import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { MAX_CAMINANTES, isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
+import { formatPersonName } from "@/lib/utils"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    body.nombre_completo = formatPersonName(body.nombre_completo)
     
     // Usar Service Role Key para bypasear RLS en registro público
     // Esto permite que usuarios anónimos puedan registrarse sin autenticación
@@ -116,7 +118,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
-    return NextResponse.json(data, { status: 200 })
+    const normalized = (data || []).map((c) => ({
+      ...c,
+      nombre_completo: formatPersonName(c.nombre_completo),
+    }))
+
+    return NextResponse.json(normalized, { status: 200 })
   } catch (error) {
     console.error("[v0] Error in GET /api/caminantes:", error)
     return NextResponse.json({ message: "Error al procesar la solicitud" }, { status: 500 })

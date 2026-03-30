@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import ExcelJS from "exceljs"
+import { formatPersonName } from "@/lib/utils"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
@@ -429,6 +430,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         return NextResponse.json({ message: "Tipo de reporte no válido" }, { status: 400 })
     }
 
+    data = normalizeReportNames(data)
+
     if (format === "excel") {
       try {
         const workbook = new ExcelJS.Workbook()
@@ -726,6 +729,54 @@ function formatValue(value: any): string {
   if (Array.isArray(value)) return value.join(", ")
   if (typeof value === "object") return JSON.stringify(value)
   return String(value)
+}
+
+function normalizeReportNames(data: any[]): any[] {
+  return (data || []).map((row) => {
+    const normalized = { ...row }
+
+    if (typeof normalized.nombre_completo === "string") {
+      normalized.nombre_completo = formatPersonName(normalized.nombre_completo)
+    }
+
+    if (typeof normalized.nombre === "string") {
+      normalized.nombre = formatPersonName(normalized.nombre)
+    }
+
+    if (Array.isArray(normalized.caminantes)) {
+      normalized.caminantes = normalized.caminantes.map((name: any) =>
+        typeof name === "string" ? formatPersonName(name) : name,
+      )
+    }
+
+    if (Array.isArray(normalized.servidores)) {
+      normalized.servidores = normalized.servidores.map((name: any) =>
+        typeof name === "string" ? formatPersonName(name) : name,
+      )
+    }
+
+    if (typeof normalized.servidores === "string" && normalized.servidores.includes("\n")) {
+      normalized.servidores = normalized.servidores
+        .split("\n")
+        .map((line: string) => formatPersonName(line.trim()))
+        .join("\n")
+    }
+
+    if (typeof normalized.caminantes_detalle === "string" && normalized.caminantes_detalle.includes("\n")) {
+      normalized.caminantes_detalle = normalized.caminantes_detalle
+        .split("\n")
+        .map((line: string) => {
+          const parts = line.split("|")
+          if (parts.length === 0) return line
+          const formattedName = formatPersonName(parts[0].trim())
+          if (parts.length === 1) return formattedName
+          return `${formattedName} | ${parts.slice(1).join("|").trim()}`
+        })
+        .join("\n")
+    }
+
+    return normalized
+  })
 }
 
 function generateCSV(data: any[], columns: { key: string; label: string }[]): string {

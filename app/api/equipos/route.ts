@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { formatPersonName } from "@/lib/utils"
 
 export async function GET() {
   try {
@@ -31,7 +32,10 @@ export async function GET() {
 
           return {
             ...equipo,
-            servidores: servidores || [],
+            servidores: (servidores || []).map((s) => ({
+              ...s,
+              nombre_completo: formatPersonName(s.nombre_completo),
+            })),
           }
         }
 
