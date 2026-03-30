@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import Image from "next/image"
 import { Loader2 } from "lucide-react"
+import { CountdownTimer } from "@/components/countdown-timer"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -107,6 +108,7 @@ export default function LoginPage() {
           <div className="flex flex-col items-center gap-4">
             <Image src="/logo.png" alt="El Camino de Emaús" width={80} height={80} className="object-contain" />
             <h1 className="text-2xl font-bold">El Camino de Emaús</h1>
+            <CountdownTimer />
           </div>
 
           <Card>

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
+import { CountdownTimer } from "@/components/countdown-timer"
 
 export default function HomePage() {
   return (
@@ -16,6 +17,7 @@ export default function HomePage() {
               <br />
               Abril 10, 11 y 12 de 2026
             </p>
+            <CountdownTimer />
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 w-full">
