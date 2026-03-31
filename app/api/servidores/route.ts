@@ -3,11 +3,14 @@ import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { formatPersonName } from "@/lib/utils"
+import { getRetiroSettings } from "@/lib/retiro-settings"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     body.nombre_completo = formatPersonName(body.nombre_completo)
+    const settings = await getRetiroSettings()
+    body.monto_total = settings.costo_servidor
     
     // Usar Service Role Key para bypasear RLS en registro público
     // Esto permite que usuarios anónimos puedan registrarse sin autenticación

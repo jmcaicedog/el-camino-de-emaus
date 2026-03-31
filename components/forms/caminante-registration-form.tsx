@@ -26,7 +26,6 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { MAX_CAMINANTES } from "@/lib/caminantes-capacity"
 
 export function CaminanteRegistrationForm() {
   const router = useRouter()
@@ -37,6 +36,7 @@ export function CaminanteRegistrationForm() {
   const [currentCount, setCurrentCount] = useState(0)
   const [sacramentos, setSacramentos] = useState<string[]>([])
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [costoCaminante, setCostoCaminante] = useState(490000)
 
   const loadCapacity = useCallback(async () => {
     try {
@@ -61,6 +61,19 @@ export function CaminanteRegistrationForm() {
 
   useEffect(() => {
     void loadCapacity()
+
+    const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/retiro-settings", { cache: "no-store" })
+        if (!response.ok) return
+        const settings = await response.json()
+        setCostoCaminante(Number(settings.costo_caminante) || 490000)
+      } catch {
+        // keep default cost
+      }
+    }
+
+    void loadSettings()
 
     const interval = window.setInterval(() => {
       void loadCapacity()
@@ -97,7 +110,7 @@ export function CaminanteRegistrationForm() {
       const payload = {
         ...data,
         edad: age,
-        monto_total: 490000,
+        monto_total: costoCaminante,
         sacramentos_recibidos: sacramentos,
         es_sorpresa: data.es_sorpresa === "si",
         ronca_al_dormir: data.ronca_al_dormir === "si",

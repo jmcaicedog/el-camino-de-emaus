@@ -9,6 +9,7 @@ import { EquiposManagement } from "@/components/admin/equipos-management"
 import { ReportsManagement } from "@/components/admin/reports-management"
 import { AdminsManagement } from "@/components/admin/admins-management"
 import { MesaReport } from "@/components/admin/mesa-report"
+import { SystemSettingsPanel } from "@/components/admin/system-settings-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList } from "lucide-react"
@@ -23,6 +24,7 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const router = useRouter()
+  const [logoSrc, setLogoSrc] = useState("/logo.png")
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isLiderOrColider, setIsLiderOrColider] = useState(false)
   const [isCartasTeam, setIsCartasTeam] = useState(false)
@@ -47,6 +49,19 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   }
 
   useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        const response = await fetch("/api/retiro-settings", { cache: "no-store" })
+        if (!response.ok) return
+        const settings = await response.json()
+        if (settings?.logo_url) {
+          setLogoSrc(settings.logo_url)
+        }
+      } catch {
+        // Keep default logo on fetch errors
+      }
+    }
+
     const checkRoles = async () => {
       try {
         const res = await fetch("/api/servidores")
@@ -89,6 +104,8 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
     if (!adminUser.is_super) {
       checkRoles()
     }
+
+    loadLogo()
   }, [adminUser])
 
   const handleLogout = async () => {
@@ -104,7 +121,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
-              <Image src="/logo.png" alt="El Camino de Emaús" width={40} height={40} className="object-contain flex-shrink-0 md:w-[50px] md:h-[50px]" />
+              <Image src={logoSrc} alt="El Camino de Emaús" width={40} height={40} className="object-contain flex-shrink-0 md:w-[50px] md:h-[50px]" />
               <div className="min-w-0 flex-1">
                 <h1 className="text-lg md:text-2xl font-bold truncate">Panel de Administración</h1>
                 <div className="mt-0.5 flex flex-col items-start gap-1 text-xs md:text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-2">
@@ -117,10 +134,13 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                 </div>
               </div>
             </div>
-            <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
-              <LogOut className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Cerrar Sesión</span>
-            </Button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {adminUser.is_super && <SystemSettingsPanel />}
+              <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
+                <LogOut className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Cerrar Sesión</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>

@@ -3,14 +3,21 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
 import { CountdownTimer } from "@/components/countdown-timer"
+import { getRetiroSettings } from "@/lib/retiro-settings"
 
-export default function HomePage() {
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
+export default async function HomePage() {
+  const settings = await getRetiroSettings()
+  const logoSrc = settings.logo_url || "/logo.png"
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col items-center gap-8 max-w-4xl mx-auto">
           <div className="flex flex-col items-center gap-4 text-center">
-            <Image src="/logo.png" alt="El Camino de Emaús" width={120} height={120} className="object-contain" />
+            <Image src={logoSrc} alt="El Camino de Emaús" width={120} height={120} className="object-contain" />
             <h1 className="text-4xl font-bold text-balance">El Camino de Emaús</h1>
             <p className="text-lg text-muted-foreground text-pretty max-w-2xl">
               Retiro Espiritual Cristo Rey Hombres

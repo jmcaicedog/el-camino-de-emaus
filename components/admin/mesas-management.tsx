@@ -24,6 +24,8 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
   const { toast } = useToast()
   const TARGET_MESA_PAYMENT = 490000
   const [mesas, setMesas] = useState<Mesa[]>([])
+  const [mesasCount, setMesasCount] = useState<number>(12)
+  const [caminantesPorMesa, setCaminantesPorMesa] = useState<number>(7)
   const [caminantes, setCaminantes] = useState<Caminante[]>([])
   const [servidores, setServidores] = useState<Servidor[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -36,19 +38,38 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
 
   const loadData = async () => {
     try {
-      const [mesasRes, caminantesRes, servidoresRes] = await Promise.all([
+      const [mesasRes, caminantesRes, servidoresRes, settingsRes] = await Promise.all([
         fetch("/api/mesas"),
         fetch("/api/caminantes"),
         fetch("/api/servidores"),
+        fetch("/api/retiro-settings", { cache: "no-store" }),
       ])
 
-      const [mesasData, caminantesData, servidoresData] = await Promise.all([
+      const [mesasData, caminantesData, servidoresData, settingsData] = await Promise.all([
         mesasRes.json(),
         caminantesRes.json(),
         servidoresRes.json(),
+        settingsRes.json(),
       ])
 
-      setMesas(mesasData)
+      const nextMesasCount = Number(settingsData?.mesas_count) || 12
+      const nextCaminantesPorMesa = Math.max(1, Number(settingsData?.caminantes_por_mesa) || 7)
+
+      const mesasConAsignacionesFueraDeRango = mesasData.filter((mesa: Mesa) => {
+        if (mesa.numero <= nextMesasCount) return false
+        const tieneCaminantes = caminantesData.some((c: Caminante) => c.mesa_id === mesa.id)
+        const tieneServidores = servidoresData.some((s: Servidor) => s.mesa_id === mesa.id)
+        return tieneCaminantes || tieneServidores
+      })
+
+      const mesasFiltradas = mesasData
+        .filter((mesa: Mesa) => mesa.numero <= nextMesasCount)
+        .concat(mesasConAsignacionesFueraDeRango)
+        .sort((a: Mesa, b: Mesa) => a.numero - b.numero)
+
+      setMesasCount(nextMesasCount)
+      setCaminantesPorMesa(nextCaminantesPorMesa)
+      setMesas(mesasFiltradas)
       setCaminantes(caminantesData)
       setServidores(servidoresData)
     } catch (error) {
@@ -211,7 +232,7 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Gestión de Mesas</h2>
-          <p className="text-muted-foreground">Organiza caminantes y servidores en mesas</p>
+          <p className="text-muted-foreground">Organiza caminantes y servidores en mesas (activas: {mesasCount})</p>
         </div>
       </div>
 
@@ -228,7 +249,7 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                 <CardTitle>Mesa {mesa.numero}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Badge variant={mesaCaminantes.length > 0 ? "default" : "secondary"}>
-                    {mesaCaminantes.length} / 7
+                    {mesaCaminantes.length} / {caminantesPorMesa}
                   </Badge>
                 </div>
                 <div className="grid grid-cols-3 gap-2 pt-1">
@@ -370,7 +391,7 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
                                 <Button
                                   size="sm"
                                   onClick={() => assignToMesa(caminante.id, mesa.id, "caminante")}
-                                  disabled={isAssigning || mesaCaminantes.length >= 7}
+                                  disabled={isAssigning || mesaCaminantes.length >= caminantesPorMesa}
                                 >
                                   Asignar
                                 </Button>

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import { MAX_CAMINANTES, isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
+import { isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
+import { getRetiroSettings } from "@/lib/retiro-settings"
+
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 export async function GET() {
   try {
@@ -19,12 +23,13 @@ export async function GET() {
     }
 
     const currentCount = count ?? 0
+    const settings = await getRetiroSettings()
 
     return NextResponse.json(
       {
         currentCount,
-        maxCupo: MAX_CAMINANTES,
-        registrationOpen: isCaminanteRegistrationOpen(currentCount),
+        maxCupo: settings.max_caminantes,
+        registrationOpen: isCaminanteRegistrationOpen(currentCount, settings.max_caminantes),
       },
       { status: 200 },
     )

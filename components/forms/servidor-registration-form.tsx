@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,22 @@ export function ServidorRegistrationForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [coloresCamisa, setColoresCamisa] = useState<string[]>([])
+  const [costoServidor, setCostoServidor] = useState(400000)
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/retiro-settings", { cache: "no-store" })
+        if (!response.ok) return
+        const settings = await response.json()
+        setCostoServidor(Number(settings.costo_servidor) || 400000)
+      } catch {
+        // keep default cost
+      }
+    }
+
+    void loadSettings()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -45,7 +61,7 @@ export function ServidorRegistrationForm() {
       const payload = {
         ...data,
         edad: age,
-        monto_total: 400000,
+        monto_total: costoServidor,
         retiros_anteriores: Number.parseInt((data.retiros_anteriores as string) || "0") || 0,
         // Convert known boolean-like radio fields
         ronca_al_dormir: (data.ronca_al_dormir as string) === "si",

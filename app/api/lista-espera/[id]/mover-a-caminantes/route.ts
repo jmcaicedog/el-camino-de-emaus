@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { formatPersonName } from "@/lib/utils"
 import { sendEmailNotification } from "@/lib/email/send-notification"
 import { buildNuevoCaminanteRegistradoNotification } from "@/lib/email/caminante-notification"
+import { getRetiroSettings } from "@/lib/retiro-settings"
 
 function parseBoolean(value: unknown): boolean | null {
   if (typeof value === "boolean") return value
@@ -28,7 +29,7 @@ function parseAgeFromBirthDate(fechaNacimiento: unknown): number {
   return Math.max(age, 0)
 }
 
-function buildCaminantePayload(waitItem: any) {
+function buildCaminantePayload(waitItem: any, costoCaminante: number) {
   const formData = (waitItem?.form_data && typeof waitItem.form_data === "object") ? waitItem.form_data : {}
 
   const nombreCompleto = formatPersonName(formData.nombre_completo || waitItem?.nombre_completo || "")
@@ -45,7 +46,7 @@ function buildCaminantePayload(waitItem: any) {
     celular,
     correo,
     edad: Number(formData.edad) || parseAgeFromBirthDate(formData.fecha_nacimiento),
-    monto_total: Number(formData.monto_total) || 490000,
+    monto_total: Number(formData.monto_total) || costoCaminante,
     monto_pagado: Number(formData.monto_pagado) || 0,
     cartas_recibidas: Number(formData.cartas_recibidas) || 0,
     fotos_recibidas: Number(formData.fotos_recibidas) || 0,
@@ -92,7 +93,8 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ message: "Registro no encontrado en lista de espera" }, { status: 404 })
     }
 
-    const built = buildCaminantePayload(waitItem)
+    const settings = await getRetiroSettings()
+    const built = buildCaminantePayload(waitItem, settings.costo_caminante)
     if ("error" in built) {
       return NextResponse.json({ message: built.error }, { status: 400 })
     }

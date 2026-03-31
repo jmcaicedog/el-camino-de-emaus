@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
 import { formatPersonName } from "@/lib/utils"
 import { sendEmailNotification } from "@/lib/email/send-notification"
+import { getRetiroSettings } from "@/lib/retiro-settings"
 
 function normalizeText(value: unknown): string {
   return typeof value === "string" ? value.trim() : ""
@@ -47,7 +48,8 @@ export async function POST(request: NextRequest) {
     }
 
     const currentCount = count ?? 0
-    if (isCaminanteRegistrationOpen(currentCount)) {
+    const settings = await getRetiroSettings()
+    if (isCaminanteRegistrationOpen(currentCount, settings.max_caminantes)) {
       return NextResponse.json(
         { message: "Aún hay cupos disponibles. Por favor completa el formulario de caminantes." },
         { status: 409 },

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Loader2 } from "lucide-react"
 import { CountdownTimer } from "@/components/countdown-timer"
@@ -19,7 +19,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [logoSrc, setLogoSrc] = useState("/logo.png")
   const router = useRouter()
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/retiro-settings", { cache: "no-store" })
+        if (!response.ok) return
+        const settings = await response.json()
+        if (settings.logo_url) setLogoSrc(settings.logo_url)
+      } catch {
+        // keep default logo
+      }
+    }
+
+    void loadSettings()
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -106,7 +122,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-4">
-            <Image src="/logo.png" alt="El Camino de Emaús" width={80} height={80} className="object-contain" />
+            <Image src={logoSrc} alt="El Camino de Emaús" width={80} height={80} className="object-contain" />
             <h1 className="text-2xl font-bold">El Camino de Emaús</h1>
             <CountdownTimer />
           </div>

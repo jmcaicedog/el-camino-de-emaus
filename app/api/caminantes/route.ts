@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
 import { buildNuevoCaminanteRegistradoNotification } from "@/lib/email/caminante-notification"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import { MAX_CAMINANTES, isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
+import { isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
+import { getRetiroSettings } from "@/lib/retiro-settings"
 import { formatPersonName } from "@/lib/utils"
 
 export async function POST(request: NextRequest) {
@@ -62,16 +63,19 @@ export async function POST(request: NextRequest) {
     }
 
     const currentCount = count ?? 0
-    if (!isCaminanteRegistrationOpen(currentCount)) {
+    const settings = await getRetiroSettings()
+    if (!isCaminanteRegistrationOpen(currentCount, settings.max_caminantes)) {
       return NextResponse.json(
         {
           message: "Nuestro cupo para este retiro se ha completado. Déjanos tus datos para agregarte a una lista de espera.",
           currentCount,
-          maxCupo: MAX_CAMINANTES,
+          maxCupo: settings.max_caminantes,
         },
         { status: 409 },
       )
     }
+
+    body.monto_total = settings.costo_caminante
 
     // Insert caminante (no auth required for public registration)
     const { data, error } = await supabase.from("caminantes").insert([body]).select().single()
