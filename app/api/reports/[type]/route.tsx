@@ -136,16 +136,51 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
 
       case "servidores": {
-        const { data: servidores } = await supabase.from("servidores").select("*").order("nombre_completo")
-        data = servidores || []
-        if (data.length > 0) {
-          columns = Object.keys(data[0]).map((k) => ({ key: k, label: humanize(k) }))
-        } else {
-          columns = [
-            { key: "nombre_completo", label: "Nombre" },
-            { key: "cedula", label: "Cédula" },
-          ]
+        const { data: servidores } = await supabase
+          .from("servidores")
+          .select("id, nombre_completo, mesa_id, monto_pagado, monto_total")
+          .order("nombre_completo")
+        const { data: relaciones } = await supabase
+          .from("servidor_equipo")
+          .select("servidor_id, equipo_id")
+        const { data: equipos } = await supabase
+          .from("equipos")
+          .select("id, nombre")
+        const { data: mesas } = await supabase
+          .from("mesas")
+          .select("id, numero")
+
+        const equipoById = new Map((equipos || []).map((e) => [e.id, e.nombre]))
+        const mesaById = new Map((mesas || []).map((m) => [m.id, m.numero]))
+        const equiposPorServidor = new Map<string, string[]>()
+
+        for (const rel of relaciones || []) {
+          const nombreEquipo = equipoById.get(rel.equipo_id)
+          if (!nombreEquipo) continue
+          const arr = equiposPorServidor.get(rel.servidor_id) || []
+          arr.push(String(nombreEquipo))
+          equiposPorServidor.set(rel.servidor_id, arr)
         }
+
+        data = (servidores || []).map((s) => {
+          const pagado = Number(s.monto_pagado) || 0
+          const total = Number(s.monto_total) || 0
+          const equiposServidor = (equiposPorServidor.get(s.id) || []).sort((a, b) => a.localeCompare(b, "es"))
+
+          return {
+            nombre: s.nombre_completo,
+            equipo: equiposServidor.length ? equiposServidor.join(", ") : "Sin equipo",
+            mesa: s.mesa_id ? `Mesa ${mesaById.get(s.mesa_id) ?? "N/A"}` : "Sin mesa",
+            pago: `$${pagado.toLocaleString("es-CO")} / $${total.toLocaleString("es-CO")}`,
+          }
+        })
+
+        columns = [
+          { key: "nombre", label: "Nombre" },
+          { key: "equipo", label: "Equipo" },
+          { key: "mesa", label: "Mesa" },
+          { key: "pago", label: "Pago" },
+        ]
         title = "Reporte de Servidores"
         break
       }
@@ -525,7 +560,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       if (type === "caminantes") {
         html = generateFichaHTML(data, title);
       } else if (type === "servidores") {
-        html = generateFichaServidoresHTML(data, title);
+        html = generateHTML(data, columns, title);
       } else {
         html = generateHTML(data, columns, title);
       }

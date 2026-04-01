@@ -76,6 +76,7 @@ END $$;
 -- Catálogo oficial de equipos
 INSERT INTO equipos (nombre, descripcion) VALUES
   ('Coordinador del retiro', 'Coordinación general del retiro'),
+  ('Mesa de Registro', 'Registro y apoyo de ingreso al retiro'),
   ('Logistica', 'Logística y organización general'),
   ('Cocina/Snacks', 'Preparación y distribución de alimentos y snacks'),
   ('Apoyo de mesas', 'Acompañamiento y soporte operativo a mesas'),
@@ -93,7 +94,9 @@ INSERT INTO equipos (nombre, descripcion) VALUES
   ('Lavatorio de pies', 'Coordinación de la dinámica de lavatorio de pies'),
   ('Sanación de recuerdos', 'Apoyo en la dinámica de sanación de recuerdos'),
   ('Carta de pecados', 'Coordinación de la dinámica carta de pecados'),
+  ('Quema de pecados', 'Coordinación de la dinámica de quema de pecados'),
   ('Imposición de cenizas', 'Coordinación de la dinámica de imposición de cenizas'),
+  ('Resumen', 'Responsable de la dinámica de resumen'),
   ('Mantelitos', 'Preparación y entrega de mantelitos'),
   ('Carta de Jesús', 'Coordinación de la dinámica carta de Jesús'),
   ('Pared', 'Coordinación de la dinámica de la pared'),
@@ -125,6 +128,7 @@ ON CONFLICT (servidor_id, equipo_id) DO NOTHING;
 DELETE FROM equipos
 WHERE nombre NOT IN (
   'Coordinador del retiro',
+  'Mesa de Registro',
   'Logistica',
   'Cocina/Snacks',
   'Apoyo de mesas',
@@ -142,7 +146,9 @@ WHERE nombre NOT IN (
   'Lavatorio de pies',
   'Sanación de recuerdos',
   'Carta de pecados',
+  'Quema de pecados',
   'Imposición de cenizas',
+  'Resumen',
   'Mantelitos',
   'Carta de Jesús',
   'Pared',
