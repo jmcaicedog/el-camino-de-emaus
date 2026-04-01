@@ -292,12 +292,10 @@ export function CaminantesManagement({ adminUser, readOnly = false }: Caminantes
             <CardTitle>Caminantes Registrados</CardTitle>
             <CardDescription>Total: {caminantes.length} caminantes</CardDescription>
           </div>
-          {adminUser?.is_super && (
-            <Button variant="outline" size="sm" onClick={exportarPDF}>
-              <FileDown className="h-4 w-4 mr-2" />
-              Exportar PDF
-            </Button>
-          )}
+          <Button variant="outline" size="sm" onClick={exportarPDF}>
+            <FileDown className="h-4 w-4 mr-2" />
+            Exportar PDF
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="mb-4">

@@ -261,12 +261,10 @@ export function ServidoresManagement({ adminUser, readOnly = false }: Servidores
             <CardTitle>Servidores Registrados</CardTitle>
             <CardDescription>Total: {servidores.length} servidores</CardDescription>
           </div>
-          {adminUser?.is_super && (
-            <Button variant="outline" size="sm" onClick={exportarPDF}>
-              <FileDown className="h-4 w-4 mr-2" />
-              Exportar PDF
-            </Button>
-          )}
+          <Button variant="outline" size="sm" onClick={exportarPDF}>
+            <FileDown className="h-4 w-4 mr-2" />
+            Exportar PDF
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
