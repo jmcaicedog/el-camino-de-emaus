@@ -29,7 +29,7 @@ export default async function ServidorPage() {
     .map((r: any) => (r.equipos?.nombre || '').normalize('NFC').toLowerCase())
     .filter(Boolean)
   const isCartasTeam = myEquipos.includes('cartas')
-  const isSnacksTeam = myEquipos.some((e: string) => e === 'snacks' || e === 'cocina/snacks')
+  const isSnacksTeam = myEquipos.some((e: string) => e === 'snacks' || e === 'cocina/snacks' || e === 'apoyo de mesas')
   const isLogisticaTeam = myEquipos.some((e: string) => e.includes('log'))
 
   // Get mesa data if assigned

@@ -18,9 +18,10 @@ import type { AdminUser } from "@/lib/types"
 
 interface MesasManagementProps {
   adminUser?: AdminUser
+  readOnly?: boolean
 }
 
-export function MesasManagement({ adminUser }: MesasManagementProps) {
+export function MesasManagement({ adminUser, readOnly = false }: MesasManagementProps) {
   const { toast } = useToast()
   const TARGET_MESA_PAYMENT = 490000
   const [mesas, setMesas] = useState<Mesa[]>([])
@@ -138,6 +139,8 @@ export function MesasManagement({ adminUser }: MesasManagementProps) {
   }
 
   const canEditMesa = (mesaId: string) => {
+    if (readOnly) return false
+
     // Superadmin siempre puede editar
     if (adminUser?.is_super) return true
     

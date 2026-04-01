@@ -20,9 +20,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 interface CaminantesManagementProps {
   adminUser?: AdminUser
+  readOnly?: boolean
 }
 
-export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
+export function CaminantesManagement({ adminUser, readOnly = false }: CaminantesManagementProps) {
   const { toast } = useToast()
   const [caminantes, setCaminantes] = useState<Caminante[]>([])
   const [listaEspera, setListaEspera] = useState<ListaEspera[]>([])
@@ -97,6 +98,8 @@ export function CaminantesManagement({ adminUser }: CaminantesManagementProps) {
   }
 
   const canEditCaminante = (caminante: Caminante) => {
+    if (readOnly) return false
+
     // Superadmin siempre puede editar
     if (adminUser?.is_super) return true
     

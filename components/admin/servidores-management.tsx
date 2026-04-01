@@ -21,9 +21,10 @@ import type { Servidor } from "@/lib/types"
 
 interface ServidoresManagementProps {
   adminUser?: AdminUser
+  readOnly?: boolean
 }
 
-export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
+export function ServidoresManagement({ adminUser, readOnly = false }: ServidoresManagementProps) {
   const { toast } = useToast()
   const [servidores, setServidores] = useState<Servidor[]>([])
   const [admins, setAdmins] = useState<Set<string>>(new Set())
@@ -97,6 +98,8 @@ export function ServidoresManagement({ adminUser }: ServidoresManagementProps) {
   }
 
   const canEditServidor = (servidor: Servidor) => {
+    if (readOnly) return false
+
     // Superadmin siempre puede editar
     if (adminUser?.is_super) return true
     

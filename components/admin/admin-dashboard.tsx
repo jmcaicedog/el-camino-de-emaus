@@ -30,6 +30,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const [isCartasTeam, setIsCartasTeam] = useState(false)
   const [isSnacksTeam, setIsSnacksTeam] = useState(false)
   const [isLogisticaTeam, setIsLogisticaTeam] = useState(false)
+  const [isAdditionalTeam, setIsAdditionalTeam] = useState(false)
   const [pagoServidor, setPagoServidor] = useState<{ text: string; status: "zero" | "partial" | "complete" } | null>(null)
 
   const getPaymentBadgeClass = (status: "zero" | "partial" | "complete") => {
@@ -87,14 +88,31 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           })
         }
         const myEquipos: string[] = (myServidor?.equipos || []).map((e: string) => e.normalize('NFC').toLowerCase())
+        const equiposConPermisoDefinido = [
+          'lideres y colideres',
+          'líderes y colíderes',
+          'cartas',
+          'snacks',
+          'cocina/snacks',
+          'apoyo de mesas',
+          'logistica',
+          'logística',
+        ]
+
         if (myEquipos.includes('cartas')) {
           setIsCartasTeam(true)
         }
-        if (myEquipos.includes('snacks')) {
+        if (myEquipos.some((e: string) => e === 'snacks' || e === 'cocina/snacks' || e === 'apoyo de mesas')) {
           setIsSnacksTeam(true)
         }
         if (myEquipos.some((e: string) => e.includes('log'))) {
           setIsLogisticaTeam(true)
+        }
+
+        const hasDefinedPermissionTeam = myEquipos.some((e: string) => equiposConPermisoDefinido.includes(e))
+        const hasAdditionalTeam = myEquipos.some((e: string) => !equiposConPermisoDefinido.includes(e))
+        if (hasAdditionalTeam && !hasDefinedPermissionTeam) {
+          setIsAdditionalTeam(true)
         }
       } catch (error) {
         console.error("Error checking roles:", error)
@@ -114,6 +132,11 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
     await supabase.auth.signOut()
     router.push("/")
   }
+
+  const hasMiMesaTab = !adminUser.is_super && isLiderOrColider && !isAdditionalTeam
+  const hasReportesTab = adminUser.is_super || isCartasTeam || isSnacksTeam || isLogisticaTeam
+  const tabCount = adminUser.is_super ? 6 : hasMiMesaTab || hasReportesTab ? 5 : 4
+  const isReadOnlyByAdditionalTeam = !adminUser.is_super && isAdditionalTeam
 
   return (
     <div className="min-h-screen bg-background">
@@ -147,7 +170,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="equipos" className="space-y-6">
-          <TabsList className={`grid w-full h-auto ${adminUser.is_super ? 'grid-cols-6' : (isLiderOrColider || isCartasTeam || isSnacksTeam || isLogisticaTeam) ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <TabsList className={`grid w-full h-auto ${tabCount === 6 ? 'grid-cols-6' : tabCount === 5 ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="equipos" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
               <UsersRound className="h-4 w-4 md:mr-0" />
               <span className="hidden sm:inline">Equipos</span>
@@ -170,13 +193,13 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                 <span className="hidden sm:inline">Admins</span>
               </TabsTrigger>
             )}
-            {!adminUser.is_super && isLiderOrColider && (
+            {hasMiMesaTab && (
               <TabsTrigger value="mi-mesa" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
                 <ClipboardList className="h-4 w-4 md:mr-0" />
                 <span className="hidden sm:inline">Mi Mesa</span>
               </TabsTrigger>
             )}
-            {(adminUser.is_super || isCartasTeam || isSnacksTeam || isLogisticaTeam) && (
+            {hasReportesTab && (
               <TabsTrigger value="reportes" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
                 <FileText className="h-4 w-4 md:mr-0" />
                 <span className="hidden sm:inline">Reportes</span>
@@ -189,15 +212,15 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           </TabsContent>
 
           <TabsContent value="mesas">
-            <MesasManagement adminUser={adminUser} />
+            <MesasManagement adminUser={adminUser} readOnly={isReadOnlyByAdditionalTeam} />
           </TabsContent>
 
           <TabsContent value="caminantes">
-            <CaminantesManagement adminUser={adminUser} />
+            <CaminantesManagement adminUser={adminUser} readOnly={isReadOnlyByAdditionalTeam} />
           </TabsContent>
 
           <TabsContent value="servidores">
-            <ServidoresManagement adminUser={adminUser} />
+            <ServidoresManagement adminUser={adminUser} readOnly={isReadOnlyByAdditionalTeam} />
           </TabsContent>
 
           {adminUser.is_super && (
@@ -206,13 +229,13 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             </TabsContent>
           )}
 
-          {!adminUser.is_super && isLiderOrColider && (
+          {hasMiMesaTab && (
             <TabsContent value="mi-mesa">
               <MesaReport adminUser={adminUser} />
             </TabsContent>
           )}
 
-          {(adminUser.is_super || isCartasTeam || isSnacksTeam || isLogisticaTeam) && (
+          {hasReportesTab && (
             <TabsContent value="reportes">
               {adminUser.is_super || isLogisticaTeam ? (
                 <ReportsManagement isSuperAdmin={adminUser.is_super} isLogisticaTeam={isLogisticaTeam} />
