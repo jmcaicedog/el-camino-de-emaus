@@ -95,9 +95,9 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
                   {isCartasTeam ? (
                     <Badge variant="secondary">Equipo de Cartas</Badge>
                   ) : isSnacksTeam ? (
-                    <Badge variant="secondary">Equipo de Snacks</Badge>
+                    <Badge variant="secondary">Equipo de Cocina/Snacks</Badge>
                   ) : isLogisticaTeam ? (
-                    <Badge variant="secondary">Equipo de Logística</Badge>
+                    <Badge variant="secondary">Equipo de Logistica</Badge>
                   ) : (
                     <Badge variant="secondary">{servidor.tipo_servidor === "lider" ? "Líder" : "Colíder"}</Badge>
                   )}
