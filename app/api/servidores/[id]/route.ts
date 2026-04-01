@@ -53,16 +53,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
-    // Si se actualiza tipo_servidor a líder o colíder, agregar al equipo de líderes
-    if (body.tipo_servidor && (body.tipo_servidor === "lider" || body.tipo_servidor === "colider")) {
+    // Sincronizar membresía del equipo de líderes/colíderes y notificar cambios
+    const oldIsLiderConMesa = !!oldData?.mesa_id && (oldData.tipo_servidor === "lider" || oldData.tipo_servidor === "colider")
+    const newIsLiderConMesa = !!data?.mesa_id && (data.tipo_servidor === "lider" || data.tipo_servidor === "colider")
+
+    if (oldIsLiderConMesa !== newIsLiderConMesa) {
       const { data: equipoLideres } = await supabase
         .from("equipos")
-        .select("id")
+        .select("id, nombre")
         .eq("nombre", "Líderes y colíderes")
         .single()
 
       if (equipoLideres) {
-        // Verificar si ya está en el equipo
         const { data: existing } = await supabase
           .from("servidor_equipo")
           .select("id")
@@ -70,34 +72,48 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           .eq("equipo_id", equipoLideres.id)
           .maybeSingle()
 
-        if (!existing) {
+        if (newIsLiderConMesa && !existing) {
           await supabase
             .from("servidor_equipo")
             .insert({ servidor_id: id, equipo_id: equipoLideres.id })
+
+          if (data.correo) {
+            const nombreServidor = formatPersonName(data.nombre_completo)
+            const subject = `Asignación a Equipo - El Camino de Emaús`
+            const text = `Hola ${nombreServidor},\n\nHas sido asignado(a) al equipo "${equipoLideres.nombre}".\n\n¡Que Dios te bendiga en este servicio!\n\nEquipo El Camino de Emaús`
+            const html = `
+              <h2>Asignación a Equipo</h2>
+              <p>Hola <strong>${nombreServidor}</strong>,</p>
+              <p>Has sido asignado(a) al equipo <strong>"${equipoLideres.nombre}"</strong>.</p>
+              <p>¡Que Dios te bendiga en este servicio!</p>
+              <br>
+              <p>Equipo El Camino de Emaús</p>
+            `
+            await sendEmailNotification({ to: [data.correo], subject, text, html, includeSuperAdmins: true })
+          }
         }
-      }
-    }
 
-    // Si se actualiza mesa_id y el servidor tiene tipo_servidor, también agregarlo al equipo
-    if (body.mesa_id && data.tipo_servidor && (data.tipo_servidor === "lider" || data.tipo_servidor === "colider")) {
-      const { data: equipoLideres } = await supabase
-        .from("equipos")
-        .select("id")
-        .eq("nombre", "Líderes y colíderes")
-        .single()
-
-      if (equipoLideres) {
-        const { data: existing } = await supabase
-          .from("servidor_equipo")
-          .select("id")
-          .eq("servidor_id", id)
-          .eq("equipo_id", equipoLideres.id)
-          .maybeSingle()
-
-        if (!existing) {
+        if (!newIsLiderConMesa && existing) {
           await supabase
             .from("servidor_equipo")
-            .insert({ servidor_id: id, equipo_id: equipoLideres.id })
+            .delete()
+            .eq("servidor_id", id)
+            .eq("equipo_id", equipoLideres.id)
+
+          if (data.correo) {
+            const nombreServidor = formatPersonName(data.nombre_completo)
+            const subject = `Desasignación de Equipo - El Camino de Emaús`
+            const text = `Hola ${nombreServidor},\n\nHas sido removido(a) del equipo "${equipoLideres.nombre}".\n\nSi tienes alguna pregunta, por favor contacta a los administradores.\n\nEquipo El Camino de Emaús`
+            const html = `
+              <h2>Desasignación de Equipo</h2>
+              <p>Hola <strong>${nombreServidor}</strong>,</p>
+              <p>Has sido removido(a) del equipo <strong>"${equipoLideres.nombre}"</strong>.</p>
+              <p>Si tienes alguna pregunta, por favor contacta a los administradores.</p>
+              <br>
+              <p>Equipo El Camino de Emaús</p>
+            `
+            await sendEmailNotification({ to: [data.correo], subject, text, html, includeSuperAdmins: true })
+          }
         }
       }
     }
