@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
+import { ServidorCard } from "@/components/servidor/servidor-card"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Search, Plus, X, Users } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
@@ -173,35 +174,53 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
                 ) : (
                   <div className="space-y-2">
                     {equipo.servidores.map((servidor) => (
-                      <div
-                        key={servidor.id}
-                        className="flex items-center justify-between p-2 bg-secondary/50 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
+                      (() => {
+                        const servidorCompleto = servidoresDisponibles.find((s) => s.id === servidor.id) || servidor
+
+                        return (
+                          <div
+                            key={servidor.id}
+                            className="flex items-center justify-between p-2 bg-secondary/50 rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
                           <img
-                            src={servidor.imagen || uiAvatarUrl(servidor.nombre_completo)}
-                            alt={servidor.nombre_completo}
+                            src={servidorCompleto.imagen || uiAvatarUrl(servidorCompleto.nombre_completo)}
+                            alt={servidorCompleto.nombre_completo}
                             className="w-8 h-8 rounded-full object-cover"
                           />
                           <div>
-                            <p className="text-sm font-medium">{servidor.nombre_completo}</p>
-                            {servidor.tipo_servidor && (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <button className="text-left text-sm font-medium underline underline-offset-2 text-primary/90">
+                                  {servidorCompleto.nombre_completo}
+                                </button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-md! max-h-[80vh] overflow-y-auto">
+                                <DialogHeader>
+                                  <DialogTitle>{servidorCompleto.nombre_completo}</DialogTitle>
+                                </DialogHeader>
+                                <ServidorCard servidor={servidorCompleto} onUpdate={loadData} canEdit={adminUser.is_super} />
+                              </DialogContent>
+                            </Dialog>
+                            {servidorCompleto.tipo_servidor && (
                               <p className="text-xs text-muted-foreground capitalize">
-                                {servidor.tipo_servidor}
+                                {servidorCompleto.tipo_servidor}
                               </p>
                             )}
                           </div>
-                        </div>
-                        {adminUser.is_super && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeServidorFromEquipo(equipo.id, servidor.id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
+                            </div>
+                            {adminUser.is_super && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeServidorFromEquipo(equipo.id, servidor.id)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        )
+                      })()
                     ))}
                   </div>
                 )}
