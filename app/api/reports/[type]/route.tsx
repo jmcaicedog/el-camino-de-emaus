@@ -272,10 +272,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       case "restricciones": {
         const { data: caminantes } = await supabase.from("caminantes").select("*").order("nombre_completo")
         const { data: servidores } = await supabase.from("servidores").select("*").order("nombre_completo")
+        const { data: mesas } = await supabase.from("mesas").select("id, numero")
+        const mesaById = new Map((mesas || []).map((mesa) => [mesa.id, mesa.numero]))
 
         data = [
           ...(caminantes?.filter((c) => c.medicamentos || c.restricciones_alimenticias || c.condicion_especial).map((c) => ({
             tipo: "Caminante",
+            mesa_numero: c.mesa_id ? mesaById.get(c.mesa_id) ?? "Sin mesa" : "Sin mesa",
             nombre: c.nombre_completo,
             celular: c.celular,
             eps: c.eps,
@@ -286,6 +289,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           })) || []),
           ...(servidores?.filter((s) => s.medicamentos || s.restricciones_alimenticias || s.condicion_especial).map((s) => ({
             tipo: "Servidor",
+            mesa_numero: "N/A",
             nombre: s.nombre_completo,
             celular: s.celular,
             eps: s.eps,
@@ -297,6 +301,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         ]
         columns = [
           { key: "tipo", label: "Tipo" },
+          { key: "mesa_numero", label: "Mesa #" },
           { key: "nombre", label: "Nombre" },
           { key: "celular", label: "Celular" },
           { key: "eps", label: "EPS" },
