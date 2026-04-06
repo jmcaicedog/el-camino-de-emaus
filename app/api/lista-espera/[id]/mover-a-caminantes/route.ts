@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { formatPersonName } from "@/lib/utils"
 import { sendEmailNotification } from "@/lib/email/send-notification"
 import { buildNuevoCaminanteRegistradoNotification } from "@/lib/email/caminante-notification"
@@ -60,6 +61,51 @@ function buildCaminantePayload(waitItem: any, costoCaminante: number) {
   return { payload }
 }
 
+async function resolveCaminanteImage(imagen: unknown): Promise<{ imageUrl?: string; error?: string }> {
+  if (typeof imagen !== "string" || !imagen) {
+    return { imageUrl: undefined }
+  }
+
+  if (!imagen.startsWith("data:")) {
+    return { imageUrl: imagen }
+  }
+
+  const match = imagen.match(/^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/)
+  if (!match) {
+    return { error: "Formato de imagen inválido" }
+  }
+
+  const mime = match[1]
+  const ext = match[2] === "jpeg" ? "jpg" : match[2]
+  const base64 = match[3]
+  const buffer = Buffer.from(base64, "base64")
+  const MAX_BYTES = 2 * 1024 * 1024
+
+  if (buffer.length > MAX_BYTES) {
+    return { error: "Imagen muy grande (max 2MB)" }
+  }
+
+  const supabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+
+  const key = `avatars/${Date.now()}_waitlist_caminante.${ext}`
+  const { error: uploadError } = await supabase.storage.from("avatars").upload(key, buffer, {
+    contentType: mime,
+    upsert: true,
+  })
+
+  if (uploadError) {
+    return { error: uploadError.message }
+  }
+
+  const { data: publicUrl } = supabase.storage.from("avatars").getPublicUrl(key)
+  return { imageUrl: publicUrl.publicUrl }
+}
+
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
@@ -98,6 +144,12 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     if ("error" in built) {
       return NextResponse.json({ message: built.error }, { status: 400 })
     }
+
+    const resolvedImage = await resolveCaminanteImage(built.payload.imagen)
+    if (resolvedImage.error) {
+      return NextResponse.json({ message: resolvedImage.error }, { status: 400 })
+    }
+    built.payload.imagen = resolvedImage.imageUrl ?? null
 
     const { data: insertedCaminante, error: insertError } = await supabase
       .from("caminantes")
