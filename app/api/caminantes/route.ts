@@ -64,6 +64,14 @@ export async function POST(request: NextRequest) {
 
     const currentCount = count ?? 0
     const settings = await getRetiroSettings()
+
+    if (!settings.caminante_form_enabled) {
+      return NextResponse.json(
+        { message: "El registro de caminantes está deshabilitado temporalmente por administración." },
+        { status: 403 },
+      )
+    }
+
     if (!isCaminanteRegistrationOpen(currentCount, settings.max_caminantes)) {
       return NextResponse.json(
         {

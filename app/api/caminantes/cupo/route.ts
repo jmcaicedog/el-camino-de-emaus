@@ -29,7 +29,9 @@ export async function GET() {
       {
         currentCount,
         maxCupo: settings.max_caminantes,
-        registrationOpen: isCaminanteRegistrationOpen(currentCount, settings.max_caminantes),
+        caminanteFormEnabled: settings.caminante_form_enabled,
+        registrationOpen:
+          settings.caminante_form_enabled && isCaminanteRegistrationOpen(currentCount, settings.max_caminantes),
       },
       { status: 200 },
     )

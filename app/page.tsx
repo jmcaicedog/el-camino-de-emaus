@@ -31,14 +31,24 @@ export default async function HomePage() {
             <Card>
               <CardHeader>
                 <CardTitle>Registro de Caminantes</CardTitle>
-                <CardDescription>Inscríbete como participante del retiro</CardDescription>
+                <CardDescription>
+                  {settings.caminante_form_enabled
+                    ? "Inscríbete como participante del retiro"
+                    : "Inscripciones cerradas temporalmente por administración"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <Link href="/registro/caminante">
-                  <Button className="w-full" size="lg">
-                    Registrarme como Caminante
+                {settings.caminante_form_enabled ? (
+                  <Link href="/registro/caminante">
+                    <Button className="w-full" size="lg">
+                      Registrarme como Caminante
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button className="w-full" size="lg" disabled>
+                    Registro de Caminantes Cerrado
                   </Button>
-                </Link>
+                )}
               </CardContent>
             </Card>
 

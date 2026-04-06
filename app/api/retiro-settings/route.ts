@@ -83,6 +83,7 @@ export async function PUT(request: NextRequest) {
       costo_servidor: body?.costo_servidor,
       costo_caminante: body?.costo_caminante,
       countdown_enabled: body?.countdown_enabled,
+      caminante_form_enabled: body?.caminante_form_enabled,
     })
 
     // Mantener consistencia en listados: sincronizar siempre monto_total existente.

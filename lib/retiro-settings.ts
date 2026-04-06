@@ -10,6 +10,7 @@ export interface RetiroSettings {
   costo_servidor: number
   costo_caminante: number
   countdown_enabled: boolean
+  caminante_form_enabled: boolean
 }
 
 export const DEFAULT_RETIRO_SETTINGS: RetiroSettings = {
@@ -21,6 +22,7 @@ export const DEFAULT_RETIRO_SETTINGS: RetiroSettings = {
   costo_servidor: 400000,
   costo_caminante: 490000,
   countdown_enabled: true,
+  caminante_form_enabled: true,
 }
 
 function getServiceClient() {
@@ -45,6 +47,10 @@ function normalizeSettings(input: Partial<RetiroSettings> | null | undefined): R
       typeof input?.countdown_enabled === "boolean"
         ? input.countdown_enabled
         : DEFAULT_RETIRO_SETTINGS.countdown_enabled,
+    caminante_form_enabled:
+      typeof input?.caminante_form_enabled === "boolean"
+        ? input.caminante_form_enabled
+        : DEFAULT_RETIRO_SETTINGS.caminante_form_enabled,
   }
 }
 

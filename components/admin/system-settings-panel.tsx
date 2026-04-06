@@ -30,6 +30,7 @@ export function SystemSettingsPanel() {
   const [costoServidores, setCostoServidores] = useState(400000)
   const [costoCaminantes, setCostoCaminantes] = useState(490000)
   const [countdownEnabled, setCountdownEnabled] = useState(true)
+  const [caminanteFormEnabled, setCaminanteFormEnabled] = useState(true)
 
   const toLocalDateTimeInput = (value?: string | null) => {
     if (!value) return ""
@@ -59,6 +60,9 @@ export function SystemSettingsPanel() {
       setCostoServidores(Number(settings.costo_servidor) || 400000)
       setCostoCaminantes(Number(settings.costo_caminante) || 490000)
       setCountdownEnabled(Boolean(settings.countdown_enabled))
+      setCaminanteFormEnabled(
+        typeof settings.caminante_form_enabled === "boolean" ? settings.caminante_form_enabled : true,
+      )
     } catch (error) {
       toast({
         title: "Error",
@@ -129,6 +133,7 @@ export function SystemSettingsPanel() {
           costo_servidor: costoServidores,
           costo_caminante: costoCaminantes,
           countdown_enabled: countdownEnabled,
+          caminante_form_enabled: caminanteFormEnabled,
         }),
       })
 
@@ -335,6 +340,19 @@ export function SystemSettingsPanel() {
                 <p className="text-sm text-muted-foreground">Mostrar u ocultar el contador en inicio y login.</p>
               </div>
               <Checkbox checked={countdownEnabled} onCheckedChange={(v) => setCountdownEnabled(v === true)} disabled={isLoading} />
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <p className="font-medium">Habilitar registro/lista de espera de caminantes</p>
+                <p className="text-sm text-muted-foreground">
+                  Activa o desactiva el botón del inicio y el formulario público de caminantes.
+                </p>
+              </div>
+              <Checkbox
+                checked={caminanteFormEnabled}
+                onCheckedChange={(v) => setCaminanteFormEnabled(v === true)}
+                disabled={isLoading}
+              />
             </div>
           </section>
 

@@ -52,7 +52,16 @@ export default async function CaminanteRegistrationPage() {
             </div>
           </div>
 
-          <CaminanteRegistrationForm />
+          {settings.caminante_form_enabled ? (
+            <CaminanteRegistrationForm />
+          ) : (
+            <div className="mb-6 p-6 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <p className="text-base font-semibold mb-2">Registro temporalmente deshabilitado</p>
+              <p className="text-sm text-muted-foreground">
+                En este momento el formulario de registro y lista de espera de caminantes está cerrado por administración.
+              </p>
+            </div>
+          )}
         </div>
       </div>
       
