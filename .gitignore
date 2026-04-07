@@ -25,3 +25,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# manual de usuario (docs y generacion pdf)
+/docs/manual-usuario-template.md
+/docs/manual-usuario.pdf
+/docs/screenshots/
+/docs/pdf/
+/scripts/generate-manual-pdf.mjs
