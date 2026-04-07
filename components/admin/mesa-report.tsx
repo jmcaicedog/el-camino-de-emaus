@@ -78,7 +78,7 @@ export function MesaReport({ adminUser }: MesaReportProps) {
       `<!doctype html><html><head><meta charset=\"utf-8\"><title>Generando reporte...</title></head><body><p>Generando reporte, por favor espere...</p></body></html>`
     );
     win.document.close();
-    fetch(`/api/reports/caminantes?format=pdf&mesa=${encodeURIComponent(mesaId)}`)
+    fetch(`/api/reports/caminantes?format=pdf&mesa=${encodeURIComponent(mesaId)}&paper=legal&orientation=portrait`)
       .then(async (response) => {
         if (!response.ok) throw new Error("Error al generar reporte");
         const html = await response.text();

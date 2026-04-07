@@ -1,13 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import ExcelJS from "exceljs"
-import { formatPersonName } from "@/lib/utils"
+import { formatPersonName, uiAvatarUrl } from "@/lib/utils"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
     const { type } = await params
     const { searchParams } = new URL(request.url)
     const format = searchParams.get("format") || "excel"
+    const paperParam = (searchParams.get("paper") || "legal").toLowerCase()
+    const orientationParam = (searchParams.get("orientation") || "portrait").toLowerCase()
+
+    const paperSize = paperParam === "a4" || paperParam === "letter" || paperParam === "legal" ? paperParam : "legal"
+    const orientation = orientationParam === "landscape" ? "landscape" : "portrait"
 
     const supabase = await createClient()
 
@@ -563,7 +568,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     } else {
       let html = '';
       if (type === "caminantes") {
-        html = generateFichaHTML(data, title);
+        html = generateFichaHTML(data, title, paperSize, orientation);
       } else if (type === "servidores") {
         html = generateHTML(data, columns, title);
       } else {
@@ -664,7 +669,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       })
     }
   // Genera HTML tipo ficha por caminante, una por página, con sombra y formato fácil de imprimir
-  function generateFichaHTML(data: any[], title: string): string {
+  function generateFichaHTML(data: any[], title: string, paperSize: "a4" | "letter" | "legal", orientation: "portrait" | "landscape"): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -672,6 +677,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         <meta charset="UTF-8">
         <title>${escapeHtml(title)}</title>
         <style>
+          @page {
+            size: ${paperSize} ${orientation};
+            margin: 12mm;
+          }
           body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
           h1 { color: #333; }
           .header { margin-bottom: 20px; }
@@ -686,8 +695,27 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
+            page-break-inside: avoid;
+            break-inside: avoid-page;
           }
           .ficha:last-child { page-break-after: auto; }
+          .ficha-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+          }
+          .ficha-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 9999px;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+            flex-shrink: 0;
+          }
+          .ficha-title {
+            margin: 0;
+          }
           .campo {
             display: flex;
             margin-bottom: 8px;
@@ -704,6 +732,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           @media print {
             button { display: none; }
             body { background: #fff; }
+            .ficha {
+              box-shadow: none;
+              border: 1px solid #ddd;
+            }
           }
         </style>
       </head>
@@ -715,7 +747,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         </div>
         ${data.map((caminante, idx) => `
           <div class="ficha">
-            <h2 style="margin-top:0;margin-bottom:18px;">Caminante #${idx + 1}</h2>
+            <div class="ficha-header">
+              <img
+                class="ficha-avatar"
+                src="${escapeHtml(String(caminante.imagen || uiAvatarUrl(caminante.nombre_completo || "Caminante", 256)))}"
+                alt="Foto de ${escapeHtml(String(caminante.nombre_completo || "Caminante"))}"
+              />
+              <h2 class="ficha-title">Caminante #${idx + 1}</h2>
+            </div>
             ${renderCampo('Nombre completo', caminante.nombre_completo)}
             ${renderCampo('Cédula', caminante.cedula)}
             ${renderCampo('Edad', caminante.edad)}
