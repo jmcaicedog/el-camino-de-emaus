@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -238,6 +238,95 @@ export function CaminantesManagement({ adminUser, readOnly = false }: Caminantes
       setMovingId(null)
     }
   }
+
+  const getWaitlistValue = (item: ListaEspera, key: string): string => {
+    const formData = item.form_data && typeof item.form_data === "object" ? item.form_data : null
+    const value = formData ? formData[key as keyof typeof formData] : undefined
+    return typeof value === "string" ? value.trim() : ""
+  }
+
+  const getWaitlistBoolean = (item: ListaEspera, key: string): boolean => {
+    const formData = item.form_data && typeof item.form_data === "object" ? item.form_data : null
+    return Boolean(formData ? formData[key as keyof typeof formData] : false)
+  }
+
+  const getWaitlistNumber = (item: ListaEspera, key: string): number => {
+    const formData = item.form_data && typeof item.form_data === "object" ? item.form_data : null
+    const value = formData ? formData[key as keyof typeof formData] : undefined
+    if (typeof value === "number" && Number.isFinite(value)) return value
+    if (typeof value === "string") {
+      const parsed = Number.parseInt(value, 10)
+      return Number.isFinite(parsed) ? parsed : 0
+    }
+    return 0
+  }
+
+  const getWaitlistStringArray = (item: ListaEspera, key: string): string[] => {
+    const formData = item.form_data && typeof item.form_data === "object" ? item.form_data : null
+    const value = formData ? formData[key as keyof typeof formData] : undefined
+    if (!Array.isArray(value)) return []
+    return value.filter((entry): entry is string => typeof entry === "string")
+  }
+
+  const mapWaitlistToCaminante = (item: ListaEspera): Caminante => {
+    return {
+      id: item.id,
+      nombre_completo: item.nombre_completo,
+      cedula: getWaitlistValue(item, "cedula"),
+      fecha_nacimiento: getWaitlistValue(item, "fecha_nacimiento"),
+      edad: getWaitlistNumber(item, "edad"),
+      celular: item.celular,
+      correo: item.correo,
+      direccion: getWaitlistValue(item, "direccion"),
+      ciudad: getWaitlistValue(item, "ciudad"),
+      estado_civil: getWaitlistValue(item, "estado_civil"),
+      profesion: getWaitlistValue(item, "profesion"),
+      empresa: getWaitlistValue(item, "empresa") || undefined,
+      cargo: getWaitlistValue(item, "cargo") || undefined,
+      nombre_contacto_emergencia: getWaitlistValue(item, "nombre_contacto_emergencia"),
+      parentesco_contacto: getWaitlistValue(item, "parentesco_contacto"),
+      celular_contacto: getWaitlistValue(item, "celular_contacto"),
+      nombre_contacto_emergencia_2: getWaitlistValue(item, "nombre_contacto_emergencia_2") || undefined,
+      parentesco_contacto_2: getWaitlistValue(item, "parentesco_contacto_2") || undefined,
+      celular_contacto_2: getWaitlistValue(item, "celular_contacto_2") || undefined,
+      es_sorpresa: getWaitlistBoolean(item, "es_sorpresa"),
+      ronca_al_dormir: getWaitlistBoolean(item, "ronca_al_dormir"),
+      condicion_especial: getWaitlistValue(item, "condicion_especial") || undefined,
+      talla_camisa: getWaitlistValue(item, "talla_camisa"),
+      sacramentos_recibidos: getWaitlistStringArray(item, "sacramentos_recibidos"),
+      quien_invito: getWaitlistValue(item, "quien_invito") || undefined,
+      invitador_hizo_retiro: getWaitlistBoolean(item, "invitador_hizo_retiro"),
+      eps: getWaitlistValue(item, "eps"),
+      tipo_sangre: getWaitlistValue(item, "tipo_sangre"),
+      medicamentos: getWaitlistValue(item, "medicamentos") || undefined,
+      restricciones_alimenticias: getWaitlistValue(item, "restricciones_alimenticias") || undefined,
+      observaciones: getWaitlistValue(item, "observaciones") || undefined,
+      parroquia: getWaitlistValue(item, "parroquia"),
+      parroco: getWaitlistValue(item, "parroco"),
+      monto_pagado: getWaitlistNumber(item, "monto_pagado"),
+      monto_total: getWaitlistNumber(item, "monto_total"),
+      imagen: getWaitlistValue(item, "imagen") || null,
+      cartas_recibidas: getWaitlistNumber(item, "cartas_recibidas"),
+      fotos_recibidas: getWaitlistNumber(item, "fotos_recibidas"),
+      caminantes_contactados: getWaitlistBoolean(item, "caminantes_contactados"),
+      familiares_contactados: getWaitlistBoolean(item, "familiares_contactados"),
+      mesa_id: undefined,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    }
+  }
+
+  const renderWaitlistCaminanteDialog = (item: ListaEspera, waitlistAsCaminante: Caminante, trigger: ReactNode) => (
+    <Dialog>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="!max-w-md max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{item.nombre_completo}</DialogTitle>
+        </DialogHeader>
+        <CaminanteCard caminante={waitlistAsCaminante} canEdit={false} />
+      </DialogContent>
+    </Dialog>
+  )
 
   const filteredCaminantes = caminantes.filter(
     (c) =>
@@ -604,27 +693,68 @@ export function CaminantesManagement({ adminUser, readOnly = false }: Caminantes
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">Foto</TableHead>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>Teléfono</TableHead>
-                  <TableHead>Correo</TableHead>
-                  <TableHead>Fecha de registro</TableHead>
+                  <TableHead>Cédula</TableHead>
+                  <TableHead>Celular</TableHead>
+                  <TableHead>Mesa</TableHead>
+                  <TableHead>Pago</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {listaEspera.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       No hay personas en lista de espera.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  listaEspera.map((item) => (
+                  listaEspera.map((item) => {
+                    const waitlistAsCaminante = mapWaitlistToCaminante(item)
+                    const imagen = waitlistAsCaminante.imagen || ""
+                    const cedula = getWaitlistValue(item, "cedula")
+                    const esSorpresa = waitlistAsCaminante.es_sorpresa
+
+                    return (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.nombre_completo}</TableCell>
+                      <TableCell>
+                        {renderWaitlistCaminanteDialog(
+                          item,
+                          waitlistAsCaminante,
+                          <button className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 p-0">
+                            <img
+                              src={imagen || uiAvatarUrl(item.nombre_completo)}
+                              alt={item.nombre_completo}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>,
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {renderWaitlistCaminanteDialog(
+                          item,
+                          waitlistAsCaminante,
+                          <div className="flex items-center gap-2 cursor-pointer">
+                            <button className="text-left text-sm underline underline-offset-2 text-primary/90">{item.nombre_completo}</button>
+                            {esSorpresa && (
+                              <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">
+                                Sorpresa
+                              </Badge>
+                            )}
+                          </div>,
+                        )}
+                      </TableCell>
+                      <TableCell>{cedula || "\u2014"}</TableCell>
                       <TableCell>{item.celular}</TableCell>
-                      <TableCell>{item.correo}</TableCell>
-                      <TableCell>{new Date(item.created_at).toLocaleString("es-CO")}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">Sin asignar</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={getPaymentBadgeClass("zero")}>
+                          $0 / $0
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Button
@@ -655,7 +785,8 @@ export function CaminantesManagement({ adminUser, readOnly = false }: Caminantes
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
+                    )
+                  })
                 )}
               </TableBody>
             </Table>
