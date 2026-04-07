@@ -13,11 +13,14 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { Servidor } from "@/lib/types"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { uiAvatarUrl } from "@/lib/utils"
 
 interface Admin {
   id: string
   nombre_completo: string
   email: string
+  celular?: string | null
+  imagen?: string | null
   role: string
   is_super: boolean
   created_at: string
@@ -291,8 +294,10 @@ export function AdminsManagement() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">Foto</TableHead>
                     <TableHead>Nombre</TableHead>
                     <TableHead>Correo</TableHead>
+                    <TableHead>Teléfono</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Fecha Creación</TableHead>
                     <TableHead>Acciones</TableHead>
@@ -301,15 +306,38 @@ export function AdminsManagement() {
                 <TableBody>
                   {filteredAdmins.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No se encontraron administradores
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredAdmins.map((admin) => (
                       <TableRow key={admin.id}>
+                        <TableCell>
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100">
+                            <img
+                              src={admin.imagen || uiAvatarUrl(admin.nombre_completo)}
+                              alt={admin.nombre_completo}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </TableCell>
                         <TableCell className="font-medium">{admin.nombre_completo}</TableCell>
                         <TableCell>{admin.email}</TableCell>
+                        <TableCell>
+                          {admin.celular ? (
+                            <a
+                              href={`https://wa.me/57${admin.celular.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-600 hover:text-green-700 font-medium"
+                            >
+                              {admin.celular}
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground">\u2014</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {admin.is_super ? (
                             <Badge variant="default" className="gap-1">

@@ -50,7 +50,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
-    return NextResponse.json(admins, { status: 200 })
+    const adminIds = (admins || []).map((admin) => admin.id)
+
+    const { data: servidores } = await supabase
+      .from('servidores')
+      .select('auth_user_id, celular, imagen')
+      .in('auth_user_id', adminIds)
+
+    const servidorByAuthId = new Map<string, { celular?: string | null; imagen?: string | null }>()
+    ;(servidores || []).forEach((servidor) => {
+      if (servidor.auth_user_id) {
+        servidorByAuthId.set(servidor.auth_user_id, {
+          celular: servidor.celular,
+          imagen: servidor.imagen,
+        })
+      }
+    })
+
+    const adminsWithContact = (admins || []).map((admin) => ({
+      ...admin,
+      celular: servidorByAuthId.get(admin.id)?.celular || null,
+      imagen: servidorByAuthId.get(admin.id)?.imagen || null,
+    }))
+
+    return NextResponse.json(adminsWithContact, { status: 200 })
   } catch (error) {
     console.error("[API] Error in GET /api/admins:", error)
     return NextResponse.json({ message: "Error al procesar la solicitud" }, { status: 500 })
