@@ -471,6 +471,41 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         break
       }
 
+      case "verificacion-existencia": {
+        const { data: caminantes } = await supabase
+          .from("caminantes")
+          .select("nombre_completo, mesa_id")
+          .order("nombre_completo")
+
+        const { data: mesas } = await supabase.from("mesas").select("id, numero")
+        const mesaById = new Map((mesas || []).map((mesa) => [mesa.id, mesa.numero]))
+
+        data = (caminantes || [])
+          .map((c) => ({
+            nombre: c.nombre_completo,
+            mesa:
+              c.mesa_id && mesaById.has(c.mesa_id)
+                ? `Mesa ${mesaById.get(c.mesa_id)}`
+                : "Sin mesa",
+            recibido: "",
+            _mesa_orden: c.mesa_id ? mesaById.get(c.mesa_id) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER,
+          }))
+          .sort((a, b) => {
+            if (a._mesa_orden !== b._mesa_orden) return a._mesa_orden - b._mesa_orden
+            return String(a.nombre).localeCompare(String(b.nombre), "es")
+          })
+          .map(({ _mesa_orden, ...row }) => row)
+
+        columns = [
+          { key: "nombre", label: "Nombre" },
+          { key: "mesa", label: "Mesa" },
+          { key: "recibido", label: "Recibido" },
+        ]
+
+        title = "Verificación de asistencia"
+        break
+      }
+
       default:
         return NextResponse.json({ message: "Tipo de reporte no válido" }, { status: 400 })
     }
@@ -569,6 +604,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       let html = '';
       if (type === "caminantes") {
         html = generateFichaHTML(data, title, paperSize, orientation);
+      } else if (type === "verificacion-existencia") {
+        html = generateVerificacionExistenciaHTML(data, title)
       } else if (type === "servidores") {
         html = generateHTML(data, columns, title);
       } else {
@@ -916,6 +953,80 @@ function generateHTML(data: any[], columns: { key: string; label: string }[], ti
       <table>
         <thead>
           <tr>${columns.map((c) => `<th>${escapeHtml(c.label)}</th>`).join("")}</tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `
+}
+
+function generateVerificacionExistenciaHTML(data: any[], title: string): string {
+  const tableRows = data
+    .map((item) => {
+      const nombre = escapeHtml(formatValue(item.nombre))
+      const mesa = escapeHtml(formatValue(item.mesa))
+
+      return `
+        <tr>
+          <td>${nombre}</td>
+          <td>${mesa}</td>
+          <td class="recibido-cell"><span class="recibido-box" aria-label="Casilla para marcar recibido"></span></td>
+        </tr>
+      `
+    })
+    .join("")
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>${escapeHtml(title)}</title>
+      <style>
+        @page {
+          size: legal portrait;
+          margin: 12mm;
+        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; margin-bottom: 6px; }
+        .header { margin-bottom: 16px; }
+        .date { color: #666; font-size: 14px; margin: 0 0 12px 0; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 1px solid #d1d5db; padding: 8px 10px; text-align: left; font-size: 12px; }
+        th { background-color: #1f2937; color: #fff; }
+        th:nth-child(1), td:nth-child(1) { width: 62%; }
+        th:nth-child(2), td:nth-child(2) { width: 20%; }
+        th:nth-child(3), td:nth-child(3) { width: 18%; text-align: center; }
+        .recibido-cell { text-align: center; }
+        .recibido-box {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          border: 1.5px solid #111827;
+          border-radius: 2px;
+          vertical-align: middle;
+        }
+        @media print {
+          button { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>${escapeHtml(title)}</h1>
+        <p class="date">Fecha: ${new Date().toLocaleDateString("es-CO")}</p>
+        <button onclick="window.print()">Imprimir / Guardar como PDF</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Mesa</th>
+            <th>Recibido</th>
+          </tr>
         </thead>
         <tbody>
           ${tableRows}

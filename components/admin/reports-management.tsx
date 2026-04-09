@@ -9,11 +9,13 @@ import { FileSpreadsheet, FileText, Loader2 } from "lucide-react"
 export function ReportsManagement({
   onlyCartas,
   onlyRestricciones,
+  onlyVerificacionExistencia,
   isSuperAdmin,
   isLogisticaTeam,
 }: {
   onlyCartas?: boolean
   onlyRestricciones?: boolean
+  onlyVerificacionExistencia?: boolean
   isSuperAdmin?: boolean
   isLogisticaTeam?: boolean
 } = {}) {
@@ -32,7 +34,8 @@ export function ReportsManagement({
       | "equipos-servidores"
       | "tallas"
       | "tallas-servidores"
-      | "evolucion-mesas",
+      | "evolucion-mesas"
+      | "verificacion-existencia",
     format: "excel" | "pdf",
   ) => {
     setIsExporting(`${type}-${format}`)
@@ -156,6 +159,12 @@ export function ReportsManagement({
       icon: FileText,
     },
     {
+      id: "verificacion-existencia",
+      title: "Verificación de asistencia",
+      description: "Listado de caminantes por mesa para marcar asistencia manualmente al imprimir",
+      icon: FileText,
+    },
+    {
       id: "equipos-servidores",
       title: "Equipos y Servidores",
       description: "Listado de equipos con sus servidores asignados",
@@ -193,9 +202,11 @@ export function ReportsManagement({
   ]
 
   const filteredReports = onlyCartas
-    ? reports.filter(r => r.id === 'cartas')
+    ? reports.filter((r) => r.id === "cartas" || r.id === "verificacion-existencia")
     : onlyRestricciones
-      ? reports.filter(r => r.id === 'restricciones')
+      ? reports.filter((r) => r.id === "restricciones" || r.id === "verificacion-existencia")
+      : onlyVerificacionExistencia
+        ? reports.filter((r) => r.id === "verificacion-existencia")
       : reports
 
   return (

@@ -30,6 +30,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const [isCartasTeam, setIsCartasTeam] = useState(false)
   const [isSnacksTeam, setIsSnacksTeam] = useState(false)
   const [isLogisticaTeam, setIsLogisticaTeam] = useState(false)
+  const [isMesaRegistroTeam, setIsMesaRegistroTeam] = useState(false)
   const [isAdditionalTeam, setIsAdditionalTeam] = useState(false)
   const [pagoServidor, setPagoServidor] = useState<{ text: string; status: "zero" | "partial" | "complete" } | null>(null)
 
@@ -91,6 +92,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
         const equiposConPermisoDefinido = [
           'lideres y colideres',
           'líderes y colíderes',
+          'mesa de registro',
           'cartas',
           'snacks',
           'cocina/snacks',
@@ -104,6 +106,9 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
         }
         if (myEquipos.some((e: string) => e === 'snacks' || e === 'cocina/snacks' || e === 'apoyo de mesas')) {
           setIsSnacksTeam(true)
+        }
+        if (myEquipos.includes('mesa de registro')) {
+          setIsMesaRegistroTeam(true)
         }
         if (myEquipos.some((e: string) => e.includes('log'))) {
           setIsLogisticaTeam(true)
@@ -134,7 +139,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   }
 
   const hasMiMesaTab = !adminUser.is_super && isLiderOrColider && !isAdditionalTeam
-  const hasReportesTab = adminUser.is_super || isCartasTeam || isSnacksTeam || isLogisticaTeam
+  const hasReportesTab = adminUser.is_super || isCartasTeam || isSnacksTeam || isLogisticaTeam || isMesaRegistroTeam
   const tabCount = adminUser.is_super ? 6 : hasMiMesaTab || hasReportesTab ? 5 : 4
   const isReadOnlyByAdditionalTeam = !adminUser.is_super && isAdditionalTeam
 
@@ -239,6 +244,8 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             <TabsContent value="reportes">
               {adminUser.is_super || isLogisticaTeam ? (
                 <ReportsManagement isSuperAdmin={adminUser.is_super} isLogisticaTeam={isLogisticaTeam} />
+              ) : isMesaRegistroTeam ? (
+                <ReportsManagement onlyVerificacionExistencia isSuperAdmin={adminUser.is_super} isLogisticaTeam={isLogisticaTeam} />
               ) : isCartasTeam ? (
                 <ReportsManagement onlyCartas isSuperAdmin={adminUser.is_super} isLogisticaTeam={isLogisticaTeam} />
               ) : (
