@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Image from "next/image"
 import { CountdownTimer } from "@/components/countdown-timer"
 import { getRetiroSettings } from "@/lib/retiro-settings"
+import { getRetiroRangeLabel, getSafeRetiroStartDate } from "@/lib/retiro-date-range"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -11,6 +12,8 @@ export const revalidate = 0
 export default async function HomePage() {
   const settings = await getRetiroSettings()
   const logoSrc = settings.logo_url || "/logo.png"
+  const retiroStartDate = getSafeRetiroStartDate(settings.retiro_datetime)
+  const retiroRangeLabel = getRetiroRangeLabel(retiroStartDate)
 
   return (
     <div className="min-h-screen bg-background">
@@ -22,7 +25,7 @@ export default async function HomePage() {
             <p className="text-lg text-muted-foreground text-pretty max-w-2xl">
               Retiro Espiritual Cristo Rey Hombres
               <br />
-              Abril 10, 11 y 12 de 2026
+              {retiroRangeLabel}
             </p>
             <CountdownTimer />
           </div>

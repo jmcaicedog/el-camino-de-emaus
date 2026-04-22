@@ -13,6 +13,7 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Loader2 } from "lucide-react"
 import { CountdownTimer } from "@/components/countdown-timer"
+import { getRetiroRangeLabel, getSafeRetiroStartDate } from "@/lib/retiro-date-range"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [logoSrc, setLogoSrc] = useState("/logo.png")
+  const [retiroRangeLabel, setRetiroRangeLabel] = useState("Del 10 al 12 de abril de 2026")
   const router = useRouter()
 
   useEffect(() => {
@@ -29,6 +31,10 @@ export default function LoginPage() {
         if (!response.ok) return
         const settings = await response.json()
         if (settings.logo_url) setLogoSrc(settings.logo_url)
+        if (typeof settings.retiro_datetime === "string") {
+          const safeDate = getSafeRetiroStartDate(settings.retiro_datetime)
+          setRetiroRangeLabel(getRetiroRangeLabel(safeDate))
+        }
       } catch {
         // keep default logo
       }
@@ -124,6 +130,7 @@ export default function LoginPage() {
           <div className="flex flex-col items-center gap-4">
             <Image src={logoSrc} alt="El Camino de Emaús" width={80} height={80} className="object-contain" />
             <h1 className="text-2xl font-bold">El Camino de Emaús</h1>
+            <p className="text-center text-sm text-muted-foreground">{retiroRangeLabel}</p>
             <CountdownTimer />
           </div>
 
