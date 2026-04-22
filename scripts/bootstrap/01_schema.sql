@@ -353,13 +353,31 @@ USING (EXISTS (SELECT 1 FROM admin_users a WHERE a.id = auth.uid()));
 
 DROP POLICY IF EXISTS admin_users_select_admins ON admin_users;
 DROP POLICY IF EXISTS admin_users_manage_superadmins ON admin_users;
+
+CREATE OR REPLACE FUNCTION public.is_super_admin(_uid UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.admin_users
+    WHERE id = _uid
+      AND is_super = true
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.is_super_admin(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_super_admin(UUID) TO authenticated;
+
 CREATE POLICY admin_users_select_admins
 ON admin_users FOR SELECT TO authenticated
-USING (EXISTS (SELECT 1 FROM admin_users a WHERE a.id = auth.uid()));
+USING (id = auth.uid() OR public.is_super_admin(auth.uid()));
 CREATE POLICY admin_users_manage_superadmins
 ON admin_users FOR ALL TO authenticated
-USING (EXISTS (SELECT 1 FROM admin_users a WHERE a.id = auth.uid() AND a.is_super = true))
-WITH CHECK (EXISTS (SELECT 1 FROM admin_users a WHERE a.id = auth.uid() AND a.is_super = true));
+USING (public.is_super_admin(auth.uid()))
+WITH CHECK (public.is_super_admin(auth.uid()));
 
 DROP POLICY IF EXISTS equipos_select_authenticated ON equipos;
 DROP POLICY IF EXISTS equipos_manage_admins ON equipos;
