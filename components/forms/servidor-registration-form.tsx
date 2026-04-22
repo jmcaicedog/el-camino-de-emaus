@@ -138,7 +138,7 @@ export function ServidorRegistrationForm() {
             </div>
 
             <div>
-              <Label htmlFor="imagen">Foto personal (opcional)</Label>
+              <Label htmlFor="imagen">Foto personal (Obligatorio, esto es indispensable para que seamos identificables dentro de la aplicación)</Label>
               {/* AvatarUploader provides a consistent circular preview + overlay button */}
               <div className="mt-2">
                 <AvatarUploader
@@ -177,7 +177,7 @@ export function ServidorRegistrationForm() {
             {/* Profesión, empresa y cargo han sido movidos a Información Laboral */}
             <div className="space-y-4">
               <div>
-                <Label htmlFor="talla_camisa">Talla de Camisa</Label>
+                <Label htmlFor="talla_camisa">Talla de Camisa (solo si necesitas comprar alguna)</Label>
                 <Select name="talla_camisa">
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona tu talla (opcional)" />
@@ -194,7 +194,7 @@ export function ServidorRegistrationForm() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  ¿Necesitas camisa?
+                  ¿Necesitas camisa? Marca los colores que necesitas (solo si necesitas comprar alguna)
                 </label>
                 <div className="flex flex-col space-y-2">
                   <div className="flex items-center space-x-2">
