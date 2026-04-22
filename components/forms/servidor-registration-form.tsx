@@ -85,7 +85,7 @@ export function ServidorRegistrationForm() {
         description: "Tu inscripción como servidor ha sido registrada correctamente.",
       })
 
-      router.push("/registro/exito")
+      router.push("/registro/exito/servidor")
     } catch (error) {
       toast({
         title: "Error",

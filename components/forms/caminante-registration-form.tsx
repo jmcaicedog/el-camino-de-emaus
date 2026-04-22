@@ -93,8 +93,9 @@ export function CaminanteRegistrationForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
+    const form = e.currentTarget
 
-    const formData = new FormData(e.currentTarget)
+    const formData = new FormData(form)
     const data = Object.fromEntries(formData.entries())
 
     // Calculate age from birth date
@@ -139,13 +140,13 @@ export function CaminanteRegistrationForm() {
           title: "Registro exitoso",
           description: "Tu inscripción ha sido registrada correctamente.",
         })
-        router.push("/registro/exito")
+        router.push("/registro/exito/caminante")
       } else {
         toast({
           title: "Datos recibidos",
           description: "Te agregamos a la lista de espera. Te contactaremos si se libera un cupo.",
         })
-        e.currentTarget.reset()
+        form.reset()
         setSacramentos([])
         setPreviewImage(null)
       }
@@ -213,7 +214,7 @@ export function CaminanteRegistrationForm() {
                   bienvenida, revisa que todos los campos estén completos.
                 </li>
                 <li>
-                  Te llegará un correo desde emauscristoreyhombres@gmail.com con las instrucciones para asistir al retiro y
+                  Te llegará un correo electrónico con las instrucciones para asistir al retiro y
                   formalizar el pago; por favor léelo, imprímelo o guárdalo.
                 </li>
                 <li>
@@ -257,7 +258,7 @@ export function CaminanteRegistrationForm() {
         <CardContent className="space-y-4">
           <div className="grid gap-4">
             <div className="space-y-2">
-              <Label>¿Este retiro es una sorpresa para otra persona? *</Label>
+              <Label>¿Este retiro es un regalo sorpreesa para otra persona? *</Label>
               <RadioGroup name="es_sorpresa" defaultValue="no" required>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="si" id="sorpresa-si" />
@@ -275,8 +276,8 @@ export function CaminanteRegistrationForm() {
             </div>
 
             <div>
-              <Label htmlFor="nombre_completo">Nombre Completo *</Label>
-              <Input id="nombre_completo" name="nombre_completo" required placeholder="Nombre completo" />
+              <Label htmlFor="nombre_completo">Nombre Completo de quien hará el retiro*</Label>
+              <Input id="nombre_completo" name="nombre_completo" required placeholder="Nombres y apellidos" />
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
@@ -292,11 +293,11 @@ export function CaminanteRegistrationForm() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="celular">Celular *</Label>
+                <Label htmlFor="celular">Celular de quien hará el retiro *</Label>
                 <Input id="celular" name="celular" type="tel" required placeholder="Número de celular" />
               </div>
               <div>
-                <Label htmlFor="correo">Correo Electrónico *</Label>
+                <Label htmlFor="correo">Correo Electrónico de quien hará el retiro *</Label>
                 <Input id="correo" name="correo" type="email" required placeholder="correo@ejemplo.com" />
               </div>
             </div>
@@ -373,7 +374,7 @@ export function CaminanteRegistrationForm() {
       <Card>
         <CardHeader>
           <CardTitle>Contactos de Emergencia</CardTitle>
-          <CardDescription>Por favor proporciona dos contactos de emergencia con los que podamos comunicarnos en cualquier eventualiad durante el retiro</CardDescription>
+          <CardDescription>Por favor proporciona dos contactos de emergencia con los que podamos comunicarnos en cualquier eventualiad durante el retiro.  Si el retiro es un regalo sorpresa que tu vas a dar, llena tus datos en el primer contacto de emergencia</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
@@ -385,7 +386,7 @@ export function CaminanteRegistrationForm() {
                   id="nombre_contacto_emergencia"
                   name="nombre_contacto_emergencia"
                   required
-                  placeholder="Nombre del contacto"
+                  placeholder="Nombres y apellidos"
                 />
               </div>
               <div>
@@ -419,7 +420,7 @@ export function CaminanteRegistrationForm() {
                   id="nombre_contacto_emergencia_2"
                   name="nombre_contacto_emergencia_2"
                   required
-                  placeholder="Nombre del contacto"
+                  placeholder="Nombres y apellidos"
                 />
               </div>
               <div>
@@ -477,7 +478,7 @@ export function CaminanteRegistrationForm() {
           </div>
 
           <div>
-            <Label htmlFor="medicamentos">Medicamentos</Label>
+            <Label htmlFor="medicamentos">Medicamentos (Si los toma)</Label>
             <Textarea
               id="medicamentos"
               name="medicamentos"
@@ -487,7 +488,7 @@ export function CaminanteRegistrationForm() {
           </div>
 
           <div>
-            <Label htmlFor="restricciones_alimenticias">Restricciones Alimenticias</Label>
+            <Label htmlFor="restricciones_alimenticias">Restricciones Alimenticias (Si las tiene)</Label>
             <Textarea
               id="restricciones_alimenticias"
               name="restricciones_alimenticias"
@@ -533,7 +534,7 @@ export function CaminanteRegistrationForm() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="parroquia">Parroquia</Label>
+            <Label htmlFor="parroquia">Parroquia a la que asistes</Label>
             <Input id="parroquia" name="parroquia" placeholder="Nombre de la parroquia (Si asistes a una)" />
           </div>
 
@@ -587,7 +588,7 @@ export function CaminanteRegistrationForm() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="quien_invito">¿Quién te invitó al retiro?</Label>
+            <Label htmlFor="quien_invito">Nombre completo de quien te invitó al retiro</Label>
             <Input id="quien_invito" name="quien_invito" placeholder="Nombre de quien te invitó" />
           </div>
 
