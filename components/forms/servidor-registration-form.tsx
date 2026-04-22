@@ -177,10 +177,10 @@ export function ServidorRegistrationForm() {
             {/* Profesión, empresa y cargo han sido movidos a Información Laboral */}
             <div className="space-y-4">
               <div>
-                <Label htmlFor="talla_camisa">Talla de Camisa *</Label>
-                <Select name="talla_camisa" required>
+                <Label htmlFor="talla_camisa">Talla de Camisa</Label>
+                <Select name="talla_camisa">
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona tu talla" />
+                    <SelectValue placeholder="Selecciona tu talla (opcional)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="S">S</SelectItem>
