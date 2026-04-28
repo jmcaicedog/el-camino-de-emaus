@@ -28,6 +28,9 @@ export function HabitacionModal({
   busy,
 }: HabitacionModalProps) {
   const [search, setSearch] = useState("")
+  const [snoreFilter, setSnoreFilter] = useState<"all" | "yes" | "no">("all")
+  const [minAge, setMinAge] = useState("")
+  const [maxAge, setMaxAge] = useState("")
 
   const assignedByBed = useMemo(() => {
     const map = new Map<number, HabitacionConAsignaciones["asignaciones"][number]>()
@@ -53,11 +56,36 @@ export function HabitacionModal({
   const personasFiltradasOrdenadas = useMemo(() => {
     const searchTerm = search.trim().toLocaleLowerCase("es")
     const collator = new Intl.Collator("es", { sensitivity: "base" })
+    const parsedMinAge = Number(minAge)
+    const parsedMaxAge = Number(maxAge)
+    const hasMinAge = minAge.trim() !== "" && Number.isFinite(parsedMinAge)
+    const hasMaxAge = maxAge.trim() !== "" && Number.isFinite(parsedMaxAge)
 
     return [...personasDisponibles]
       .filter((persona) => {
-        if (!searchTerm) return true
-        return persona.nombre_completo.toLocaleLowerCase("es").includes(searchTerm)
+        if (searchTerm && !persona.nombre_completo.toLocaleLowerCase("es").includes(searchTerm)) {
+          return false
+        }
+
+        if (snoreFilter === "yes" && !persona.ronca_al_dormir) {
+          return false
+        }
+
+        if (snoreFilter === "no" && persona.ronca_al_dormir) {
+          return false
+        }
+
+        const age = typeof persona.edad === "number" ? persona.edad : null
+
+        if (hasMinAge && (age === null || age < parsedMinAge)) {
+          return false
+        }
+
+        if (hasMaxAge && (age === null || age > parsedMaxAge)) {
+          return false
+        }
+
+        return true
       })
       .sort((a, b) => {
         if (a.persona_tipo !== b.persona_tipo) {
@@ -65,11 +93,14 @@ export function HabitacionModal({
         }
         return collator.compare(a.nombre_completo, b.nombre_completo)
       })
-  }, [personasDisponibles, search])
+  }, [personasDisponibles, search, snoreFilter, minAge, maxAge])
 
   useEffect(() => {
     if (open) {
       setSearch("")
+      setSnoreFilter("all")
+      setMinAge("")
+      setMaxAge("")
     }
   }, [open, habitacion?.id])
 
@@ -101,13 +132,15 @@ export function HabitacionModal({
                         isOccupied ? "border-emerald-300 bg-emerald-50" : "border-slate-200 bg-slate-50"
                       }`}
                     >
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-1">
                         <span className="text-sm font-medium">Cama {bedNumber}</span>
                         {isOccupied ? (
-                          <span className="text-sm text-muted-foreground">
-                            {asignacion.persona_nombre}
-                            {asignacion.ronca_al_dormir ? " · ronca" : ""}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                            <span>{asignacion.persona_nombre}</span>
+                            {asignacion.ronca_al_dormir ? (
+                              <Badge className="bg-rose-600 text-white hover:bg-rose-700">Ronca</Badge>
+                            ) : null}
+                          </div>
                         ) : (
                           <span className="text-sm text-muted-foreground">Libre</span>
                         )}
@@ -142,6 +175,37 @@ export function HabitacionModal({
                   placeholder="Buscar por nombre..."
                   aria-label="Buscar persona por nombre"
                 />
+
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <select
+                    value={snoreFilter}
+                    onChange={(e) => setSnoreFilter(e.target.value as "all" | "yes" | "no")}
+                    className="border-input bg-background h-9 rounded-md border px-3 text-sm"
+                    aria-label="Filtrar por ronquido"
+                  >
+                    <option value="all">Ronquido: todos</option>
+                    <option value="yes">Ronca</option>
+                    <option value="no">No ronca</option>
+                  </select>
+
+                  <Input
+                    type="number"
+                    min={0}
+                    value={minAge}
+                    onChange={(e) => setMinAge(e.target.value)}
+                    placeholder="Edad mínima"
+                    aria-label="Edad mínima"
+                  />
+
+                  <Input
+                    type="number"
+                    min={0}
+                    value={maxAge}
+                    onChange={(e) => setMaxAge(e.target.value)}
+                    placeholder="Edad máxima"
+                    aria-label="Edad máxima"
+                  />
+                </div>
 
                 {personasDisponibles.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No hay personas disponibles para asignar.</p>
