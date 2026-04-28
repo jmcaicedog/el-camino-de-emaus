@@ -109,6 +109,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const nombre = typeof body?.nombre === "string" ? body.nombre.trim() : ""
+    const habitacionesCount = Math.max(0, Number(body?.habitaciones_count) || 0)
+    const camasPorHabitacion = Math.max(1, Number(body?.camas_por_habitacion) || 1)
 
     if (!nombre) {
       return NextResponse.json({ message: "El nombre del edificio es obligatorio" }, { status: 400 })
@@ -120,6 +122,22 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ message: error.message }, { status: 400 })
+    }
+
+    if (habitacionesCount > 0) {
+      const habitacionesPayload = Array.from({ length: habitacionesCount }, (_, index) => ({
+        edificio_id: data.id,
+        nombre: `Habitación ${index + 1}`,
+        camas_total: camasPorHabitacion,
+      }))
+
+      const { error: roomsError } = await service.from("habitaciones").insert(habitacionesPayload)
+
+      if (roomsError) {
+        // Intento de rollback para evitar edificio sin configuración inicial solicitada.
+        await service.from("edificios").delete().eq("id", data.id)
+        return NextResponse.json({ message: roomsError.message }, { status: 400 })
+      }
     }
 
     return NextResponse.json(data, { status: 201 })

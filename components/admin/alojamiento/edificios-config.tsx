@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { EdificioConHabitaciones } from "@/lib/types"
 
 interface EdificiosConfigProps {
   edificios: EdificioConHabitaciones[]
-  onCreateEdificio: (payload: { nombre: string }) => Promise<void>
+  onCreateEdificio: (payload: { nombre: string; habitaciones_count: number; camas_por_habitacion: number }) => Promise<void>
   onUpdateEdificio: (id: string, payload: { nombre: string }) => Promise<void>
   onDeleteEdificio: (id: string) => Promise<void>
   onCreateHabitacion: (payload: { edificio_id: string; nombre: string; camas_total: number }) => Promise<void>
@@ -30,7 +31,12 @@ export function EdificiosConfig({
   busy,
 }: EdificiosConfigProps) {
   const [newEdificioName, setNewEdificioName] = useState("")
+  const [newEdificioRoomsCount, setNewEdificioRoomsCount] = useState(0)
+  const [newEdificioBedsPerRoom, setNewEdificioBedsPerRoom] = useState(1)
   const [newRoomByBuilding, setNewRoomByBuilding] = useState<Record<string, { nombre: string; camas_total: number }>>({})
+  const [confirmDeleteBuildingId, setConfirmDeleteBuildingId] = useState<string | null>(null)
+
+  const buildingToDelete = edificios.find((e) => e.id === confirmDeleteBuildingId) || null
 
   return (
     <div className="space-y-4">
@@ -38,8 +44,8 @@ export function EdificiosConfig({
         <CardHeader>
           <CardTitle className="text-base">Nuevo edificio</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3 md:flex-row md:items-end">
-          <div className="flex-1 space-y-2">
+        <CardContent className="grid gap-3 md:grid-cols-[1fr_180px_180px_auto] md:items-end">
+          <div className="space-y-2">
             <Label htmlFor="edificio-nombre">Nombre</Label>
             <Input
               id="edificio-nombre"
@@ -48,10 +54,38 @@ export function EdificiosConfig({
               placeholder="Ej: Casa San José"
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="edificio-habitaciones">Habitaciones iniciales</Label>
+            <Input
+              id="edificio-habitaciones"
+              type="number"
+              min={0}
+              value={newEdificioRoomsCount}
+              onChange={(e) => setNewEdificioRoomsCount(Math.max(0, Number(e.target.value) || 0))}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edificio-camas">Camas por habitación</Label>
+            <Input
+              id="edificio-camas"
+              type="number"
+              min={1}
+              value={newEdificioBedsPerRoom}
+              onChange={(e) => setNewEdificioBedsPerRoom(Math.max(1, Number(e.target.value) || 1))}
+            />
+          </div>
           <Button
             disabled={busy || newEdificioName.trim().length === 0}
             onClick={() => {
-              void onCreateEdificio({ nombre: newEdificioName.trim() }).then(() => setNewEdificioName(""))
+              void onCreateEdificio({
+                nombre: newEdificioName.trim(),
+                habitaciones_count: Math.max(0, newEdificioRoomsCount),
+                camas_por_habitacion: Math.max(1, newEdificioBedsPerRoom),
+              }).then(() => {
+                setNewEdificioName("")
+                setNewEdificioRoomsCount(0)
+                setNewEdificioBedsPerRoom(1)
+              })
             }}
           >
             Agregar edificio
@@ -82,7 +116,11 @@ export function EdificiosConfig({
                     }}
                   />
                 </div>
-                <Button variant="destructive" disabled={busy} onClick={() => void onDeleteEdificio(edificio.id)}>
+                <Button
+                  variant="destructive"
+                  disabled={busy}
+                  onClick={() => setConfirmDeleteBuildingId(edificio.id)}
+                >
                   Eliminar edificio
                 </Button>
               </div>
@@ -99,7 +137,7 @@ export function EdificiosConfig({
                           ...prev,
                           [edificio.id]: {
                             nombre: e.target.value,
-                            camas_total: prev[edificio.id]?.camas_total || 4,
+                            camas_total: prev[edificio.id]?.camas_total || 1,
                           },
                         }))
                       }
@@ -111,7 +149,7 @@ export function EdificiosConfig({
                     <Input
                       type="number"
                       min={1}
-                      value={newRoomByBuilding[edificio.id]?.camas_total || 4}
+                      value={newRoomByBuilding[edificio.id]?.camas_total || 1}
                       onChange={(e) =>
                         setNewRoomByBuilding((prev) => ({
                           ...prev,
@@ -135,7 +173,7 @@ export function EdificiosConfig({
                       }).then(() => {
                         setNewRoomByBuilding((prev) => ({
                           ...prev,
-                          [edificio.id]: { nombre: "", camas_total: 4 },
+                          [edificio.id]: { nombre: "", camas_total: 1 },
                         }))
                       })
                     }}
@@ -194,6 +232,28 @@ export function EdificiosConfig({
           </Card>
         ))}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(confirmDeleteBuildingId)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmDeleteBuildingId(null)
+          }
+        }}
+        title="Eliminar edificio"
+        description={
+          buildingToDelete
+            ? `Se eliminará el edificio "${buildingToDelete.nombre}" junto con todas sus habitaciones y asignaciones. Esta acción no se puede deshacer.`
+            : "Se eliminará el edificio con todas sus habitaciones y asignaciones. Esta acción no se puede deshacer."
+        }
+        confirmLabel="Sí, eliminar"
+        cancelLabel="Cancelar"
+        onConfirm={async () => {
+          if (!confirmDeleteBuildingId) return
+          await onDeleteEdificio(confirmDeleteBuildingId)
+          setConfirmDeleteBuildingId(null)
+        }}
+      />
     </div>
   )
 }
