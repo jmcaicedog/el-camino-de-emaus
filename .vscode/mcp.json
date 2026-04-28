@@ -1,9 +1,8 @@
 {
-	"servers": {
-		"supabase": {
-			"type": "http",
-			"url": "http://localhost:54321/mcp?features=development,database,docs"
-		}
-	},
-	"inputs": []
+  "servers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp"
+    }
+  }
 }

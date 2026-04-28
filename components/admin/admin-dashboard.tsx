@@ -12,10 +12,11 @@ import { MesaReport } from "@/components/admin/mesa-report"
 import { SystemSettingsPanel } from "@/components/admin/system-settings-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList } from "lucide-react"
+import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import type { AdminUser } from "@/lib/types"
 
 interface AdminDashboardProps {
@@ -164,6 +165,13 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {adminUser.is_super && <SystemSettingsPanel />}
+              {adminUser.is_super && (
+                <Link href="/admin/alojamiento">
+                  <Button variant="outline" size="icon" aria-label="Abrir módulo de alojamiento" title="Alojamiento">
+                    <Building2 className="h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
               <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
                 <LogOut className="h-4 w-4 md:mr-2" />
                 <span className="hidden md:inline">Cerrar Sesión</span>

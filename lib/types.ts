@@ -131,3 +131,52 @@ export interface ServidorEquipo {
   equipo_id: string
   created_at: string
 }
+
+export type PersonaAlojamientoTipo = "caminante" | "servidor"
+
+export interface Edificio {
+  id: string
+  nombre: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Habitacion {
+  id: string
+  edificio_id: string
+  nombre: string
+  camas_total: number
+  created_at: string
+  updated_at: string
+}
+
+export interface AsignacionAlojamiento {
+  id: string
+  habitacion_id: string
+  persona_id: string
+  persona_tipo: PersonaAlojamientoTipo
+  cama_numero: number
+  created_at: string
+  updated_at: string
+}
+
+export interface PersonaAlojamientoResumen {
+  id: string
+  nombre_completo: string
+  ronca_al_dormir: boolean
+  edad?: number | null
+  persona_tipo: PersonaAlojamientoTipo
+}
+
+export interface AsignacionAlojamientoDetalle extends AsignacionAlojamiento {
+  persona_nombre: string
+  ronca_al_dormir: boolean
+}
+
+export interface HabitacionConAsignaciones extends Habitacion {
+  asignaciones: AsignacionAlojamientoDetalle[]
+}
+
+export interface EdificioConHabitaciones extends Edificio {
+  habitaciones: HabitacionConAsignaciones[]
+}
