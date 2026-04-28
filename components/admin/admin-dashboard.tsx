@@ -12,7 +12,7 @@ import { MesaReport } from "@/components/admin/mesa-report"
 import { SystemSettingsPanel } from "@/components/admin/system-settings-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2 } from "lucide-react"
+import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2, ClipboardCheck } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -165,10 +165,17 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {adminUser.is_super && <SystemSettingsPanel />}
-              {adminUser.is_super && (
+              {(adminUser.is_super || isLogisticaTeam) && (
                 <Link href="/admin/alojamiento">
                   <Button variant="outline" size="icon" aria-label="Abrir módulo de alojamiento" title="Alojamiento">
                     <Building2 className="h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
+              {(adminUser.is_super || isLogisticaTeam) && (
+                <Link href="/admin/asistencia">
+                  <Button variant="outline" size="icon" aria-label="Abrir control de asistencia" title="Control de asistencia">
+                    <ClipboardCheck className="h-4 w-4" />
                   </Button>
                 </Link>
               )}

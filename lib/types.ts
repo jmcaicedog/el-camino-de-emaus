@@ -180,3 +180,15 @@ export interface HabitacionConAsignaciones extends Habitacion {
 export interface EdificioConHabitaciones extends Edificio {
   habitaciones: HabitacionConAsignaciones[]
 }
+
+export interface CaminanteAsistenciaResumen {
+  id: string
+  nombre_completo: string
+  celular: string
+  imagen?: string | null
+  mesa_id?: string | null
+  mesa_numero?: number | null
+  habitacion_nombre?: string | null
+  llego: boolean
+  llegada_at?: string | null
+}
