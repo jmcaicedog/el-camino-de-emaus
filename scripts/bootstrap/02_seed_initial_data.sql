@@ -40,6 +40,7 @@ INSERT INTO equipos (nombre, descripcion) VALUES
   ('Carta de Jesús', 'Coordinacion de la dinamica carta de Jesus'),
   ('Pared', 'Coordinacion de la dinamica de la pared'),
   ('Abrazos', 'Coordinacion de la dinamica de abrazos'),
+  ('Contabilidad', 'Gestion de pagos de caminantes y servidores'),
   ('Entrega de biblias', 'Organizacion de entrega de biblias'),
   ('Campanero', 'Responsable de campana y tiempos'),
   ('Minuto a minuto', 'Seguimiento operativo del minuto a minuto'),

@@ -22,9 +22,10 @@ import type { Servidor } from "@/lib/types"
 interface ServidoresManagementProps {
   adminUser?: AdminUser
   readOnly?: boolean
+  canManagePayments?: boolean
 }
 
-export function ServidoresManagement({ adminUser, readOnly = false }: ServidoresManagementProps) {
+export function ServidoresManagement({ adminUser, readOnly = false, canManagePayments = false }: ServidoresManagementProps) {
   const { toast } = useToast()
   const [servidores, setServidores] = useState<Servidor[]>([])
   const [admins, setAdmins] = useState<Set<string>>(new Set())
@@ -289,7 +290,7 @@ export function ServidoresManagement({ adminUser, readOnly = false }: Servidores
                   <TableHead>Celular</TableHead>
                   <TableHead>Equipos</TableHead>
                   <TableHead>Mesa</TableHead>
-                  {adminUser?.is_super && <TableHead>Pago</TableHead>}
+                  {(adminUser?.is_super || canManagePayments) && <TableHead>Pago</TableHead>}
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -468,7 +469,7 @@ export function ServidoresManagement({ adminUser, readOnly = false }: Servidores
                         <Badge variant="outline">Sin asignar</Badge>
                       )}
                     </TableCell>
-                    {adminUser?.is_super && (
+                    {(adminUser?.is_super || canManagePayments) && (
                       <TableCell>
                         <Badge
                           variant="secondary"
@@ -499,7 +500,7 @@ export function ServidoresManagement({ adminUser, readOnly = false }: Servidores
                             )}
                           </Button>
                         ) : null}
-                        {adminUser?.is_super && (
+                        {(adminUser?.is_super || canManagePayments) && (
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button

@@ -22,6 +22,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // If not super admin, restrict which fields can be modified
     if (!isSuper) {
+      const bodyKeys = Object.keys(body)
+      const isPaymentOnlyUpdate = bodyKeys.length === 1 && bodyKeys[0] === 'monto_pagado'
+
       const allowedFields = [
         'medicamentos',
         'restricciones_alimenticias',
@@ -36,6 +39,37 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       // If body contains keys outside allowedFields, deny
       const forbidden = Object.keys(body).some((k) => !allowedFields.includes(k))
       if (forbidden) return NextResponse.json({ message: 'No autorizado para modificar ese campo' }, { status: 403 })
+
+      // Miembros de contabilidad pueden actualizar monto_pagado de cualquier caminante.
+      if (isPaymentOnlyUpdate) {
+        const { data: servidorRecord } = await supabase
+          .from("servidores")
+          .select("id")
+          .eq("auth_user_id", currentUser.id)
+          .maybeSingle()
+
+        if (servidorRecord?.id) {
+          const { data: memberships } = await supabase
+            .from("servidor_equipo")
+            .select("equipos(nombre)")
+            .eq("servidor_id", servidorRecord.id)
+
+          const isContabilidadTeam = (memberships || []).some((membership: any) => {
+            const nombre = String(membership?.equipos?.nombre || "")
+            const normalized = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+            return normalized.includes("contabilidad")
+          })
+
+          if (isContabilidadTeam) {
+            const { data, error } = await supabase.from("caminantes").update(body).eq("id", id).select().single()
+            if (error) {
+              console.error("[v0] Error updating caminante:", error)
+              return NextResponse.json({ message: error.message }, { status: 400 })
+            }
+            return NextResponse.json(data, { status: 200 })
+          }
+        }
+      }
 
       // Check if user belongs to the "Cartas" equipo
       const { data: cartasEquipo } = await supabase

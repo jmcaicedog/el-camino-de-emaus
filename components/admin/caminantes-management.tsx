@@ -21,9 +21,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 interface CaminantesManagementProps {
   adminUser?: AdminUser
   readOnly?: boolean
+  canManagePayments?: boolean
 }
 
-export function CaminantesManagement({ adminUser, readOnly = false }: CaminantesManagementProps) {
+export function CaminantesManagement({ adminUser, readOnly = false, canManagePayments = false }: CaminantesManagementProps) {
   const { toast } = useToast()
   const [caminantes, setCaminantes] = useState<Caminante[]>([])
   const [listaEspera, setListaEspera] = useState<ListaEspera[]>([])
@@ -589,7 +590,7 @@ export function CaminantesManagement({ adminUser, readOnly = false }: Caminantes
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {adminUser?.is_super && (
+                        {(adminUser?.is_super || canManagePayments) && (
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button

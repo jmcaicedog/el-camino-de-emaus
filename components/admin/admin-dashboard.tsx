@@ -31,6 +31,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const [isCartasTeam, setIsCartasTeam] = useState(false)
   const [isSnacksTeam, setIsSnacksTeam] = useState(false)
   const [isLogisticaTeam, setIsLogisticaTeam] = useState(false)
+  const [isContabilidadTeam, setIsContabilidadTeam] = useState(false)
   const [isMesaRegistroTeam, setIsMesaRegistroTeam] = useState(false)
   const [isAdditionalTeam, setIsAdditionalTeam] = useState(false)
   const [pagoServidor, setPagoServidor] = useState<{ text: string; status: "zero" | "partial" | "complete" } | null>(null)
@@ -100,6 +101,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           'apoyo de mesas',
           'logistica',
           'logística',
+          'contabilidad',
         ]
 
         if (myEquipos.includes('cartas')) {
@@ -113,6 +115,9 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
         }
         if (myEquipos.some((e: string) => e.includes('log'))) {
           setIsLogisticaTeam(true)
+        }
+        if (myEquipos.includes('contabilidad')) {
+          setIsContabilidadTeam(true)
         }
 
         const hasDefinedPermissionTeam = myEquipos.some((e: string) => equiposConPermisoDefinido.includes(e))
@@ -236,11 +241,19 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           </TabsContent>
 
           <TabsContent value="caminantes">
-            <CaminantesManagement adminUser={adminUser} readOnly={isReadOnlyByAdditionalTeam} />
+            <CaminantesManagement
+              adminUser={adminUser}
+              readOnly={isReadOnlyByAdditionalTeam}
+              canManagePayments={adminUser.is_super || isContabilidadTeam}
+            />
           </TabsContent>
 
           <TabsContent value="servidores">
-            <ServidoresManagement adminUser={adminUser} readOnly={isReadOnlyByAdditionalTeam} />
+            <ServidoresManagement
+              adminUser={adminUser}
+              readOnly={isReadOnlyByAdditionalTeam}
+              canManagePayments={adminUser.is_super || isContabilidadTeam}
+            />
           </TabsContent>
 
           {adminUser.is_super && (

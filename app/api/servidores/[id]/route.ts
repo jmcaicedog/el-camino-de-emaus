@@ -22,6 +22,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // If not super admin, restrict which fields can be modified
     if (!isSuper) {
+      const bodyKeys = Object.keys(body)
+      const isPaymentOnlyUpdate = bodyKeys.length === 1 && bodyKeys[0] === 'monto_pagado'
+
       const allowedFields = [
         'medicamentos',
         'restricciones_alimenticias',
@@ -32,6 +35,34 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       ]
       const forbidden = Object.keys(body).some((k) => !allowedFields.includes(k))
       if (forbidden) return NextResponse.json({ message: 'No autorizado para modificar ese campo' }, { status: 403 })
+
+      // Miembros de contabilidad pueden actualizar monto_pagado de cualquier servidor.
+      if (isPaymentOnlyUpdate) {
+        const { data: servidorRecord } = await supabase
+          .from("servidores")
+          .select("id")
+          .eq("auth_user_id", currentUser.id)
+          .maybeSingle()
+
+        if (servidorRecord?.id) {
+          const { data: memberships } = await supabase
+            .from("servidor_equipo")
+            .select("equipos(nombre)")
+            .eq("servidor_id", servidorRecord.id)
+
+          const isContabilidadTeam = (memberships || []).some((membership: any) => {
+            const nombre = String(membership?.equipos?.nombre || "")
+            const normalized = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+            return normalized.includes("contabilidad")
+          })
+
+          if (!isContabilidadTeam) {
+            return NextResponse.json({ message: 'No autorizado para modificar pagos' }, { status: 403 })
+          }
+        } else {
+          return NextResponse.json({ message: 'No autorizado para modificar pagos' }, { status: 403 })
+        }
+      }
     }
 
     // Obtener datos anteriores para comparar cambios
