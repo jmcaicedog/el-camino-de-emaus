@@ -75,7 +75,10 @@ export async function POST(request: NextRequest) {
     `
     
     // Solo enviar a superadmins (to vacío, includeSuperAdmins por defecto es true)
-    await sendEmailNotification({ to: [], subject, text, html })
+    const notificationSent = await sendEmailNotification({ to: [], subject, text, html })
+    if (!notificationSent) {
+      console.warn(`[API] Email notification was not sent for servidor ${data.id}`)
+    }
 
     return NextResponse.json(data, { status: 201 })
   } catch (error) {

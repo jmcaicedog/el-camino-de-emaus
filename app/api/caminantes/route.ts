@@ -97,7 +97,10 @@ export async function POST(request: NextRequest) {
     const notification = buildNuevoCaminanteRegistradoNotification(data)
     
     // Solo enviar a superadmins (to vacío, includeSuperAdmins por defecto es true)
-    await sendEmailNotification({ to: [], ...notification })
+    const notificationSent = await sendEmailNotification({ to: [], ...notification })
+    if (!notificationSent) {
+      console.warn(`[API] Email notification was not sent for caminante ${data.id}`)
+    }
 
     return NextResponse.json(data, { status: 201 })
   } catch (error) {
