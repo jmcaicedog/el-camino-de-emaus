@@ -2,6 +2,9 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { sendEmailNotification } from "@/lib/email/send-notification"
+import { getPublicSiteUrl } from "@/lib/site-url"
+
+const RETREAT_COORDINATOR_TEAM_NAME = "Coordinador del retiro"
 
 // Función para generar contraseña temporal segura
 function generateTemporaryPassword(): string {
@@ -116,6 +119,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Servidor no encontrado' }, { status: 404 })
     }
 
+    const { data: servidorEquipos, error: equiposError } = await supabase
+      .from('servidor_equipo')
+      .select('equipos(nombre)')
+      .eq('servidor_id', servidor_id)
+
+    if (equiposError) {
+      console.error("[API] Error fetching servidor teams:", equiposError)
+      return NextResponse.json({ message: 'No fue posible validar los equipos del servidor' }, { status: 400 })
+    }
+
+    const isRetreatCoordinator =
+      servidorEquipos?.some((relation: any) => relation.equipos?.nombre === RETREAT_COORDINATOR_TEAM_NAME) ?? false
+
     // Check if already admin
     const { data: existingAdmin } = await supabase
       .from('admin_users')
@@ -155,7 +171,7 @@ export async function POST(request: NextRequest) {
         email_confirm: true,
         user_metadata: {
           nombre_completo: servidor.nombre_completo,
-          role: 'admin'
+          role: isRetreatCoordinator ? 'superadmin' : 'admin'
         }
       })
       if (updateError) {
@@ -170,7 +186,7 @@ export async function POST(request: NextRequest) {
         email_confirm: true,
         user_metadata: {
           nombre_completo: servidor.nombre_completo,
-          role: 'admin'
+          role: isRetreatCoordinator ? 'superadmin' : 'admin'
         }
       })
 
@@ -205,7 +221,7 @@ export async function POST(request: NextRequest) {
         nombre_completo: servidor.nombre_completo,
         email: servidor.correo,
         role: 'admin',
-        is_super: false
+        is_super: isRetreatCoordinator
       })
       .select()
       .single()
@@ -226,14 +242,15 @@ export async function POST(request: NextRequest) {
       .eq('id', servidor.id)
 
     // Send credentials via email
-    const loginUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const loginUrl = getPublicSiteUrl(request)
+    const accessRoleLabel = isRetreatCoordinator ? 'Superadministrador' : 'Administrador'
     const subject = 'Credenciales de Acceso - El Camino de Emaús'
-    const text = `Hola ${servidor.nombre_completo},\n\nHas sido promovido a Administrador en la plataforma El Camino de Emaús.\n\nTus credenciales de acceso son:\n\nUsuario: ${servidor.correo}\nContraseña temporal: ${temporaryPassword}\n\nAccede a la plataforma en: ${loginUrl}/auth/login\n\nPor seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión.\n\n¡Bendiciones!\nEquipo El Camino de Emaús`
+    const text = `Hola ${servidor.nombre_completo},\n\nHas sido promovido a ${accessRoleLabel} en la plataforma El Camino de Emaús.\n\nTus credenciales de acceso son:\n\nUsuario: ${servidor.correo}\nContraseña temporal: ${temporaryPassword}\n\nAccede a la plataforma en: ${loginUrl}/auth/login\n\nPor seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión.\n\n¡Bendiciones!\nEquipo El Camino de Emaús`
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2563eb;">Credenciales de Acceso</h2>
         <p>Hola <strong>${servidor.nombre_completo}</strong>,</p>
-        <p>Has sido promovido a <strong>Administrador</strong> en la plataforma El Camino de Emaús.</p>
+        <p>Has sido promovido a <strong>${accessRoleLabel}</strong> en la plataforma El Camino de Emaús.</p>
         
         <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="margin-top: 0;">Tus credenciales de acceso:</h3>
@@ -267,7 +284,7 @@ export async function POST(request: NextRequest) {
       includeSuperAdmins: true // Los superadmins también reciben copia
     })
 
-    return NextResponse.json(newAdmin, { status: 201 })
+    return NextResponse.json({ ...newAdmin, is_super: isRetreatCoordinator }, { status: 201 })
   } catch (error) {
     console.error("[API] Error in POST /api/admins:", error)
     return NextResponse.json({ message: "Error al procesar la solicitud" }, { status: 500 })

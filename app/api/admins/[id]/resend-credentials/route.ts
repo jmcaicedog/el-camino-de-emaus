@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { sendEmailNotification } from "@/lib/email/send-notification"
+import { getPublicSiteUrl } from "@/lib/site-url"
 
 // Función para generar contraseña temporal segura
 function generateTemporaryPassword(): string {
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Get admin info
     const { data: targetAdmin, error: adminError } = await supabase
       .from('admin_users')
-      .select('id, nombre_completo, email')
+      .select('id, nombre_completo, email, is_super')
       .eq('id', id)
       .single()
 
@@ -68,14 +69,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Send credentials via email
-    const loginUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const loginUrl = getPublicSiteUrl(request)
+    const accessRoleLabel = targetAdmin.is_super ? 'Superadministrador' : 'Administrador'
     const subject = 'Nuevas Credenciales de Acceso - El Camino de Emaús'
-    const text = `Hola ${targetAdmin.nombre_completo},\n\nSe han generado nuevas credenciales de acceso para tu cuenta de administrador en la plataforma El Camino de Emaús.\n\nTus credenciales de acceso son:\n\nUsuario: ${targetAdmin.email}\nContraseña temporal: ${temporaryPassword}\n\nAccede a la plataforma en: ${loginUrl}/auth/login\n\nPor seguridad, te recomendamos cambiar tu contraseña después del inicio de sesión.\n\n¡Bendiciones!\nEquipo El Camino de Emaús`
+    const text = `Hola ${targetAdmin.nombre_completo},\n\nSe han generado nuevas credenciales de acceso para tu cuenta de ${accessRoleLabel.toLowerCase()} en la plataforma El Camino de Emaús.\n\nTus credenciales de acceso son:\n\nUsuario: ${targetAdmin.email}\nContraseña temporal: ${temporaryPassword}\n\nAccede a la plataforma en: ${loginUrl}/auth/login\n\nPor seguridad, te recomendamos cambiar tu contraseña después del inicio de sesión.\n\n¡Bendiciones!\nEquipo El Camino de Emaús`
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2563eb;">Nuevas Credenciales de Acceso</h2>
         <p>Hola <strong>${targetAdmin.nombre_completo}</strong>,</p>
-        <p>Se han generado nuevas credenciales de acceso para tu cuenta de administrador en la plataforma El Camino de Emaús.</p>
+        <p>Se han generado nuevas credenciales de acceso para tu cuenta de <strong>${accessRoleLabel}</strong> en la plataforma El Camino de Emaús.</p>
         
         <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="margin-top: 0;">Tus credenciales de acceso:</h3>

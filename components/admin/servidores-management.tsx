@@ -188,8 +188,10 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
       }
 
       toast({ 
-        title: 'Administrador agregado', 
-        description: `${servidor.nombre_completo} ahora tiene permisos de administrador. Las credenciales serán enviadas por correo.` 
+        title: data.is_super ? 'Superadministrador agregado' : 'Administrador agregado', 
+        description: data.is_super
+          ? `${servidor.nombre_completo} ahora tiene permisos de superadministrador. Las credenciales serán enviadas por correo.`
+          : `${servidor.nombre_completo} ahora tiene permisos de administrador. Las credenciales serán enviadas por correo.` 
       })
       
       await loadServidores()

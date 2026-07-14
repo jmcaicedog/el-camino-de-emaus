@@ -98,8 +98,10 @@ export function AdminsManagement() {
       }
 
       toast({
-        title: "Administrador agregado",
-        description: "El servidor ahora tiene permisos de administrador",
+        title: data.is_super ? "Superadministrador agregado" : "Administrador agregado",
+        description: data.is_super
+          ? "El servidor ahora tiene permisos de superadministrador"
+          : "El servidor ahora tiene permisos de administrador",
       })
 
       setAddDialogOpen(false)
