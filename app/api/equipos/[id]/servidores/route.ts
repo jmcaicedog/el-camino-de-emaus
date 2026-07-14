@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
 import { formatPersonName } from "@/lib/utils"
 
+const RETREAT_COORDINATOR_TEAM_NAME = "Coordinador del retiro"
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
@@ -85,7 +87,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const { data: servidor } = await supabase
       .from("servidores")
-      .select("nombre_completo, correo")
+      .select("id, nombre_completo, correo, auth_user_id")
       .eq("id", servidor_id)
       .single()
 
@@ -95,6 +97,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .insert({ equipo_id: id, servidor_id })
 
     if (error) throw error
+
+    // Si el equipo es Coordinador del retiro y el servidor ya es admin, elevar a superadmin.
+    if (equipo?.nombre === RETREAT_COORDINATOR_TEAM_NAME && servidor?.auth_user_id) {
+      const { error: promoteError } = await supabase
+        .from("admin_users")
+        .update({ is_super: true })
+        .eq("id", servidor.auth_user_id)
+
+      if (promoteError) {
+        console.error("Error promoting coordinator to superadmin:", promoteError)
+      }
+    }
 
     // Enviar notificación al servidor
     if (servidor?.correo && equipo?.nombre) {
@@ -156,7 +170,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     const { data: servidor } = await supabase
       .from("servidores")
-      .select("nombre_completo, correo")
+      .select("id, nombre_completo, correo, auth_user_id")
       .eq("id", servidor_id)
       .single()
 
@@ -167,6 +181,18 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       .eq("servidor_id", servidor_id)
 
     if (error) throw error
+
+    // Si se remueve del equipo Coordinador del retiro y es admin, retirar privilegio superadmin.
+    if (equipo?.nombre === RETREAT_COORDINATOR_TEAM_NAME && servidor?.auth_user_id) {
+      const { error: demoteError } = await supabase
+        .from("admin_users")
+        .update({ is_super: false })
+        .eq("id", servidor.auth_user_id)
+
+      if (demoteError) {
+        console.error("Error demoting coordinator from superadmin:", demoteError)
+      }
+    }
 
     // Enviar notificación al servidor
     if (servidor?.correo && equipo?.nombre) {
