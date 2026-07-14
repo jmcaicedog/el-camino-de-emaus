@@ -76,8 +76,17 @@ export function ServidorRegistrationForm() {
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Error al registrar")
+        const error = await response.json().catch(() => null)
+
+        if (error?.code === "already_registered") {
+          toast({
+            title: "Ya estás registrado",
+            description: error.message,
+          })
+          return
+        }
+
+        throw new Error(error?.message || "Error al registrar")
       }
 
       toast({

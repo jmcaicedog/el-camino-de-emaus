@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
+import { buildPublicRegistrationErrorResponse } from "@/lib/public-registration-errors"
 import { formatPersonName } from "@/lib/utils"
 import { sendEmailNotification } from "@/lib/email/send-notification"
 import { getRetiroSettings } from "@/lib/retiro-settings"
@@ -71,7 +72,13 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (existingEmail) {
-      return NextResponse.json({ message: "Este correo ya está registrado en lista de espera" }, { status: 409 })
+      return NextResponse.json(
+        {
+          message: "Ya tenemos tus datos registrados en la lista de espera. Te contactaremos si se libera un cupo.",
+          code: "already_registered",
+        },
+        { status: 409 },
+      )
     }
 
     const { data, error } = await supabase
@@ -94,7 +101,11 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("[v0] Error inserting lista_espera:", error)
-      return NextResponse.json({ message: error.message }, { status: 400 })
+      const errorResponse = buildPublicRegistrationErrorResponse(error, "lista_espera")
+      return NextResponse.json(
+        { message: errorResponse.message, code: errorResponse.code },
+        { status: errorResponse.status },
+      )
     }
 
     // Enviar notificación a superadmins sobre nuevo registro en lista de espera

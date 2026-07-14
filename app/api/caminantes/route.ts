@@ -4,6 +4,7 @@ import { sendEmailNotification } from "@/lib/email/send-notification"
 import { buildNuevoCaminanteRegistradoNotification } from "@/lib/email/caminante-notification"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
+import { buildPublicRegistrationErrorResponse } from "@/lib/public-registration-errors"
 import { getRetiroSettings } from "@/lib/retiro-settings"
 import { formatPersonName } from "@/lib/utils"
 
@@ -90,7 +91,11 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("[v0] Error inserting caminante:", error)
-      return NextResponse.json({ message: error.message }, { status: 400 })
+      const errorResponse = buildPublicRegistrationErrorResponse(error, "caminante")
+      return NextResponse.json(
+        { message: errorResponse.message, code: errorResponse.code },
+        { status: errorResponse.status },
+      )
     }
 
     // Enviar notificación a superadmins sobre nuevo registro

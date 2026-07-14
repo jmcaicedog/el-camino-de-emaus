@@ -70,7 +70,9 @@ export function Toaster() {
           <Toast
             key={id}
             {...props}
-            ref={(node: HTMLElement | null) => refs.current.set(id, node)}
+            ref={(node) => {
+              refs.current.set(id, node)
+            }}
           >
             <div className="grid gap-1" style={wrapperStyle}>
               {title && <ToastTitle style={titleDescStyle}>{title}</ToastTitle>}

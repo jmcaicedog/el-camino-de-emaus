@@ -129,6 +129,14 @@ export function CaminanteRegistrationForm() {
 
       if (!response.ok) {
         const error = await response.json().catch(() => null)
+        if (error?.code === "already_registered") {
+          toast({
+            title: "Ya estás registrado",
+            description: error.message,
+          })
+          return
+        }
+
         if (response.status === 409) {
           await loadCapacity()
         }

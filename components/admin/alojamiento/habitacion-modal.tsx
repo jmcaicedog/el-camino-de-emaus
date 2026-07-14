@@ -123,18 +123,17 @@ export function HabitacionModal({
               <CardContent className="space-y-2">
                 {beds.map((bedNumber) => {
                   const asignacion = assignedByBed.get(bedNumber)
-                  const isOccupied = Boolean(asignacion)
 
                   return (
                     <div
                       key={bedNumber}
                       className={`flex items-center justify-between rounded-md border px-3 py-2 ${
-                        isOccupied ? "border-emerald-300 bg-emerald-50" : "border-slate-200 bg-slate-50"
+                        asignacion ? "border-emerald-300 bg-emerald-50" : "border-slate-200 bg-slate-50"
                       }`}
                     >
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-medium">Cama {bedNumber}</span>
-                        {isOccupied ? (
+                        {asignacion ? (
                           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                             <span>{asignacion.persona_nombre}</span>
                             {asignacion.ronca_al_dormir ? (
@@ -146,7 +145,7 @@ export function HabitacionModal({
                         )}
                       </div>
 
-                      {isOccupied ? (
+                      {asignacion ? (
                         <Button
                           variant="outline"
                           size="sm"
