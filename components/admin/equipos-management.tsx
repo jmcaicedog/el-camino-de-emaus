@@ -141,7 +141,7 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
     )
   }
 
-  const equiposFiltrados = equipos.filter((equipo) => equipo.tipo === activeTab)
+  const equiposFiltrados = equipos.filter((equipo) => (equipo.tipo || "equipo") === activeTab)
 
   return (
     <div className="space-y-6">

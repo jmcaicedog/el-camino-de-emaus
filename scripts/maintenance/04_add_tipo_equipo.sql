@@ -59,3 +59,6 @@ WHERE nombre NOT IN (
 );
 
 COMMIT;
+
+-- PostgREST cachea el esquema; sin este aviso la API puede no ver la columna nueva.
+NOTIFY pgrst, 'reload schema';
