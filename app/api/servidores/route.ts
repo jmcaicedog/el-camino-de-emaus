@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { sendEmailNotification } from "@/lib/email/send-notification"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import { buildPublicRegistrationErrorResponse } from "@/lib/public-registration-errors"
 import { formatPersonName } from "@/lib/utils"
 import { getRetiroSettings } from "@/lib/retiro-settings"
 
@@ -57,11 +56,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("[v0] Error inserting servidor:", error)
-      const errorResponse = buildPublicRegistrationErrorResponse(error, "servidor")
-      return NextResponse.json(
-        { message: errorResponse.message, code: errorResponse.code },
-        { status: errorResponse.status },
-      )
+      return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
     // Enviar notificación a superadmins sobre nuevo registro
