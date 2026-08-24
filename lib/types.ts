@@ -117,10 +117,13 @@ export interface AdminUser {
   created_at: string
 }
 
+export type TipoEquipo = "equipo" | "actividad"
+
 export interface Equipo {
   id: string
   nombre: string
   descripcion?: string
+  tipo: TipoEquipo
   created_at: string
   updated_at: string
 }

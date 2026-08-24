@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS equipos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nombre TEXT NOT NULL UNIQUE,
   descripcion TEXT,
+  tipo TEXT NOT NULL DEFAULT 'equipo' CHECK (tipo IN ('equipo', 'actividad')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
