@@ -7,10 +7,58 @@ import { isCaminanteRegistrationOpen } from "@/lib/caminantes-capacity"
 import { getRetiroSettings } from "@/lib/retiro-settings"
 import { formatPersonName } from "@/lib/utils"
 
+// Campos permitidos en el registro público. Excluye deliberadamente monto_pagado,
+// mesa_id, cartas_recibidas, fotos_recibidas y los flags de contacto: son controlados
+// solo por administración para evitar que un registro fraudulento se auto-asigne valores.
+const ALLOWED_CAMINANTE_FIELDS = [
+  "nombre_completo",
+  "cedula",
+  "fecha_nacimiento",
+  "edad",
+  "celular",
+  "correo",
+  "direccion",
+  "ciudad",
+  "estado_civil",
+  "profesion",
+  "empresa",
+  "cargo",
+  "nombre_contacto_emergencia",
+  "parentesco_contacto",
+  "celular_contacto",
+  "nombre_contacto_emergencia_2",
+  "parentesco_contacto_2",
+  "celular_contacto_2",
+  "es_sorpresa",
+  "ronca_al_dormir",
+  "condicion_especial",
+  "talla_camisa",
+  "sacramentos_recibidos",
+  "quien_invito",
+  "invitador_hizo_retiro",
+  "eps",
+  "tipo_sangre",
+  "medicamentos",
+  "restricciones_alimenticias",
+  "observaciones",
+  "parroquia",
+  "parroco",
+  "imagen",
+] as const
+
+function sanitizeCaminanteInput(raw: Record<string, unknown>) {
+  const sanitized: Record<string, unknown> = {}
+  for (const field of ALLOWED_CAMINANTE_FIELDS) {
+    if (raw[field] !== undefined) sanitized[field] = raw[field]
+  }
+  return sanitized
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    body.nombre_completo = formatPersonName(body.nombre_completo)
+    const rawBody = await request.json()
+    const body = sanitizeCaminanteInput(rawBody)
+    body.nombre_completo = formatPersonName(body.nombre_completo as string)
     
     // Usar Service Role Key para bypasear RLS en registro público
     // Esto permite que usuarios anónimos puedan registrarse sin autenticación

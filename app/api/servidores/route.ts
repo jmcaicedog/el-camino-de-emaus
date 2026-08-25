@@ -5,10 +5,56 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { formatPersonName } from "@/lib/utils"
 import { getRetiroSettings } from "@/lib/retiro-settings"
 
+// Campos permitidos en el registro público. Excluye deliberadamente monto_pagado,
+// mesa_id, auth_user_id y tipo_servidor: son controlados solo por administración
+// para evitar que un registro fraudulento se auto-asigne pagos, mesa o rol de líder.
+const ALLOWED_SERVIDOR_FIELDS = [
+  "nombre_completo",
+  "cedula",
+  "fecha_nacimiento",
+  "edad",
+  "celular",
+  "correo",
+  "direccion",
+  "ciudad",
+  "estado_civil",
+  "profesion",
+  "empresa",
+  "cargo",
+  "talla_camisa",
+  "colores_camisa",
+  "nombre_contacto_emergencia",
+  "parentesco_contacto",
+  "celular_contacto",
+  "nombre_contacto_emergencia_2",
+  "parentesco_contacto_2",
+  "celular_contacto_2",
+  "condicion_especial",
+  "medicamentos",
+  "restricciones_alimenticias",
+  "parroco",
+  "ronca_al_dormir",
+  "eps",
+  "tipo_sangre",
+  "parroquia",
+  "retiros_anteriores",
+  "experiencia_servicio",
+  "imagen",
+] as const
+
+function sanitizeServidorInput(raw: Record<string, unknown>) {
+  const sanitized: Record<string, unknown> = {}
+  for (const field of ALLOWED_SERVIDOR_FIELDS) {
+    if (raw[field] !== undefined) sanitized[field] = raw[field]
+  }
+  return sanitized
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    body.nombre_completo = formatPersonName(body.nombre_completo)
+    const rawBody = await request.json()
+    const body = sanitizeServidorInput(rawBody)
+    body.nombre_completo = formatPersonName(body.nombre_completo as string)
     const settings = await getRetiroSettings()
     body.monto_total = settings.costo_servidor
     

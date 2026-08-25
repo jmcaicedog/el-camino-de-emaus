@@ -4,6 +4,13 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 export async function POST(request: Request) {
   try {
+    // Requiere sesión activa: evita que cualquier visitante anónimo suba archivos al bucket.
+    const authClient = await createBrowserClient()
+    const { data: userData } = await authClient.auth.getUser()
+    if (!userData?.user) {
+      return NextResponse.json({ message: "No autenticado" }, { status: 401 })
+    }
+
     const { dataUrl, filename } = await request.json()
     if (!dataUrl) return NextResponse.json({ message: "No data provided" }, { status: 400 })
 
@@ -14,6 +21,12 @@ export async function POST(request: Request) {
     const mime = match[1]
     const ext = match[2] === 'jpeg' ? 'jpg' : match[2]
     const base64 = match[3]
+
+    const MAX_BYTES = 2 * 1024 * 1024
+    if (Buffer.byteLength(base64, 'base64') > MAX_BYTES) {
+      return NextResponse.json({ message: "Imagen muy grande (max 2MB)" }, { status: 400 })
+    }
+
     // Create several representations to support different runtimes
     let nodeBuffer: Buffer | null = null
     let uint8: Uint8Array | null = null
