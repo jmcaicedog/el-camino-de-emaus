@@ -19,8 +19,7 @@ INSERT INTO equipos (nombre, descripcion, tipo) VALUES
   ('Oración y bendición de los alimentos', 'Responsable de la oracion y bendicion de los alimentos', 'actividad'),
   ('Cena de sacerdotes', 'Responsable de la cena de sacerdotes', 'actividad'),
   ('Misa nocturna', 'Responsable de la misa nocturna', 'actividad'),
-  ('Dinámica del perdón', 'Responsable de la dinamica del perdon', 'actividad'),
-  ('Refrigerio', 'Responsable del refrigerio', 'actividad')
+  ('Dinámica del perdón', 'Responsable de la dinamica del perdon', 'actividad')
 ON CONFLICT (nombre)
 DO UPDATE SET
   descripcion = EXCLUDED.descripcion,

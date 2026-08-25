@@ -19,8 +19,8 @@ UPDATE equipos
 SET tipo = 'actividad'
 WHERE normalize(nombre, NFC) IN (
   normalize('Camino de Emaús (Explicación)', NFC),
-  normalize('Carta de Jesús', NFC),
-  normalize('Carta de pecados', NFC),
+  normalize('Dinámica de Carta de Jesús', NFC),
+  normalize('Dinámica de Carta de pecados', NFC),
   normalize('Despertar de caminantes', NFC),
   normalize('El abrazo / La vela (Explicación)', NFC),
   normalize('Entrega de biblias', NFC),
@@ -28,11 +28,9 @@ WHERE normalize(nombre, NFC) IN (
   normalize('Imposición de cenizas', NFC),
   normalize('La Rosa (Explicación)', NFC),
   normalize('Lavado de manos', NFC),
-  normalize('Lavatorio de pies', NFC),
   normalize('Lema de Emáus (Explicación)', NFC),
   normalize('Oración al Espíritu Santo (Oración)', NFC),
-  normalize('Pared', NFC),
-  normalize('Quema de pecados', NFC),
+  normalize('Dinámica de la pared', NFC),
   normalize('Resumen', NFC),
   normalize('Rosario', NFC),
   normalize('Sanación de recuerdos', NFC)
@@ -42,8 +40,8 @@ UPDATE equipos
 SET tipo = 'equipo'
 WHERE normalize(nombre, NFC) NOT IN (
   normalize('Camino de Emaús (Explicación)', NFC),
-  normalize('Carta de Jesús', NFC),
-  normalize('Carta de pecados', NFC),
+  normalize('Dinámica de Carta de Jesús', NFC),
+  normalize('Dinámica de Carta de pecados', NFC),
   normalize('Despertar de caminantes', NFC),
   normalize('El abrazo / La vela (Explicación)', NFC),
   normalize('Entrega de biblias', NFC),
@@ -51,11 +49,9 @@ WHERE normalize(nombre, NFC) NOT IN (
   normalize('Imposición de cenizas', NFC),
   normalize('La Rosa (Explicación)', NFC),
   normalize('Lavado de manos', NFC),
-  normalize('Lavatorio de pies', NFC),
   normalize('Lema de Emáus (Explicación)', NFC),
   normalize('Oración al Espíritu Santo (Oración)', NFC),
-  normalize('Pared', NFC),
-  normalize('Quema de pecados', NFC),
+  normalize('Dinámica de la pared', NFC),
   normalize('Resumen', NFC),
   normalize('Rosario', NFC),
   normalize('Sanación de recuerdos', NFC)

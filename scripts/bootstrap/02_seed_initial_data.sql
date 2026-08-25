@@ -30,15 +30,13 @@ INSERT INTO equipos (nombre, descripcion, tipo) VALUES
   ('Sacerdotes', 'Coordinacion y apoyo a sacerdotes', 'equipo'),
   ('Salones', 'Preparacion y logistica de salones', 'equipo'),
   ('Lavado de manos', 'Coordinacion de la dinamica de lavado de manos', 'actividad'),
-  ('Lavatorio de pies', 'Coordinacion de la dinamica de lavatorio de pies', 'actividad'),
   ('Sanación de recuerdos', 'Apoyo en la dinamica de sanacion de recuerdos', 'actividad'),
-  ('Carta de pecados', 'Coordinacion de la dinamica carta de pecados', 'actividad'),
-  ('Quema de pecados', 'Coordinacion de la dinamica de quema de pecados', 'actividad'),
+  ('Dinámica de Carta de pecados', 'Coordinacion de la dinamica carta de pecados', 'actividad'),
   ('Imposición de cenizas', 'Coordinacion de la dinamica de imposicion de cenizas', 'actividad'),
   ('Resumen', 'Responsable de la dinamica de resumen', 'actividad'),
   ('Mantelitos', 'Preparacion y entrega de mantelitos', 'equipo'),
-  ('Carta de Jesús', 'Coordinacion de la dinamica carta de Jesus', 'actividad'),
-  ('Pared', 'Coordinacion de la dinamica de la pared', 'actividad'),
+  ('Dinámica de Carta de Jesús', 'Coordinacion de la dinamica carta de Jesus', 'actividad'),
+  ('Dinámica de la pared', 'Coordinacion de la dinamica de la pared', 'actividad'),
   ('Abrazos', 'Coordinacion de la dinamica de abrazos', 'equipo'),
   ('Contabilidad', 'Gestion de pagos de caminantes y servidores', 'equipo'),
   ('Entrega de biblias', 'Organizacion de entrega de biblias', 'actividad'),
@@ -64,8 +62,7 @@ INSERT INTO equipos (nombre, descripcion, tipo) VALUES
   ('Oración y bendición de los alimentos', 'Responsable de la oracion y bendicion de los alimentos', 'actividad'),
   ('Cena de sacerdotes', 'Responsable de la cena de sacerdotes', 'actividad'),
   ('Misa nocturna', 'Responsable de la misa nocturna', 'actividad'),
-  ('Dinámica del perdón', 'Responsable de la dinamica del perdon', 'actividad'),
-  ('Refrigerio', 'Responsable del refrigerio', 'actividad')
+  ('Dinámica del perdón', 'Responsable de la dinamica del perdon', 'actividad')
 ON CONFLICT (nombre)
 DO UPDATE SET
   descripcion = EXCLUDED.descripcion,

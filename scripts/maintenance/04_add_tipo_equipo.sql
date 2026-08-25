@@ -16,8 +16,8 @@ UPDATE equipos
 SET tipo = 'actividad'
 WHERE nombre IN (
   'Camino de Emaús (Explicación)',
-  'Carta de Jesús',
-  'Carta de pecados',
+  'Dinámica de Carta de Jesús',
+  'Dinámica de Carta de pecados',
   'Despertar de caminantes',
   'El abrazo / La vela (Explicación)',
   'Entrega de biblias',
@@ -25,11 +25,9 @@ WHERE nombre IN (
   'Imposición de cenizas',
   'La Rosa (Explicación)',
   'Lavado de manos',
-  'Lavatorio de pies',
   'Lema de Emáus (Explicación)',
   'Oración al Espíritu Santo (Oración)',
-  'Pared',
-  'Quema de pecados',
+  'Dinámica de la pared',
   'Resumen',
   'Rosario',
   'Sanación de recuerdos'
@@ -39,8 +37,8 @@ UPDATE equipos
 SET tipo = 'equipo'
 WHERE nombre NOT IN (
   'Camino de Emaús (Explicación)',
-  'Carta de Jesús',
-  'Carta de pecados',
+  'Dinámica de Carta de Jesús',
+  'Dinámica de Carta de pecados',
   'Despertar de caminantes',
   'El abrazo / La vela (Explicación)',
   'Entrega de biblias',
@@ -48,11 +46,9 @@ WHERE nombre NOT IN (
   'Imposición de cenizas',
   'La Rosa (Explicación)',
   'Lavado de manos',
-  'Lavatorio de pies',
   'Lema de Emáus (Explicación)',
   'Oración al Espíritu Santo (Oración)',
-  'Pared',
-  'Quema de pecados',
+  'Dinámica de la pared',
   'Resumen',
   'Rosario',
   'Sanación de recuerdos'
