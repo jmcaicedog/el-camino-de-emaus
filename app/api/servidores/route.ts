@@ -145,24 +145,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
-    // Para cada servidor, obtener sus equipos
+    // Para cada servidor, obtener sus equipos y actividades
     const servidoresConEquipos = await Promise.all(
       (servidores || []).map(async (servidor) => {
         const { data: relaciones } = await supabase
           .from("servidor_equipo")
           .select(`
             equipos (
-              nombre
+              nombre,
+              tipo
             )
           `)
           .eq("servidor_id", servidor.id)
 
         const equipos = relaciones?.map((r: any) => r.equipos?.nombre).filter(Boolean) || []
+        const equiposPorTipo = relaciones?.map((r: any) => ({
+          nombre: r.equipos?.nombre,
+          tipo: r.equipos?.tipo
+        })).filter((e: any) => e.nombre) || []
 
         return {
           ...servidor,
           nombre_completo: formatPersonName(servidor.nombre_completo),
           equipos,
+          equiposPorTipo,
         }
       })
     )

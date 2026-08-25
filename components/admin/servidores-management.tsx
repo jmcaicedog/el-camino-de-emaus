@@ -27,7 +27,7 @@ interface ServidoresManagementProps {
 
 export function ServidoresManagement({ adminUser, readOnly = false, canManagePayments = false }: ServidoresManagementProps) {
   const { toast } = useToast()
-  const [servidores, setServidores] = useState<Servidor[]>([])
+  const [servidores, setServidores] = useState<(Servidor & { equiposPorTipo?: Array<{ nombre: string; tipo: string }> })[]>([])
   const [admins, setAdmins] = useState<Set<string>>(new Set())
   const [mesas, setMesas] = useState<Array<{ id: string; numero: number }>>([])
   const [caminantes, setCaminantes] = useState<Array<any>>([])
@@ -39,6 +39,7 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
   const [promoteLoadingId, setPromoteLoadingId] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [filterStatus, setFilterStatus] = useState<"all" | "sin-equipos" | "sin-actividades" | "ambas">("all")
 
   const parseMoney = (value: unknown) => {
     if (typeof value === "number") return Number.isFinite(value) ? value : 0
@@ -48,6 +49,37 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
       return Number.isFinite(parsed) ? parsed : 0
     }
     return 0
+  }
+
+  const getEquiposYActividades = (servidor: typeof servidores[0]) => {
+    const equiposPorTipo = servidor.equiposPorTipo || []
+    const equipos = equiposPorTipo.filter(e => e.tipo === "equipo").map(e => e.nombre)
+    const actividades = equiposPorTipo.filter(e => e.tipo === "actividad").map(e => e.nombre)
+    return { equipos, actividades }
+  }
+
+  const applyFilters = (list: typeof servidores) => {
+    let filtered = list.filter(
+      (s) =>
+        s.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.cedula.includes(searchTerm) ||
+        s.correo.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+
+    if (filterStatus !== "all") {
+      filtered = filtered.filter(s => {
+        const { equipos, actividades } = getEquiposYActividades(s)
+        const tieneEquipos = equipos.length > 0 || s.tipo_servidor === "lider" || s.tipo_servidor === "colider"
+        const tieneActividades = actividades.length > 0
+
+        if (filterStatus === "sin-equipos") return !tieneEquipos
+        if (filterStatus === "sin-actividades") return !tieneActividades
+        if (filterStatus === "ambas") return !tieneEquipos && !tieneActividades
+        return true
+      })
+    }
+
+    return filtered
   }
 
   const getPaymentStatus = (montoPagado: unknown, montoTotal: unknown) => {
@@ -206,12 +238,7 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
     }
   }
 
-  const filteredServidores = servidores.filter(
-    (s) =>
-      s.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.cedula.includes(searchTerm) ||
-      s.correo.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredServidores = applyFilters(servidores)
 
   const exportarPDF = () => {
     const doc = new jsPDF()
@@ -221,19 +248,23 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
     doc.text(`Total: ${filteredServidores.length} servidores`, 14, 28)
     doc.text(`Fecha: ${new Date().toLocaleDateString("es-CO")}`, 14, 34)
 
-    const headers = ["#", "Nombre", "Cédula", "Celular", "Equipos", "Mesa"]
-    const data = filteredServidores.map((s, i) => [
-      i + 1,
-      s.nombre_completo,
-      s.cedula,
-      s.celular,
-      (() => {
-        const roles = s.tipo_servidor === "lider" ? "Líder" : s.tipo_servidor === "colider" ? "Colíder" : ""
-        const equipos = s.equipos?.filter(e => e !== "Líderes y colíderes").join(", ") || ""
-        return [roles, equipos].filter(Boolean).join(" - ") || "Sin equipos"
-      })(),
-      s.mesa_id ? mesas.find(m => m.id === s.mesa_id)?.numero?.toString() || "—" : "Sin asignar",
-    ])
+    const headers = ["#", "Nombre", "Cédula", "Celular", "Equipos", "Actividades", "Mesa"]
+    const data = filteredServidores.map((s, i) => {
+      const { equipos, actividades } = getEquiposYActividades(s)
+      const roles = s.tipo_servidor === "lider" ? "Líder" : s.tipo_servidor === "colider" ? "Colíder" : ""
+      const equiposStr = [roles, ...equipos].filter(Boolean).join(", ") || "Sin equipos"
+      const actividadesStr = actividades.length > 0 ? actividades.join(", ") : "Sin actividades"
+      
+      return [
+        i + 1,
+        s.nombre_completo,
+        s.cedula,
+        s.celular,
+        equiposStr,
+        actividadesStr,
+        s.mesa_id ? mesas.find(m => m.id === s.mesa_id)?.numero?.toString() || "—" : "Sin asignar",
+      ]
+    })
 
     autoTable(doc, {
       head: [headers],
@@ -270,7 +301,7 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
+          <div className="mb-4 space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -279,6 +310,37 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                variant={filterStatus === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterStatus("all")}
+              >
+                Todos
+              </Button>
+              <Button
+                variant={filterStatus === "sin-equipos" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterStatus("sin-equipos")}
+              >
+                Sin equipos
+              </Button>
+              <Button
+                variant={filterStatus === "sin-actividades" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterStatus("sin-actividades")}
+              >
+                Sin actividades
+              </Button>
+              <Button
+                variant={filterStatus === "ambas" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterStatus("ambas")}
+              >
+                Sin equipos ni actividades
+              </Button>
             </div>
           </div>
 
@@ -291,6 +353,7 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                   <TableHead>Cédula</TableHead>
                   <TableHead>Celular</TableHead>
                   <TableHead>Equipos</TableHead>
+                  <TableHead>Actividades</TableHead>
                   <TableHead>Mesa</TableHead>
                   {(adminUser?.is_super || canManagePayments) && <TableHead>Pago</TableHead>}
                   <TableHead>Acciones</TableHead>
@@ -340,16 +403,28 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                           <Badge variant="default">{servidor.tipo_servidor === "lider" ? "Líder" : "Colíder"}</Badge>
                         )}
                         {(() => {
-                          const equiposFiltrados = servidor.equipos?.filter(equipo => equipo !== "Líderes y colíderes") || []
+                          const { equipos } = getEquiposYActividades(servidor)
                           
-                          if (equiposFiltrados.length > 0) {
-                            return <span className="text-sm">{equiposFiltrados.join(", ")}</span>
+                          if (equipos.length > 0) {
+                            return <span className="text-sm">{equipos.join(", ")}</span>
                           } else if (!servidor.tipo_servidor) {
                             return <span className="text-sm text-muted-foreground">Sin equipos</span>
                           }
                           return null
                         })()}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {/* Mostrar actividades */}
+                      {(() => {
+                        const { actividades } = getEquiposYActividades(servidor)
+                        
+                        if (actividades.length > 0) {
+                          return <span className="text-sm">{actividades.join(", ")}</span>
+                        } else {
+                          return <span className="text-sm text-muted-foreground">Sin actividades</span>
+                        }
+                      })()}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {servidor.mesa_id ? (
