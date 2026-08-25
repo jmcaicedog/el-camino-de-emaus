@@ -40,6 +40,8 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState<"all" | "sin-equipos" | "sin-actividades" | "ambas">("all")
+  const [showEquipos, setShowEquipos] = useState(true)
+  const [showActividades, setShowActividades] = useState(true)
 
   const parseMoney = (value: unknown) => {
     if (typeof value === "number") return Number.isFinite(value) ? value : 0
@@ -248,22 +250,27 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
     doc.text(`Total: ${filteredServidores.length} servidores`, 14, 28)
     doc.text(`Fecha: ${new Date().toLocaleDateString("es-CO")}`, 14, 34)
 
-    const headers = ["#", "Nombre", "Cédula", "Celular", "Equipos", "Actividades", "Mesa"]
+    let headers = ["#", "Nombre", "Cédula", "Celular"]
+    if (showEquipos) headers.push("Equipos")
+    if (showActividades) headers.push("Actividades")
+    headers.push("Mesa")
+
     const data = filteredServidores.map((s, i) => {
       const { equipos, actividades } = getEquiposYActividades(s)
       const roles = s.tipo_servidor === "lider" ? "Líder" : s.tipo_servidor === "colider" ? "Colíder" : ""
       const equiposStr = [roles, ...equipos].filter(Boolean).join(", ") || "Sin equipos"
       const actividadesStr = actividades.length > 0 ? actividades.join(", ") : "Sin actividades"
       
-      return [
+      let row: (string | number)[] = [
         i + 1,
         s.nombre_completo,
         s.cedula,
         s.celular,
-        equiposStr,
-        actividadesStr,
-        s.mesa_id ? mesas.find(m => m.id === s.mesa_id)?.numero?.toString() || "—" : "Sin asignar",
       ]
+      if (showEquipos) row.push(equiposStr)
+      if (showActividades) row.push(actividadesStr)
+      row.push(s.mesa_id ? mesas.find(m => m.id === s.mesa_id)?.numero?.toString() || "—" : "Sin asignar")
+      return row
     })
 
     autoTable(doc, {
@@ -342,6 +349,27 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                 Sin equipos ni actividades
               </Button>
             </div>
+
+            <div className="flex gap-2 flex-wrap border-t pt-4">
+              <Label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showEquipos}
+                  onChange={(e) => setShowEquipos(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm">Mostrar columna Equipos</span>
+              </Label>
+              <Label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showActividades}
+                  onChange={(e) => setShowActividades(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm">Mostrar columna Actividades</span>
+              </Label>
+            </div>
           </div>
 
           <div className="rounded-md border">
@@ -352,8 +380,8 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                   <TableHead>Nombre</TableHead>
                   <TableHead>Cédula</TableHead>
                   <TableHead>Celular</TableHead>
-                  <TableHead>Equipos</TableHead>
-                  <TableHead>Actividades</TableHead>
+                  {showEquipos && <TableHead>Equipos</TableHead>}
+                  {showActividades && <TableHead>Actividades</TableHead>}
                   <TableHead>Mesa</TableHead>
                   {(adminUser?.is_super || canManagePayments) && <TableHead>Pago</TableHead>}
                   <TableHead>Acciones</TableHead>
@@ -396,36 +424,40 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                     </TableCell>
                     <TableCell>{servidor.cedula}</TableCell>
                     <TableCell>{servidor.celular}</TableCell>
-                    <TableCell>
-                      {/* Mostrar badge si es líder o colíder, y luego los equipos separados por comas */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {(servidor.tipo_servidor === "lider" || servidor.tipo_servidor === "colider") && (
-                          <Badge variant="default">{servidor.tipo_servidor === "lider" ? "Líder" : "Colíder"}</Badge>
-                        )}
+                    {showEquipos && (
+                      <TableCell>
+                        {/* Mostrar badge si es líder o colíder, y luego los equipos separados por comas */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {(servidor.tipo_servidor === "lider" || servidor.tipo_servidor === "colider") && (
+                            <Badge variant="default">{servidor.tipo_servidor === "lider" ? "Líder" : "Colíder"}</Badge>
+                          )}
+                          {(() => {
+                            const { equipos } = getEquiposYActividades(servidor)
+                            
+                            if (equipos.length > 0) {
+                              return <span className="text-sm">{equipos.join(", ")}</span>
+                            } else if (!servidor.tipo_servidor) {
+                              return <span className="text-sm text-muted-foreground">Sin equipos</span>
+                            }
+                            return null
+                          })()}
+                        </div>
+                      </TableCell>
+                    )}
+                    {showActividades && (
+                      <TableCell>
+                        {/* Mostrar actividades */}
                         {(() => {
-                          const { equipos } = getEquiposYActividades(servidor)
+                          const { actividades } = getEquiposYActividades(servidor)
                           
-                          if (equipos.length > 0) {
-                            return <span className="text-sm">{equipos.join(", ")}</span>
-                          } else if (!servidor.tipo_servidor) {
-                            return <span className="text-sm text-muted-foreground">Sin equipos</span>
+                          if (actividades.length > 0) {
+                            return <span className="text-sm">{actividades.join(", ")}</span>
+                          } else {
+                            return <span className="text-sm text-muted-foreground">Sin actividades</span>
                           }
-                          return null
                         })()}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {/* Mostrar actividades */}
-                      {(() => {
-                        const { actividades } = getEquiposYActividades(servidor)
-                        
-                        if (actividades.length > 0) {
-                          return <span className="text-sm">{actividades.join(", ")}</span>
-                        } else {
-                          return <span className="text-sm text-muted-foreground">Sin actividades</span>
-                        }
-                      })()}
-                    </TableCell>
+                      </TableCell>
+                    )}
                     <TableCell className="whitespace-nowrap">
                       {servidor.mesa_id ? (
                         <Dialog onOpenChange={(open: boolean) => {
