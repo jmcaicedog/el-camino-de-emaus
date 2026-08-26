@@ -123,7 +123,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         <br>
         <p>Equipo El Camino de Emaús</p>
       `
-      await sendEmailNotification({ to: [servidor.correo], subject, text, html, includeSuperAdmins: true })
+      await sendEmailNotification({ to: [servidor.correo], subject, text, html })
     }
 
     return NextResponse.json({ message: "Servidor agregado al equipo exitosamente" })
@@ -207,7 +207,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         <br>
         <p>Equipo El Camino de Emaús</p>
       `
-      await sendEmailNotification({ to: [servidor.correo], subject, text, html, includeSuperAdmins: true })
+      await sendEmailNotification({ to: [servidor.correo], subject, text, html })
     }
 
     return NextResponse.json({ message: "Servidor removido del equipo exitosamente" })
