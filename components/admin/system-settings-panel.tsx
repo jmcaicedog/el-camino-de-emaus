@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { Settings2, Upload, AlertTriangle, CalendarClock, Users, DollarSign } from "lucide-react"
 import { MAX_CAMINANTES } from "@/lib/caminantes-capacity"
+import { MAX_SERVIDORES } from "@/lib/servidores-capacity"
 
 export function SystemSettingsPanel() {
   const { toast } = useToast()
@@ -27,6 +28,7 @@ export function SystemSettingsPanel() {
   const [mesasCount, setMesasCount] = useState(12)
   const [caminantesPorMesa, setCaminantesPorMesa] = useState(7)
   const [cupoCaminantes, setCupoCaminantes] = useState(MAX_CAMINANTES)
+  const [cupoServidores, setCupoServidores] = useState(MAX_SERVIDORES)
   const [costoServidores, setCostoServidores] = useState(400000)
   const [costoCaminantes, setCostoCaminantes] = useState(490000)
   const [countdownEnabled, setCountdownEnabled] = useState(true)
@@ -57,6 +59,7 @@ export function SystemSettingsPanel() {
       setMesasCount(Number(settings.mesas_count) || 12)
       setCaminantesPorMesa(Number(settings.caminantes_por_mesa) || 7)
       setCupoCaminantes(Number(settings.max_caminantes) || MAX_CAMINANTES)
+      setCupoServidores(Number(settings.max_servidores) || MAX_SERVIDORES)
       setCostoServidores(Number(settings.costo_servidor) || 400000)
       setCostoCaminantes(Number(settings.costo_caminante) || 490000)
       setCountdownEnabled(Boolean(settings.countdown_enabled))
@@ -130,6 +133,7 @@ export function SystemSettingsPanel() {
           mesas_count: mesasCount,
           caminantes_por_mesa: caminantesPorMesa,
           max_caminantes: cupoCaminantes,
+          max_servidores: cupoServidores,
           costo_servidor: costoServidores,
           costo_caminante: costoCaminantes,
           countdown_enabled: countdownEnabled,
@@ -291,6 +295,18 @@ export function SystemSettingsPanel() {
                   min={1}
                   value={cupoCaminantes}
                   onChange={(e) => setCupoCaminantes(Number(e.target.value) || 0)}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cupo-servidores">Cantidad de servidores (cupo)</Label>
+                <Input
+                  id="cupo-servidores"
+                  type="number"
+                  min={1}
+                  value={cupoServidores}
+                  onChange={(e) => setCupoServidores(Number(e.target.value) || 0)}
                   disabled={isLoading}
                 />
               </div>

@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { MAX_CAMINANTES } from "@/lib/caminantes-capacity"
+import { MAX_SERVIDORES } from "@/lib/servidores-capacity"
 
 export interface RetiroSettings {
   retiro_datetime: string
@@ -7,6 +8,7 @@ export interface RetiroSettings {
   mesas_count: number
   caminantes_por_mesa: number
   max_caminantes: number
+  max_servidores: number
   costo_servidor: number
   costo_caminante: number
   countdown_enabled: boolean
@@ -19,6 +21,7 @@ export const DEFAULT_RETIRO_SETTINGS: RetiroSettings = {
   mesas_count: 12,
   caminantes_por_mesa: 7,
   max_caminantes: MAX_CAMINANTES,
+  max_servidores: MAX_SERVIDORES,
   costo_servidor: 400000,
   costo_caminante: 490000,
   countdown_enabled: true,
@@ -41,6 +44,7 @@ function normalizeSettings(input: Partial<RetiroSettings> | null | undefined): R
     mesas_count: Number(input?.mesas_count) || DEFAULT_RETIRO_SETTINGS.mesas_count,
     caminantes_por_mesa: Math.max(1, Number(input?.caminantes_por_mesa) || DEFAULT_RETIRO_SETTINGS.caminantes_por_mesa),
     max_caminantes: Number(input?.max_caminantes) || DEFAULT_RETIRO_SETTINGS.max_caminantes,
+    max_servidores: Number(input?.max_servidores) || DEFAULT_RETIRO_SETTINGS.max_servidores,
     costo_servidor: Number(input?.costo_servidor) || DEFAULT_RETIRO_SETTINGS.costo_servidor,
     costo_caminante: Number(input?.costo_caminante) || DEFAULT_RETIRO_SETTINGS.costo_caminante,
     countdown_enabled:

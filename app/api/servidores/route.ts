@@ -4,6 +4,7 @@ import { sendEmailNotification } from "@/lib/email/send-notification"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { formatPersonName } from "@/lib/utils"
 import { getRetiroSettings } from "@/lib/retiro-settings"
+import { isServidorRegistrationOpen } from "@/lib/servidores-capacity"
 
 // Campos permitidos en el registro público. Excluye deliberadamente monto_pagado,
 // mesa_id, auth_user_id y tipo_servidor: son controlados solo por administración
@@ -70,6 +71,29 @@ export async function POST(request: NextRequest) {
         }
       }
     )
+
+    // Enforce available slots for servidores. If capacity is full, block public registration.
+    const { count, error: countError } = await supabase
+      .from("servidores")
+      .select("id", { count: "exact", head: true })
+
+    if (countError) {
+      console.error("[v0] Error counting servidores:", countError)
+      return NextResponse.json({ message: "No fue posible validar el cupo disponible" }, { status: 500 })
+    }
+
+    const currentCount = count ?? 0
+
+    if (!isServidorRegistrationOpen(currentCount, settings.max_servidores)) {
+      return NextResponse.json(
+        {
+          message: "Nuestro cupo de servidores para este retiro se ha completado.",
+          currentCount,
+          maxCupo: settings.max_servidores,
+        },
+        { status: 409 },
+      )
+    }
 
     // If imagen is a data URL, upload to Storage and replace with public URL
     if (body.imagen && typeof body.imagen === 'string' && body.imagen.startsWith('data:')) {

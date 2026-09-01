@@ -80,6 +80,7 @@ export async function PUT(request: NextRequest) {
       mesas_count: body?.mesas_count,
       caminantes_por_mesa: body?.caminantes_por_mesa,
       max_caminantes: body?.max_caminantes,
+      max_servidores: body?.max_servidores,
       costo_servidor: body?.costo_servidor,
       costo_caminante: body?.costo_caminante,
       countdown_enabled: body?.countdown_enabled,

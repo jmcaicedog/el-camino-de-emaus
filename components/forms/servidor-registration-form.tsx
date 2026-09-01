@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,16 +15,41 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import AvatarUploader from "@/components/ui/avatar-uploader"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function ServidorRegistrationForm() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [isCapacityLoading, setIsCapacityLoading] = useState(true)
+  const [registrationOpen, setRegistrationOpen] = useState(true)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [coloresCamisa, setColoresCamisa] = useState<string[]>([])
   const [costoServidor, setCostoServidor] = useState(400000)
 
+  const loadCapacity = useCallback(async () => {
+    try {
+      const response = await fetch("/api/servidores/cupo", { cache: "no-store" })
+      if (!response.ok) {
+        throw new Error("No fue posible consultar el estado del cupo")
+      }
+
+      const cupo = await response.json()
+      setRegistrationOpen(Boolean(cupo.registrationOpen))
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No fue posible consultar el estado del cupo",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCapacityLoading(false)
+    }
+  }, [toast])
+
   useEffect(() => {
+    void loadCapacity()
+
     const loadSettings = async () => {
       try {
         const response = await fetch("/api/retiro-settings", { cache: "no-store" })
@@ -37,10 +62,26 @@ export function ServidorRegistrationForm() {
     }
 
     void loadSettings()
-  }, [])
+
+    const interval = window.setInterval(() => {
+      void loadCapacity()
+    }, 30000)
+
+    return () => window.clearInterval(interval)
+  }, [loadCapacity])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    if (!registrationOpen) {
+      toast({
+        title: "Cupo completo",
+        description: "Nuestro cupo de servidores para este retiro se ha completado.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
 
     const formData = new FormData(e.currentTarget)
@@ -86,6 +127,10 @@ export function ServidorRegistrationForm() {
           return
         }
 
+        if (response.status === 409) {
+          await loadCapacity()
+        }
+
         throw new Error(error?.message || "Error al registrar")
       }
 
@@ -106,8 +151,25 @@ export function ServidorRegistrationForm() {
     }
   }
 
+  if (isCapacityLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {!registrationOpen && (
+        <Alert className="bg-amber-50 border-amber-200">
+          <AlertDescription className="text-amber-900 text-sm leading-relaxed">
+            Nuestro cupo de servidores para este retiro se ha completado. En este momento no es posible registrar
+            nuevos servidores.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Información Personal</CardTitle>
@@ -468,7 +530,7 @@ export function ServidorRegistrationForm() {
         <Button type="button" variant="outline" onClick={() => router.push("/")} disabled={isLoading}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading || !registrationOpen}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Registrar Inscripción
         </Button>

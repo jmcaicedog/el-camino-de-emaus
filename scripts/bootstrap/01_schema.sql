@@ -154,6 +154,7 @@ CREATE TABLE IF NOT EXISTS retiro_settings (
   mesas_count INTEGER NOT NULL DEFAULT 12,
   caminantes_por_mesa INTEGER NOT NULL DEFAULT 7,
   max_caminantes INTEGER NOT NULL DEFAULT 65,
+  max_servidores INTEGER NOT NULL DEFAULT 60,
   costo_servidor NUMERIC(10, 2) NOT NULL DEFAULT 400000,
   costo_caminante NUMERIC(10, 2) NOT NULL DEFAULT 490000,
   countdown_enabled BOOLEAN NOT NULL DEFAULT true,
