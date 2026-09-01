@@ -159,17 +159,19 @@ export function ServidorRegistrationForm() {
     )
   }
 
+  if (!registrationOpen) {
+    return (
+      <Alert className="bg-amber-50 border-amber-200">
+        <AlertDescription className="text-amber-900 text-sm leading-relaxed">
+          Nuestro cupo de servidores para este retiro se ha completado. En este momento no es posible registrar
+          nuevos servidores.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {!registrationOpen && (
-        <Alert className="bg-amber-50 border-amber-200">
-          <AlertDescription className="text-amber-900 text-sm leading-relaxed">
-            Nuestro cupo de servidores para este retiro se ha completado. En este momento no es posible registrar
-            nuevos servidores.
-          </AlertDescription>
-        </Alert>
-      )}
-
       <Card>
         <CardHeader>
           <CardTitle>Información Personal</CardTitle>
