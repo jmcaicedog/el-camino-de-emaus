@@ -135,7 +135,7 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
@@ -143,14 +143,38 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
 
   const equiposFiltrados = equipos.filter((equipo) => (equipo.tipo || "equipo") === activeTab)
 
+  const miServidor = servidoresDisponibles.find((s) => s.auth_user_id === adminUser.id)
+  const perteneceAEquipo = (equipo: EquipoConServidores) =>
+    !!miServidor && equipo.servidores.some((s) => s.id === miServidor.id)
+  const misEquipos = equipos
+    .filter((equipo) => (equipo.tipo || "equipo") === "equipo" && perteneceAEquipo(equipo))
+    .map((equipo) => equipo.nombre)
+  const misActividades = equipos
+    .filter((equipo) => equipo.tipo === "actividad" && perteneceAEquipo(equipo))
+    .map((equipo) => equipo.nombre)
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">Gestión de Equipos</h2>
-        <p className="text-muted-foreground">
-          Administra los equipos y actividades, y asigna servidores a cada uno
-        </p>
       </div>
+
+      {(misEquipos.length > 0 || misActividades.length > 0) && (
+        <Card>
+          <CardContent className="space-y-1">
+            {misEquipos.length > 0 && (
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Mis equipos:</span> {misEquipos.join(", ")}
+              </p>
+            )}
+            {misActividades.length > 0 && (
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Mis Actividades:</span> {misActividades.join(", ")}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TipoEquipo)}>
         <TabsList>
