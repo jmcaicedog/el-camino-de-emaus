@@ -25,7 +25,7 @@ INSERT INTO equipos (nombre, descripcion, tipo) VALUES
   ('Música', 'Musica y ambientacion del retiro', 'equipo'),
   ('Palanquitas', 'Coordinacion de palanquitas', 'equipo'),
   ('Cartas', 'Gestion de cartas para caminantes', 'equipo'),
-  ('Despertar de caminantes', 'Apoyo en la dinamica de despertar de caminantes', 'actividad'),
+  ('Despertar de servidores', 'Apoyo en la dinamica de despertar de servidores', 'actividad'),
   ('Fotografía', 'Cobertura fotografica del retiro', 'actividad'),
   ('Sacerdotes', 'Coordinacion y apoyo a sacerdotes', 'equipo'),
   ('Salones', 'Preparacion y logistica de salones', 'equipo'),
