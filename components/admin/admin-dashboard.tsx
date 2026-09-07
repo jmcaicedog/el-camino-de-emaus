@@ -12,7 +12,7 @@ import { MesaReport } from "@/components/admin/mesa-report"
 import { SystemSettingsPanel } from "@/components/admin/system-settings-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2, ClipboardCheck } from "lucide-react"
+import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2, ClipboardCheck, Timer } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -184,6 +184,11 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                   </Button>
                 </Link>
               )}
+              <Link href="/minuto-a-minuto">
+                <Button variant="outline" size="icon" aria-label="Abrir Minuto a Minuto" title="Minuto a Minuto">
+                  <Timer className="h-4 w-4" />
+                </Button>
+              </Link>
               <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
                 <LogOut className="h-4 w-4 md:mr-2" />
                 <span className="hidden md:inline">Cerrar Sesión</span>

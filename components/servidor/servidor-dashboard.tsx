@@ -4,10 +4,11 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Users, Mail, Loader2, FileSpreadsheet, FileText } from "lucide-react"
+import { LogOut, Users, Mail, Loader2, FileSpreadsheet, FileText, Timer } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import type { Servidor, Mesa, Caminante } from "@/lib/types"
 import { CaminanteGridView } from "@/components/servidor/caminante-grid-view"
 import { Badge } from "@/components/ui/badge"
@@ -104,10 +105,17 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
                 </div>
               </div>
             </div>
-            <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
-              <LogOut className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Cerrar Sesión</span>
-            </Button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Link href="/minuto-a-minuto">
+                <Button variant="outline" size="icon" aria-label="Abrir Minuto a Minuto" title="Minuto a Minuto">
+                  <Timer className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
+                <LogOut className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Cerrar Sesión</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>

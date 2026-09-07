@@ -195,3 +195,51 @@ export interface CaminanteAsistenciaResumen {
   llego: boolean
   llegada_at?: string | null
 }
+
+export type TipoResponsable = "servidor" | "equipo"
+
+export interface MinutoResponsable {
+  id: string
+  evento_id: string
+  tipo_responsable: TipoResponsable
+  servidor_id?: string | null
+  equipo_id?: string | null
+  servidor?: {
+    id: string
+    nombre_completo: string
+    imagen?: string | null
+    celular?: string
+  } | null
+  equipo?: {
+    id: string
+    nombre: string
+  } | null
+  created_at?: string
+}
+
+export interface MinutoEvento {
+  id: string
+  titulo: string
+  descripcion?: string | null
+  ubicacion?: string | null
+  fecha_inicio: string
+  fecha_fin: string
+  color: string
+  responsables?: MinutoResponsable[]
+  created_at: string
+  updated_at: string
+}
+
+export interface MinutoEventoFormData {
+  titulo: string
+  descripcion?: string
+  ubicacion?: string
+  fecha_inicio: string
+  fecha_fin: string
+  color: string
+  responsables: {
+    tipo_responsable: TipoResponsable
+    servidor_id?: string
+    equipo_id?: string
+  }[]
+}
