@@ -16,6 +16,7 @@ import {
   Loader2,
   CalendarDays,
   List,
+  LayoutList,
   Filter,
   User,
   Shield,
@@ -23,10 +24,12 @@ import {
   MapPin,
   RefreshCw,
   Info,
+  Edit3,
+  Trash2,
 } from "lucide-react"
 import { EventoModal } from "./evento-modal"
 import { EventoCard } from "./evento-card"
-import { getRetiroDays, type RetiroDayInfo, formatISODate, formatTimeRange, getDurationLabel } from "./minuto-helpers"
+import { getRetiroDays, type RetiroDayInfo, formatISODate, formatTimeRange, getDurationLabel, isEventActiveNow } from "./minuto-helpers"
 import { getColorConfig } from "./minuto-colors"
 import type { MinutoEvento, Servidor, Equipo } from "@/lib/types"
 
@@ -45,7 +48,7 @@ export function MinutoDashboard() {
 
   // Filtros y vistas
   const [selectedDayKey, setSelectedDayKey] = useState<"viernes" | "sabado" | "domingo" | "todos">("viernes")
-  const [viewMode, setViewMode] = useState<"agenda" | "timeline">("agenda")
+  const [viewMode, setViewMode] = useState<"lista" | "compacta">("lista")
   const [searchTerm, setSearchTerm] = useState("")
   const [onlyMine, setOnlyMine] = useState(false)
 
@@ -303,25 +306,25 @@ export function MinutoDashboard() {
             </TabsList>
           </Tabs>
 
-          {/* Toggle de Modo de Vista (Agenda vs Timeline) */}
+          {/* Toggle de Modo de Vista (Lista vs Compacta) */}
           <div className="flex items-center gap-1 bg-muted p-1 rounded-lg self-end sm:self-auto">
             <Button
-              variant={viewMode === "agenda" ? "default" : "ghost"}
+              variant={viewMode === "lista" ? "default" : "ghost"}
               size="sm"
-              onClick={() => setViewMode("agenda")}
+              onClick={() => setViewMode("lista")}
               className="h-8 text-xs gap-1.5 px-3"
             >
               <List className="h-3.5 w-3.5" />
-              <span>Lista</span>
+              <span>Detallada</span>
             </Button>
             <Button
-              variant={viewMode === "timeline" ? "default" : "ghost"}
+              variant={viewMode === "compacta" ? "default" : "ghost"}
               size="sm"
-              onClick={() => setViewMode("timeline")}
+              onClick={() => setViewMode("compacta")}
               className="h-8 text-xs gap-1.5 px-3"
             >
-              <Calendar className="h-3.5 w-3.5" />
-              <span>Horario</span>
+              <LayoutList className="h-3.5 w-3.5" />
+              <span>Compacta</span>
             </Button>
           </div>
         </div>
@@ -392,8 +395,8 @@ export function MinutoDashboard() {
             )}
           </CardContent>
         </Card>
-      ) : viewMode === "agenda" ? (
-        /* VISTA AGENDA / LISTA */
+      ) : viewMode === "lista" ? (
+        /* VISTA DETALLADA */
         <div className="space-y-6">
           {retiroDays.map((d) => {
             const dayEvents = groupedByDay.get(d.isoDate) || []
@@ -427,17 +430,12 @@ export function MinutoDashboard() {
           })}
         </div>
       ) : (
-        /* VISTA TIMELINE / HORARIO (GOOGLE CALENDAR STYLE) */
+        /* VISTA COMPACTA (UNA SOLA LÍNEA POR ACTIVIDAD CON TÍTULO Y HORA) */
         <div className="space-y-6">
           {retiroDays.map((d) => {
             const dayEvents = groupedByDay.get(d.isoDate) || []
             if (selectedDayKey !== "todos" && selectedDayKey !== d.key) return null
-
-            // Generar horas para el día
-            const hours: number[] = []
-            for (let h = d.startHour; h <= d.endHour; h++) {
-              hours.push(h)
-            }
+            if (dayEvents.length === 0) return null
 
             return (
               <div key={d.key} className="space-y-3">
@@ -446,51 +444,64 @@ export function MinutoDashboard() {
                     {d.fullLabel}
                   </Badge>
                   <span className="text-xs text-muted-foreground font-medium">
-                    (Franja horaria: {d.startHour > 12 ? `${d.startHour - 12} PM` : `${d.startHour} AM`} - {d.endHour > 12 ? `${d.endHour - 12} PM` : `${d.endHour} AM`})
+                    ({dayEvents.length} {dayEvents.length === 1 ? "actividad" : "actividades"})
                   </span>
                 </div>
 
-                <div className="border rounded-xl bg-card overflow-hidden divide-y">
-                  {hours.map((h) => {
-                    const hourLabel = h === 12 ? "12:00 PM" : h > 12 ? `${h - 12}:00 PM` : `${h}:00 AM`
-                    
-                    // Eventos que inician en esta hora
-                    const eventsInHour = dayEvents.filter((ev) => {
-                      const evD = new Date(ev.fecha_inicio)
-                      return evD.getHours() === h
-                    })
+                <div className="border rounded-xl bg-card overflow-hidden divide-y shadow-xs">
+                  {dayEvents.map((evento) => {
+                    const colorCfg = getColorConfig(evento.color)
+                    const timeRangeStr = formatTimeRange(evento.fecha_inicio, evento.fecha_fin)
+                    const isActive = isEventActiveNow(evento.fecha_inicio, evento.fecha_fin)
 
                     return (
                       <div
-                        key={h}
-                        className="flex flex-col sm:flex-row items-stretch sm:items-start p-2.5 sm:p-3 gap-2 sm:gap-4 hover:bg-muted/20 transition-colors min-h-[64px]"
+                        key={evento.id}
+                        className={`flex items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3 border-l-4 transition-colors hover:bg-muted/40 ${colorCfg.calendarCard} ${
+                          isActive ? "bg-emerald-50/40 dark:bg-emerald-950/30" : ""
+                        }`}
                       >
-                        <div className="w-20 sm:w-24 flex-shrink-0 pt-0.5">
-                          <span className="text-xs font-mono font-bold text-muted-foreground">
-                            {hourLabel}
+                        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+                          <span
+                            className={`font-mono text-xs font-semibold px-2 py-0.5 rounded border whitespace-nowrap ${colorCfg.bg} ${colorCfg.text} ${colorCfg.border}`}
+                          >
+                            {timeRangeStr}
                           </span>
-                        </div>
 
-                        <div className="flex-1 space-y-2">
-                          {eventsInHour.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {eventsInHour.map((evento) => (
-                                <EventoCard
-                                  key={evento.id}
-                                  evento={evento}
-                                  canManage={canManage}
-                                  onEdit={handleOpenEdit}
-                                  onDelete={(id) => setEventoParaEliminar(id)}
-                                  layout="compact"
-                                />
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="h-6 flex items-center text-[11px] text-muted-foreground/40 italic">
-                              Sin actividades programadas a las {hourLabel}
-                            </div>
+                          <span className="font-semibold text-xs sm:text-sm text-foreground truncate">
+                            {evento.titulo}
+                          </span>
+
+                          {isActive && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded flex-shrink-0 animate-pulse">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 inline-block" />
+                              En curso
+                            </span>
                           )}
                         </div>
+
+                        {canManage && (
+                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => handleOpenEdit(evento)}
+                              title="Editar actividad"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => setEventoParaEliminar(evento.id)}
+                              title="Eliminar actividad"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
