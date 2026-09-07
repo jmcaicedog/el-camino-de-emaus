@@ -29,6 +29,7 @@ export function EventoCard({
   const isActive = isEventActiveNow(evento.fecha_inicio, evento.fecha_fin)
   const isUpcoming = !isActive && isEventUpcoming(evento.fecha_inicio)
 
+  const hasTodos = (evento.responsables || []).some((r) => r.tipo_responsable === "todos")
   const servidoresResp = (evento.responsables || []).filter((r) => r.tipo_responsable === "servidor")
   const equiposResp = (evento.responsables || []).filter((r) => r.tipo_responsable === "equipo")
 
@@ -122,11 +123,22 @@ export function EventoCard({
         </div>
 
         {/* Responsables */}
-        {(servidoresResp.length > 0 || equiposResp.length > 0) && (
+        {(hasTodos || servidoresResp.length > 0 || equiposResp.length > 0) && (
           <div className="pt-1.5 border-t border-muted flex flex-wrap items-center gap-1.5 text-xs">
             <span className="text-[11px] font-semibold text-muted-foreground mr-1 flex items-center gap-1">
               <Users className="h-3 w-3" /> Responsables:
             </span>
+
+            {/* Todos los Servidores */}
+            {hasTodos && (
+              <Badge
+                variant="secondary"
+                className="bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-300 border-purple-300 dark:border-purple-800 text-[11px] py-0.5 px-2 gap-1 font-semibold"
+              >
+                <Users className="h-2.5 w-2.5 text-purple-600 dark:text-purple-400" />
+                <span>Todos los Servidores</span>
+              </Badge>
+            )}
 
             {/* Equipos */}
             {equiposResp.map((r, i) => (

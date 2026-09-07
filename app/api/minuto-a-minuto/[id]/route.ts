@@ -80,6 +80,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
       const respRows = body.responsables
         .map((r: any) => {
+          if (r.tipo_responsable === "todos") {
+            return {
+              evento_id: id,
+              tipo_responsable: "todos",
+              servidor_id: null,
+              equipo_id: null,
+            }
+          }
           if (r.tipo_responsable === "servidor" && r.servidor_id) {
             return {
               evento_id: id,
@@ -114,7 +122,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         servidor_id,
         equipo_id,
         servidores (id, nombre_completo, imagen, celular),
-        equipos (id, nombre)
+        equipos (id, nombre, tipo)
       `)
       .eq("evento_id", id)
 

@@ -196,7 +196,7 @@ export interface CaminanteAsistenciaResumen {
   llegada_at?: string | null
 }
 
-export type TipoResponsable = "servidor" | "equipo"
+export type TipoResponsable = "servidor" | "equipo" | "todos"
 
 export interface MinutoResponsable {
   id: string
@@ -213,6 +213,7 @@ export interface MinutoResponsable {
   equipo?: {
     id: string
     nombre: string
+    tipo?: TipoEquipo
   } | null
   created_at?: string
 }

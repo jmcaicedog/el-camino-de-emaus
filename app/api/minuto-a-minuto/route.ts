@@ -39,23 +39,14 @@ export async function GET() {
       .order("fecha_inicio", { ascending: true })
 
     if (!context.isFullViewer) {
-      // Filtrar sólo eventos asignados al servidor o a sus equipos
-      const orConditions: string[] = []
+      // Filtrar eventos: asignados al servidor, a sus equipos, o asignados a "todos" los servidores
+      const orConditions: string[] = ["tipo_responsable.eq.todos"]
       if (context.servidorId) {
         orConditions.push(`and(tipo_responsable.eq.servidor,servidor_id.eq.${context.servidorId})`)
       }
       if (context.equipoIds.length > 0) {
         const equipoList = `(${context.equipoIds.join(",")})`
         orConditions.push(`and(tipo_responsable.eq.equipo,equipo_id.in.${equipoList})`)
-      }
-
-      if (orConditions.length === 0) {
-        return NextResponse.json({
-          eventos: [],
-          canManage: false,
-          isFullViewer: false,
-          servidorNombre: context.servidorNombre,
-        })
       }
 
       const { data: asignaciones, error: asigError } = await service
@@ -106,7 +97,7 @@ export async function GET() {
         servidor_id,
         equipo_id,
         servidores (id, nombre_completo, imagen, celular),
-        equipos (id, nombre)
+        equipos (id, nombre, tipo)
       `)
       .in("evento_id", eventoIds)
 
@@ -218,6 +209,14 @@ export async function POST(request: NextRequest) {
     if (responsables.length > 0) {
       const respRows = responsables
         .map((r: any) => {
+          if (r.tipo_responsable === "todos") {
+            return {
+              evento_id: nuevoEvento.id,
+              tipo_responsable: "todos",
+              servidor_id: null,
+              equipo_id: null,
+            }
+          }
           if (r.tipo_responsable === "servidor" && r.servidor_id) {
             return {
               evento_id: nuevoEvento.id,
@@ -259,7 +258,7 @@ export async function POST(request: NextRequest) {
         servidor_id,
         equipo_id,
         servidores (id, nombre_completo, imagen, celular),
-        equipos (id, nombre)
+        equipos (id, nombre, tipo)
       `)
       .eq("evento_id", nuevoEvento.id)
 

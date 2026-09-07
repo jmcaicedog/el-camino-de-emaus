@@ -17,13 +17,14 @@ CREATE TABLE IF NOT EXISTS minuto_eventos (
 CREATE TABLE IF NOT EXISTS minuto_evento_responsables (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   evento_id UUID NOT NULL REFERENCES minuto_eventos(id) ON DELETE CASCADE,
-  tipo_responsable TEXT NOT NULL CHECK (tipo_responsable IN ('servidor', 'equipo')),
+  tipo_responsable TEXT NOT NULL CHECK (tipo_responsable IN ('servidor', 'equipo', 'todos')),
   servidor_id UUID REFERENCES servidores(id) ON DELETE CASCADE,
   equipo_id UUID REFERENCES equipos(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT check_responsable_target CHECK (
     (tipo_responsable = 'servidor' AND servidor_id IS NOT NULL AND equipo_id IS NULL) OR
-    (tipo_responsable = 'equipo' AND equipo_id IS NOT NULL AND servidor_id IS NULL)
+    (tipo_responsable = 'equipo' AND equipo_id IS NOT NULL AND servidor_id IS NULL) OR
+    (tipo_responsable = 'todos' AND servidor_id IS NULL AND equipo_id IS NULL)
   )
 );
 

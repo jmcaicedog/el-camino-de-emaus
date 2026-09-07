@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, X, Plus, Search, MapPin, Users, User, Shield, Check, ClipboardList } from "lucide-react"
+import { Loader2, X, Plus, Search, MapPin, Users, User, Shield, Check, ClipboardList, Sparkles, ListChecks } from "lucide-react"
 import { MINUTO_COLORS, getColorConfig } from "./minuto-colors"
 import { getRetiroDays, type RetiroDayInfo, formatTime24, getDurationLabel } from "./minuto-helpers"
-import type { MinutoEvento, Servidor, Equipo, TipoResponsable } from "@/lib/types"
+import type { MinutoEvento, Servidor, Equipo, TipoResponsable, TipoEquipo } from "@/lib/types"
 
 interface SelectedResponsable {
   tipo_responsable: TipoResponsable
@@ -81,6 +81,12 @@ export function EventoModal({
       setHoraFin(formatTime24(eventoParaEditar.fecha_fin))
 
       const currentResp: SelectedResponsable[] = (eventoParaEditar.responsables || []).map((r) => {
+        if (r.tipo_responsable === "todos") {
+          return {
+            tipo_responsable: "todos",
+            nombre: "Todos los Servidores",
+          }
+        }
         if (r.tipo_responsable === "servidor") {
           return {
             tipo_responsable: "servidor",
@@ -125,6 +131,19 @@ export function EventoModal({
   const fakeStart = `${selectedDayIso || "2026-04-10"}T${horaInicio || "00:00"}:00`
   const fakeEnd = `${selectedDayIso || "2026-04-10"}T${horaFin || "00:00"}:00`
   const durationLabel = getDurationLabel(fakeStart, fakeEnd)
+
+  const handleAddTodosServidores = () => {
+    if (responsables.some((r) => r.tipo_responsable === "todos")) {
+      return
+    }
+    setResponsables((prev) => [
+      ...prev,
+      {
+        tipo_responsable: "todos",
+        nombre: "Todos los Servidores",
+      },
+    ])
+  }
 
   const handleAddServidor = (serv: Servidor) => {
     if (responsables.some((r) => r.tipo_responsable === "servidor" && r.servidor_id === serv.id)) {
@@ -265,11 +284,23 @@ export function EventoModal({
     )
   })
 
-  const filteredEquipos = equipos.filter((e) => {
+  // Separar equipos según su tipo: "equipo" vs "actividad"
+  const equiposGrupo = equipos.filter((e) => e.tipo === "equipo")
+  const actividadesGrupo = equipos.filter((e) => e.tipo === "actividad")
+
+  const filteredEquiposGrupo = equiposGrupo.filter((e) => {
     const q = equipoSearch.toLowerCase().trim()
     if (!q) return true
     return e.nombre.toLowerCase().includes(q) || (e.descripcion && e.descripcion.toLowerCase().includes(q))
   })
+
+  const filteredActividadesGrupo = actividadesGrupo.filter((e) => {
+    const q = equipoSearch.toLowerCase().trim()
+    if (!q) return true
+    return e.nombre.toLowerCase().includes(q) || (e.descripcion && e.descripcion.toLowerCase().includes(q))
+  })
+
+  const isTodosSelected = responsables.some((r) => r.tipo_responsable === "todos")
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -446,16 +477,22 @@ export function EventoModal({
               <div className="flex flex-wrap gap-1.5 p-2.5 bg-muted/30 rounded-md border min-h-[42px]">
                 {responsables.map((resp, idx) => (
                   <Badge
-                    key={`${resp.tipo_responsable}-${resp.servidor_id || resp.equipo_id}-${idx}`}
+                    key={`${resp.tipo_responsable}-${resp.servidor_id || resp.equipo_id || "todos"}-${idx}`}
                     variant="secondary"
-                    className="flex items-center gap-1.5 py-1 px-2.5 text-xs bg-background border shadow-xs"
+                    className={`flex items-center gap-1.5 py-1 px-2.5 text-xs border shadow-xs ${
+                      resp.tipo_responsable === "todos"
+                        ? "bg-purple-100 text-purple-900 border-purple-300 dark:bg-purple-950 dark:text-purple-200"
+                        : "bg-background"
+                    }`}
                   >
-                    {resp.tipo_responsable === "equipo" ? (
+                    {resp.tipo_responsable === "todos" ? (
+                      <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                    ) : resp.tipo_responsable === "equipo" ? (
                       <Users className="h-3 w-3 text-sky-600 dark:text-sky-400" />
                     ) : (
                       <User className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                     )}
-                    <span className="font-medium">{resp.nombre}</span>
+                    <span className="font-semibold">{resp.nombre}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveResponsable(idx)}
@@ -472,32 +509,73 @@ export function EventoModal({
               </p>
             )}
 
-            {/* Tabs para buscar y añadir Equipos o Servidores */}
+            {/* Accion rapida: Asignar Todos los Servidores */}
+            <div className="flex items-center justify-between p-2 bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 rounded-md">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                <div className="text-xs">
+                  <span className="font-semibold text-purple-900 dark:text-purple-200">Asignar a todos los servidores</span>
+                  <span className="hidden sm:inline text-purple-700 dark:text-purple-300 ml-1.5">
+                    (aparecerá en la agenda de todo el equipo de servicio)
+                  </span>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant={isTodosSelected ? "secondary" : "outline"}
+                onClick={handleAddTodosServidores}
+                disabled={isTodosSelected}
+                className={`h-7 text-xs gap-1 flex-shrink-0 ${
+                  isTodosSelected
+                    ? "bg-purple-200 text-purple-900 dark:bg-purple-900 dark:text-purple-200 cursor-not-allowed"
+                    : "border-purple-300 hover:bg-purple-100 dark:hover:bg-purple-950 text-purple-900 dark:text-purple-200"
+                }`}
+              >
+                {isTodosSelected ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-purple-700 dark:text-purple-300" />
+                    <span>Asignado</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Asignar Todos</span>
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Tabs para buscar y añadir Equipos, Actividades o Servidores */}
             <Tabs defaultValue="equipos" className="w-full">
-              <TabsList className="grid grid-cols-2 w-full">
-                <TabsTrigger value="equipos" className="text-xs gap-1.5">
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="equipos" className="text-xs gap-1">
                   <Users className="h-3.5 w-3.5" />
-                  Equipos ({filteredEquipos.length})
+                  <span>Equipos ({filteredEquiposGrupo.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="servidores" className="text-xs gap-1.5">
+                <TabsTrigger value="actividades" className="text-xs gap-1">
+                  <ListChecks className="h-3.5 w-3.5" />
+                  <span>Actividades ({filteredActividadesGrupo.length})</span>
+                </TabsTrigger>
+                <TabsTrigger value="servidores" className="text-xs gap-1">
                   <User className="h-3.5 w-3.5" />
-                  Servidores ({filteredServidores.length})
+                  <span>Servidores ({filteredServidores.length})</span>
                 </TabsTrigger>
               </TabsList>
 
-              {/* Contenido Equipos */}
+              {/* Contenido Equipos (Tipo 'equipo') */}
               <TabsContent value="equipos" className="space-y-2 mt-2">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar equipo..."
+                    placeholder="Buscar equipo de servicio..."
                     value={equipoSearch}
                     onChange={(e) => setEquipoSearch(e.target.value)}
                     className="pl-8 text-xs h-8"
                   />
                 </div>
-                <div className="max-h-36 overflow-y-auto border rounded-md p-1 grid grid-cols-1 sm:grid-cols-2 gap-1">
-                  {filteredEquipos.map((eq) => {
+                <div className="max-h-40 overflow-y-auto border rounded-md p-1 grid grid-cols-1 sm:grid-cols-2 gap-1">
+                  {filteredEquiposGrupo.map((eq) => {
                     const isAdded = responsables.some(
                       (r) => r.tipo_responsable === "equipo" && r.equipo_id === eq.id
                     )
@@ -513,7 +591,14 @@ export function EventoModal({
                             : "hover:bg-accent hover:text-accent-foreground"
                         }`}
                       >
-                        <span className="truncate font-medium">{eq.nombre}</span>
+                        <div className="min-w-0 pr-1">
+                          <span className="truncate font-medium block">{eq.nombre}</span>
+                          {eq.descripcion && (
+                            <span className="text-[10px] text-muted-foreground truncate block">
+                              {eq.descripcion}
+                            </span>
+                          )}
+                        </div>
                         {isAdded ? (
                           <Check className="h-3 w-3 text-emerald-600 flex-shrink-0 ml-1" />
                         ) : (
@@ -522,9 +607,61 @@ export function EventoModal({
                       </button>
                     )
                   })}
-                  {filteredEquipos.length === 0 && (
+                  {filteredEquiposGrupo.length === 0 && (
                     <p className="text-xs text-muted-foreground p-2 col-span-2 text-center">
                       No se encontraron equipos
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Contenido Actividades (Tipo 'actividad') */}
+              <TabsContent value="actividades" className="space-y-2 mt-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar grupo de actividad/dinámica..."
+                    value={equipoSearch}
+                    onChange={(e) => setEquipoSearch(e.target.value)}
+                    className="pl-8 text-xs h-8"
+                  />
+                </div>
+                <div className="max-h-40 overflow-y-auto border rounded-md p-1 grid grid-cols-1 sm:grid-cols-2 gap-1">
+                  {filteredActividadesGrupo.map((eq) => {
+                    const isAdded = responsables.some(
+                      (r) => r.tipo_responsable === "equipo" && r.equipo_id === eq.id
+                    )
+                    return (
+                      <button
+                        key={eq.id}
+                        type="button"
+                        onClick={() => handleAddEquipo(eq)}
+                        disabled={isAdded}
+                        className={`text-left px-2.5 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
+                          isAdded
+                            ? "bg-muted/60 text-muted-foreground cursor-not-allowed opacity-60"
+                            : "hover:bg-accent hover:text-accent-foreground"
+                        }`}
+                      >
+                        <div className="min-w-0 pr-1">
+                          <span className="truncate font-medium block">{eq.nombre}</span>
+                          {eq.descripcion && (
+                            <span className="text-[10px] text-muted-foreground truncate block">
+                              {eq.descripcion}
+                            </span>
+                          )}
+                        </div>
+                        {isAdded ? (
+                          <Check className="h-3 w-3 text-emerald-600 flex-shrink-0 ml-1" />
+                        ) : (
+                          <Plus className="h-3 w-3 text-muted-foreground flex-shrink-0 ml-1" />
+                        )}
+                      </button>
+                    )
+                  })}
+                  {filteredActividadesGrupo.length === 0 && (
+                    <p className="text-xs text-muted-foreground p-2 col-span-2 text-center">
+                      No se encontraron actividades
                     </p>
                   )}
                 </div>
