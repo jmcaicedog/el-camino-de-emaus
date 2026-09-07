@@ -138,6 +138,14 @@ export function MesasManagement({ adminUser, readOnly = false }: MesasManagement
     return (totalPagado / totalEsperado) * 100
   }
 
+  const getGeneralProgressPercentage = (mesaId: string) => {
+    const contacto = getContactProgressPercentage(mesaId)
+    const cartas = getCardsProgressPercentage(mesaId)
+    const pagos = getPaymentsProgressPercentage(mesaId)
+
+    return (contacto + cartas + pagos) / 3
+  }
+
   const canEditMesa = (mesaId: string) => {
     if (readOnly) return false
 
@@ -249,11 +257,19 @@ export function MesasManagement({ adminUser, readOnly = false }: MesasManagement
           return (
             <Card key={mesa.id}>
               <CardHeader>
-                <CardTitle>Mesa {mesa.numero}</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant={mesaCaminantes.length > 0 ? "default" : "secondary"}>
-                    {mesaCaminantes.length} / {caminantesPorMesa}
-                  </Badge>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle>Mesa {mesa.numero}</CardTitle>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant={mesaCaminantes.length > 0 ? "default" : "secondary"}>
+                        {mesaCaminantes.length} / {caminantesPorMesa}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <CircularProgress percentage={getGeneralProgressPercentage(mesa.id)} size={44} strokeWidth={2.5} />
+                    <span className="text-[11px] text-muted-foreground">General</span>
+                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 pt-1">
                   <div className="flex flex-col items-center gap-1">
