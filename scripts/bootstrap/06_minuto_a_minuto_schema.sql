@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS minuto_eventos (
   titulo TEXT NOT NULL,
   descripcion TEXT,
   ubicacion TEXT,
+  requerimientos TEXT,
   fecha_inicio TIMESTAMPTZ NOT NULL,
   fecha_fin TIMESTAMPTZ NOT NULL,
   color TEXT NOT NULL DEFAULT 'sky',

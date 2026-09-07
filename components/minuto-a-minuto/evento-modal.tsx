@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, X, Plus, Search, MapPin, Users, User, Shield, Check } from "lucide-react"
+import { Loader2, X, Plus, Search, MapPin, Users, User, Shield, Check, ClipboardList } from "lucide-react"
 import { MINUTO_COLORS, getColorConfig } from "./minuto-colors"
 import { getRetiroDays, type RetiroDayInfo, formatTime24, getDurationLabel } from "./minuto-helpers"
 import type { MinutoEvento, Servidor, Equipo, TipoResponsable } from "@/lib/types"
@@ -48,6 +48,7 @@ export function EventoModal({
   const [titulo, setTitulo] = useState("")
   const [descripcion, setDescripcion] = useState("")
   const [ubicacion, setUbicacion] = useState("")
+  const [requerimientos, setRequerimientos] = useState("")
   const [color, setColor] = useState("sky")
   const [selectedDayIso, setSelectedDayIso] = useState<string>("")
   const [horaInicio, setHoraInicio] = useState("20:00")
@@ -65,6 +66,7 @@ export function EventoModal({
       setTitulo(eventoParaEditar.titulo)
       setDescripcion(eventoParaEditar.descripcion || "")
       setUbicacion(eventoParaEditar.ubicacion || "")
+      setRequerimientos(eventoParaEditar.requerimientos || "")
       setColor(eventoParaEditar.color || "sky")
 
       const startD = new Date(eventoParaEditar.fecha_inicio)
@@ -101,10 +103,11 @@ export function EventoModal({
       setTitulo("")
       setDescripcion("")
       setUbicacion("")
+      setRequerimientos("")
       setColor("sky")
       if (defaultDay?.key === "viernes") {
-        setHoraInicio("20:00")
-        setHoraFin("20:45")
+        setHoraInicio("08:00")
+        setHoraFin("09:00")
       } else if (defaultDay?.key === "domingo") {
         setHoraInicio("08:00")
         setHoraFin("09:00")
@@ -207,6 +210,7 @@ export function EventoModal({
         titulo: titulo.trim(),
         descripcion: descripcion.trim() || null,
         ubicacion: ubicacion.trim() || null,
+        requerimientos: requerimientos.trim() || null,
         fecha_inicio: startDate.toISOString(),
         fecha_fin: endDate.toISOString(),
         color,
@@ -395,18 +399,34 @@ export function EventoModal({
             </div>
           </div>
 
-          {/* Descripción */}
-          <div className="space-y-1.5">
-            <Label htmlFor="descripcion" className="text-sm font-semibold">
-              Detalles / Instrucciones (opcional)
-            </Label>
-            <Textarea
-              id="descripcion"
-              placeholder="Instrucciones específicas, avisos o notas importantes sobre esta actividad..."
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              rows={2}
-            />
+          {/* Descripción y Requerimientos */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="descripcion" className="text-sm font-semibold">
+                Detalles / Instrucciones (opcional)
+              </Label>
+              <Textarea
+                id="descripcion"
+                placeholder="Instrucciones específicas o notas sobre la actividad..."
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="requerimientos" className="text-sm font-semibold flex items-center gap-1.5">
+                <ClipboardList className="h-3.5 w-3.5 text-amber-500" />
+                Requerimientos / Materiales (opcional)
+              </Label>
+              <Textarea
+                id="requerimientos"
+                placeholder="Ej. Micrófono, velas, 65 cartas, proyector, refrigerios..."
+                value={requerimientos}
+                onChange={(e) => setRequerimientos(e.target.value)}
+                rows={2}
+              />
+            </div>
           </div>
 
           {/* Responsables (Servidores o Equipos) */}

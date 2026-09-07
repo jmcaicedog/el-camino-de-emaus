@@ -50,8 +50,8 @@ export function getRetiroDays(retiroDatetime?: string | null): RetiroDayInfo[] {
       isoDate: formatISODate(viernesDate),
       shortLabel: `Vie ${viernesDate.getDate()} ${shortMonthNames[viernesDate.getMonth()]}`,
       fullLabel: `Viernes ${viernesDate.getDate()} de ${monthNames[viernesDate.getMonth()]}`,
-      startHour: 20, // 8:00 PM
-      endHour: 24,   // 12:00 AM
+      startHour: 8,  // 8:00 AM
+      endHour: 24,  // 12:00 AM
     },
     {
       index: 1,

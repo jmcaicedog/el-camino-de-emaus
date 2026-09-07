@@ -222,6 +222,7 @@ export interface MinutoEvento {
   titulo: string
   descripcion?: string | null
   ubicacion?: string | null
+  requerimientos?: string | null
   fecha_inicio: string
   fecha_fin: string
   color: string
@@ -234,6 +235,7 @@ export interface MinutoEventoFormData {
   titulo: string
   descripcion?: string
   ubicacion?: string
+  requerimientos?: string
   fecha_inicio: string
   fecha_fin: string
   color: string

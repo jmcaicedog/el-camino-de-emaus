@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Clock, MapPin, Users, User, Edit3, Trash2, Phone } from "lucide-react"
+import { Clock, MapPin, Users, User, Edit3, Trash2, Phone, ClipboardList } from "lucide-react"
 import { getColorConfig } from "./minuto-colors"
 import { formatTimeRange, getDurationLabel, isEventActiveNow, isEventUpcoming } from "./minuto-helpers"
 import type { MinutoEvento } from "@/lib/types"
@@ -109,6 +109,15 @@ export function EventoCard({
             <p className="text-xs sm:text-sm text-muted-foreground mt-1 whitespace-pre-line line-clamp-3">
               {evento.descripcion}
             </p>
+          )}
+          {evento.requerimientos && (
+            <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded-md text-xs text-amber-900 dark:text-amber-200 flex items-start gap-1.5">
+              <ClipboardList className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <span className="font-semibold text-amber-800 dark:text-amber-300">Requerimientos: </span>
+                <span className="whitespace-pre-line">{evento.requerimientos}</span>
+              </div>
+            </div>
           )}
         </div>
 

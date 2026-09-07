@@ -50,6 +50,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (typeof body.titulo === "string") updateData.titulo = body.titulo.trim()
     if (typeof body.descripcion !== "undefined") updateData.descripcion = body.descripcion ? body.descripcion.trim() : null
     if (typeof body.ubicacion !== "undefined") updateData.ubicacion = body.ubicacion ? body.ubicacion.trim() : null
+    if (typeof body.requerimientos !== "undefined") updateData.requerimientos = body.requerimientos ? body.requerimientos.trim() : null
     if (typeof body.color === "string") updateData.color = body.color
     if (typeof body.fecha_inicio === "string") updateData.fecha_inicio = new Date(body.fecha_inicio).toISOString()
     if (typeof body.fecha_fin === "string") updateData.fecha_fin = new Date(body.fecha_fin).toISOString()

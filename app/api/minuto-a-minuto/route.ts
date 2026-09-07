@@ -35,7 +35,7 @@ export async function GET() {
 
     let eventosQuery = service
       .from("minuto_eventos")
-      .select("id, titulo, descripcion, ubicacion, fecha_inicio, fecha_fin, color, created_at, updated_at")
+      .select("id, titulo, descripcion, ubicacion, requerimientos, fecha_inicio, fecha_fin, color, created_at, updated_at")
       .order("fecha_inicio", { ascending: true })
 
     if (!context.isFullViewer) {
@@ -170,6 +170,7 @@ export async function POST(request: NextRequest) {
     const titulo = typeof body.titulo === "string" ? body.titulo.trim() : ""
     const descripcion = typeof body.descripcion === "string" ? body.descripcion.trim() : null
     const ubicacion = typeof body.ubicacion === "string" ? body.ubicacion.trim() : null
+    const requerimientos = typeof body.requerimientos === "string" ? body.requerimientos.trim() : null
     const fechaInicio = typeof body.fecha_inicio === "string" ? body.fecha_inicio : ""
     const fechaFin = typeof body.fecha_fin === "string" ? body.fecha_fin : ""
     const color = typeof body.color === "string" && body.color ? body.color : "sky"
@@ -202,6 +203,7 @@ export async function POST(request: NextRequest) {
         titulo,
         descripcion,
         ubicacion,
+        requerimientos,
         fecha_inicio: startDate.toISOString(),
         fecha_fin: endDate.toISOString(),
         color,
