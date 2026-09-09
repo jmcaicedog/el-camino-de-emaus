@@ -169,30 +169,63 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
-    // Para cada servidor, obtener sus equipos y actividades
+    const { data: eventosMinuto } = await supabase
+      .from("minuto_eventos")
+      .select("id, titulo")
+      .order("fecha_inicio", { ascending: true })
+
+    const { data: responsablesMinuto } = await supabase
+      .from("minuto_evento_responsables")
+      .select("evento_id, tipo_responsable, servidor_id, equipo_id")
+
+    const eventosPorId = new Map((eventosMinuto || []).map((evento) => [evento.id, evento.titulo]))
+
+    // Para cada servidor, obtener sus equipos y las actividades del minuto a minuto asignadas
     const servidoresConEquipos = await Promise.all(
       (servidores || []).map(async (servidor) => {
         const { data: relaciones } = await supabase
           .from("servidor_equipo")
           .select(`
+            equipo_id,
             equipos (
+              id,
               nombre,
               tipo
             )
           `)
           .eq("servidor_id", servidor.id)
 
-        const equipos = relaciones?.map((r: any) => r.equipos?.nombre).filter(Boolean) || []
+        const equipos = relaciones
+          ?.map((r: any) => r.equipos)
+          .filter((equipo: any) => equipo?.tipo === "equipo")
+          .map((equipo: any) => equipo.nombre)
+          .filter(Boolean) || []
         const equiposPorTipo = relaciones?.map((r: any) => ({
+          id: r.equipo_id || r.equipos?.id,
           nombre: r.equipos?.nombre,
           tipo: r.equipos?.tipo
         })).filter((e: any) => e.nombre) || []
+        const equipoIds = new Set(
+          equiposPorTipo
+            .filter((equipo: any) => equipo.tipo === "equipo" && equipo.id)
+            .map((equipo: any) => equipo.id)
+        )
+        const actividades = Array.from(new Set(
+          (responsablesMinuto || [])
+            .filter((responsable: any) =>
+              (responsable.tipo_responsable === "servidor" && responsable.servidor_id === servidor.id) ||
+              (responsable.tipo_responsable === "equipo" && responsable.equipo_id && equipoIds.has(responsable.equipo_id))
+            )
+            .map((responsable: any) => eventosPorId.get(responsable.evento_id))
+            .filter(Boolean) as string[]
+        ))
 
         return {
           ...servidor,
           nombre_completo: formatPersonName(servidor.nombre_completo),
           equipos,
           equiposPorTipo,
+          actividades,
         }
       })
     )

@@ -27,7 +27,7 @@ interface ServidoresManagementProps {
 
 export function ServidoresManagement({ adminUser, readOnly = false, canManagePayments = false }: ServidoresManagementProps) {
   const { toast } = useToast()
-  const [servidores, setServidores] = useState<(Servidor & { equiposPorTipo?: Array<{ nombre: string; tipo: string }> })[]>([])
+  const [servidores, setServidores] = useState<(Servidor & { equiposPorTipo?: Array<{ id?: string; nombre: string; tipo: string }> })[]>([])
   const [admins, setAdmins] = useState<Set<string>>(new Set())
   const [mesas, setMesas] = useState<Array<{ id: string; numero: number }>>([])
   const [caminantes, setCaminantes] = useState<Array<any>>([])
@@ -56,7 +56,7 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
   const getEquiposYActividades = (servidor: typeof servidores[0]) => {
     const equiposPorTipo = servidor.equiposPorTipo || []
     const equipos = equiposPorTipo.filter(e => e.tipo === "equipo").map(e => e.nombre)
-    const actividades = equiposPorTipo.filter(e => e.tipo === "actividad").map(e => e.nombre)
+    const actividades = servidor.actividades || []
     return { equipos, actividades }
   }
 
@@ -401,7 +401,7 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                             />
                           </button>
                         </DialogTrigger>
-                        <DialogContent className="!max-w-md max-h-[80vh] overflow-y-auto">
+                        <DialogContent className="max-w-md! max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>{servidor.nombre_completo}</DialogTitle>
                           </DialogHeader>
@@ -414,7 +414,7 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                         <DialogTrigger asChild>
                           <button className="text-left text-sm underline underline-offset-2 text-primary/90">{servidor.nombre_completo}</button>
                         </DialogTrigger>
-                        <DialogContent className="!max-w-md max-h-[80vh] overflow-y-auto">
+                        <DialogContent className="max-w-md! max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>{servidor.nombre_completo}</DialogTitle>
                           </DialogHeader>

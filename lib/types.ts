@@ -96,6 +96,7 @@ export interface Servidor {
   imagen?: string | null
   mesa_id?: string
   equipos?: string[]
+  actividades?: string[]
   created_at: string
   updated_at: string
 }

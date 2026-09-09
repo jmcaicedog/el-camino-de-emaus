@@ -6,12 +6,11 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ServidorCard } from "@/components/servidor/servidor-card"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, Plus, X, Users, ListChecks } from "lucide-react"
+import { Loader2, Search, Plus, X, Users } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
-import type { Equipo, Servidor, AdminUser, TipoEquipo } from "@/lib/types"
+import type { Equipo, Servidor, AdminUser } from "@/lib/types"
 
 interface EquipoConServidores extends Equipo {
   servidores: Servidor[]
@@ -29,7 +28,6 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
   const [selectedEquipo, setSelectedEquipo] = useState<EquipoConServidores | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddingServidor, setIsAddingServidor] = useState(false)
-  const [activeTab, setActiveTab] = useState<TipoEquipo>("equipo")
 
   useEffect(() => {
     loadData()
@@ -141,16 +139,13 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
     )
   }
 
-  const equiposFiltrados = equipos.filter((equipo) => (equipo.tipo || "equipo") === activeTab)
+  const equiposFiltrados = equipos.filter((equipo) => (equipo.tipo || "equipo") === "equipo")
 
   const miServidor = servidoresDisponibles.find((s) => s.auth_user_id === adminUser.id)
   const perteneceAEquipo = (equipo: EquipoConServidores) =>
     !!miServidor && equipo.servidores.some((s) => s.id === miServidor.id)
   const misEquipos = equipos
     .filter((equipo) => (equipo.tipo || "equipo") === "equipo" && perteneceAEquipo(equipo))
-    .map((equipo) => equipo.nombre)
-  const misActividades = equipos
-    .filter((equipo) => equipo.tipo === "actividad" && perteneceAEquipo(equipo))
     .map((equipo) => equipo.nombre)
 
   return (
@@ -159,36 +154,16 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
         <h2 className="text-2xl font-bold mb-2">Gestión de Equipos</h2>
       </div>
 
-      {(misEquipos.length > 0 || misActividades.length > 0) && (
+      {misEquipos.length > 0 && (
         <Card>
           <CardContent className="space-y-1">
-            {misEquipos.length > 0 && (
-              <p className="text-muted-foreground">
-                <span className="font-medium text-foreground">Mis equipos:</span> {misEquipos.join(", ")}
-              </p>
-            )}
-            {misActividades.length > 0 && (
-              <p className="text-muted-foreground">
-                <span className="font-medium text-foreground">Mis Actividades:</span> {misActividades.join(", ")}
-              </p>
-            )}
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">Mis equipos:</span> {misEquipos.join(", ")}
+            </p>
           </CardContent>
         </Card>
       )}
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TipoEquipo)}>
-        <TabsList>
-          <TabsTrigger value="equipo" className="gap-2">
-            <Users className="h-4 w-4" />
-            Equipos
-          </TabsTrigger>
-          <TabsTrigger value="actividad" className="gap-2">
-            <ListChecks className="h-4 w-4" />
-            Actividades
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value={activeTab}>
       <div className="grid gap-6 md:grid-cols-2">
         {equiposFiltrados.map((equipo) => (
           <Card key={equipo.id}>
@@ -346,8 +321,6 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
           </Card>
         ))}
       </div>
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }
