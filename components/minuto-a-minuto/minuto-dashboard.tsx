@@ -10,7 +10,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useToast } from "@/hooks/use-toast"
 import {
   Calendar,
-  Clock,
   Plus,
   Search,
   Loader2,
@@ -400,10 +399,6 @@ export function MinutoDashboard() {
             </Button>
           )}
 
-          <div className="text-xs text-muted-foreground flex items-center gap-1 self-center sm:self-auto px-1">
-            <Clock className="h-3.5 w-3.5" />
-            <span>{filteredEventos.length} {filteredEventos.length === 1 ? "actividad" : "actividades"}</span>
-          </div>
         </div>
 
       </div>
