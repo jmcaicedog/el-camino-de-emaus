@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { Fragment, useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -50,6 +50,7 @@ export function MinutoDashboard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [onlyMine, setOnlyMine] = useState(false)
   const [selectedColorIds, setSelectedColorIds] = useState<string[]>([])
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState<"todo" | "am" | "pm">("todo")
 
   // Modales
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -176,11 +177,23 @@ export function MinutoDashboard() {
     )
   }
 
+  const getTimePeriod = (fechaInicio: string) => new Date(fechaInicio).getHours() < 12 ? "am" : "pm"
+
+  const shouldShowAfternoonDivider = (dayEvents: MinutoEvento[], index: number) => {
+    if (selectedTimePeriod !== "todo" || index === 0) return false
+    return getTimePeriod(dayEvents[index - 1].fecha_inicio) === "am" && getTimePeriod(dayEvents[index].fecha_inicio) === "pm"
+  }
+
   // Filtrado de eventos
   const filteredEventos = useMemo(() => {
     return eventos.filter((ev) => {
       // Filtro por color
       if (selectedColorIds.length > 0 && !selectedColorIds.includes(getColorConfig(ev.color).id)) {
+        return false
+      }
+
+      // Filtro por jornada
+      if (selectedTimePeriod !== "todo" && getTimePeriod(ev.fecha_inicio) !== selectedTimePeriod) {
         return false
       }
 
@@ -222,7 +235,7 @@ export function MinutoDashboard() {
 
       return true
     })
-  }, [eventos, selectedColorIds, selectedDayKey, retiroDays, searchTerm, onlyMine, servidorNombre])
+  }, [eventos, selectedColorIds, selectedTimePeriod, selectedDayKey, retiroDays, searchTerm, onlyMine, servidorNombre])
 
   // Agrupamiento por día
   const groupedByDay = useMemo(() => {
@@ -242,6 +255,7 @@ export function MinutoDashboard() {
 
   const selectedDayInfo = retiroDays.find((d) => d.key === selectedDayKey)
   const defaultDayIndex = selectedDayInfo ? selectedDayInfo.index : 0
+  const hasActiveFilters = Boolean(searchTerm.trim()) || selectedColorIds.length > 0 || selectedTimePeriod !== "todo"
 
   if (isLoading) {
     return (
@@ -322,6 +336,33 @@ export function MinutoDashboard() {
           </Tabs>
 
           <div className="flex flex-wrap items-center justify-between gap-2 lg:contents">
+            <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+              <Button
+                variant={selectedTimePeriod === "todo" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedTimePeriod("todo")}
+                className="h-8 px-2.5 text-xs"
+              >
+                Todo el día
+              </Button>
+              <Button
+                variant={selectedTimePeriod === "am" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedTimePeriod("am")}
+                className="h-8 px-2.5 text-xs"
+              >
+                AM
+              </Button>
+              <Button
+                variant={selectedTimePeriod === "pm" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedTimePeriod("pm")}
+                className="h-8 px-2.5 text-xs"
+              >
+                PM
+              </Button>
+            </div>
+
             {availableColors.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5 lg:mx-auto lg:justify-center">
                 <Button
@@ -423,14 +464,14 @@ export function MinutoDashboard() {
             <div className="space-y-1 max-w-md">
               <h3 className="text-base font-semibold">No hay actividades para mostrar</h3>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                {searchTerm || selectedColorIds.length > 0
-                  ? "No se encontraron coincidencias con los términos de búsqueda."
+                {hasActiveFilters
+                  ? "No se encontraron coincidencias con los filtros aplicados."
                   : !isFullViewer
                   ? "No tienes actividades programadas bajo tu responsabilidad en este momento."
                   : "Aún no se han programado actividades para este día del retiro."}
               </p>
             </div>
-            {canManage && !searchTerm && (
+            {canManage && !hasActiveFilters && (
               <Button onClick={handleOpenCreate} size="sm" className="mt-2 gap-1.5">
                 <Plus className="h-4 w-4" />
                 <span>Crear la primera actividad</span>
@@ -458,14 +499,22 @@ export function MinutoDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
-                  {dayEvents.map((evento) => (
-                    <EventoCard
-                      key={evento.id}
-                      evento={evento}
-                      canManage={canManage}
-                      onEdit={handleOpenEdit}
-                      onDelete={(id) => setEventoParaEliminar(id)}
-                    />
+                  {dayEvents.map((evento, index) => (
+                    <Fragment key={evento.id}>
+                      {shouldShowAfternoonDivider(dayEvents, index) && (
+                        <div className="flex items-center gap-3 py-1.5 text-xs font-semibold text-muted-foreground">
+                          <div className="h-px flex-1 bg-border" />
+                          <span>Tarde</span>
+                          <div className="h-px flex-1 bg-border" />
+                        </div>
+                      )}
+                      <EventoCard
+                        evento={evento}
+                        canManage={canManage}
+                        onEdit={handleOpenEdit}
+                        onDelete={(id) => setEventoParaEliminar(id)}
+                      />
+                    </Fragment>
                   ))}
                 </div>
               </div>
@@ -492,60 +541,68 @@ export function MinutoDashboard() {
                 </div>
 
                 <div className="border rounded-xl bg-card overflow-hidden divide-y shadow-xs">
-                  {dayEvents.map((evento) => {
+                  {dayEvents.map((evento, index) => {
                     const colorCfg = getColorConfig(evento.color)
                     const timeRangeStr = formatTimeRange(evento.fecha_inicio, evento.fecha_fin)
                     const isActive = isEventActiveNow(evento.fecha_inicio, evento.fecha_fin)
 
                     return (
-                      <div
-                        key={evento.id}
-                        className={`flex items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3 border-l-4 transition-colors hover:bg-muted/40 ${colorCfg.calendarCard} ${
-                          isActive ? "bg-emerald-50/40 dark:bg-emerald-950/30" : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
-                          <span
-                            className={`font-mono text-xs font-semibold px-2 py-0.5 rounded border whitespace-nowrap ${colorCfg.bg} ${colorCfg.text} ${colorCfg.border}`}
-                          >
-                            {timeRangeStr}
-                          </span>
-
-                          <span className="font-semibold text-xs sm:text-sm text-foreground truncate">
-                            {evento.titulo}
-                          </span>
-
-                          {isActive && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded shrink-0 animate-pulse">
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 inline-block" />
-                              En curso
-                            </span>
-                          )}
-                        </div>
-
-                        {canManage && (
-                          <div className="flex items-center gap-0.5 shrink-0">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              onClick={() => handleOpenEdit(evento)}
-                              title="Editar actividad"
-                            >
-                              <Edit3 className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                              onClick={() => setEventoParaEliminar(evento.id)}
-                              title="Eliminar actividad"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                      <Fragment key={evento.id}>
+                        {shouldShowAfternoonDivider(dayEvents, index) && (
+                          <div className="flex items-center gap-3 bg-muted/30 px-3 py-2 text-xs font-semibold text-muted-foreground sm:px-4">
+                            <div className="h-px flex-1 bg-border" />
+                            <span>Tarde</span>
+                            <div className="h-px flex-1 bg-border" />
                           </div>
                         )}
-                      </div>
+                        <div
+                          className={`flex items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3 border-l-4 transition-colors hover:bg-muted/40 ${colorCfg.calendarCard} ${
+                            isActive ? "bg-emerald-50/40 dark:bg-emerald-950/30" : ""
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+                            <span
+                              className={`font-mono text-xs font-semibold px-2 py-0.5 rounded border whitespace-nowrap ${colorCfg.bg} ${colorCfg.text} ${colorCfg.border}`}
+                            >
+                              {timeRangeStr}
+                            </span>
+
+                            <span className="font-semibold text-xs sm:text-sm text-foreground truncate">
+                              {evento.titulo}
+                            </span>
+
+                            {isActive && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded shrink-0 animate-pulse">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 inline-block" />
+                                En curso
+                              </span>
+                            )}
+                          </div>
+
+                          {canManage && (
+                            <div className="flex items-center gap-0.5 shrink-0">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                onClick={() => handleOpenEdit(evento)}
+                                title="Editar actividad"
+                              >
+                                <Edit3 className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                onClick={() => setEventoParaEliminar(evento.id)}
+                                title="Eliminar actividad"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </Fragment>
                     )
                   })}
                 </div>
