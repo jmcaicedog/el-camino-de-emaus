@@ -240,29 +240,31 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
                             className="w-8 h-8 rounded-full object-cover"
                           />
                           <div>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <button className="text-left text-sm font-medium underline underline-offset-2 text-primary/90">
-                                  {servidorCompleto.nombre_completo}
-                                </button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-md! max-h-[80vh] overflow-y-auto">
-                                <DialogHeader>
-                                  <DialogTitle>{servidorCompleto.nombre_completo}</DialogTitle>
-                                </DialogHeader>
-                                <ServidorCard servidor={servidorCompleto} onUpdate={loadData} canEdit={adminUser.is_super} />
-                              </DialogContent>
-                            </Dialog>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <button className="text-left text-sm font-medium underline underline-offset-2 text-primary/90">
+                                    {servidorCompleto.nombre_completo}
+                                  </button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-md! max-h-[80vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle>{servidorCompleto.nombre_completo}</DialogTitle>
+                                  </DialogHeader>
+                                  <ServidorCard servidor={servidorCompleto} onUpdate={loadData} canEdit={adminUser.is_super} />
+                                </DialogContent>
+                              </Dialog>
+                              {esLiderEquipo && (
+                                <Badge variant="default" className="gap-1">
+                                  <Crown className="h-3 w-3" />
+                                  Líder de equipo
+                                </Badge>
+                              )}
+                            </div>
                             {servidorCompleto.tipo_servidor && (
                               <p className="text-xs text-muted-foreground capitalize">
                                 {servidorCompleto.tipo_servidor}
                               </p>
-                            )}
-                            {esLiderEquipo && (
-                              <Badge variant="default" className="mt-1 gap-1">
-                                <Crown className="h-3 w-3" />
-                                Líder de equipo
-                              </Badge>
                             )}
                           </div>
                             </div>
