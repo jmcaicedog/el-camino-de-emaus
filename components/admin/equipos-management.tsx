@@ -113,12 +113,12 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
     }
   }
 
-  const setEquipoLeader = async (equipoId: string, servidorId: string) => {
+  const setEquipoLeader = async (equipoId: string, servidorId: string, esLider: boolean) => {
     try {
       const response = await fetch(`/api/equipos/${equipoId}/servidores`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ servidor_id: servidorId }),
+        body: JSON.stringify({ servidor_id: servidorId, es_lider: esLider }),
       })
 
       if (!response.ok) {
@@ -127,8 +127,10 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
       }
 
       toast({
-        title: "Líder actualizado",
-        description: "El líder del equipo fue actualizado exitosamente",
+        title: esLider ? "Líder actualizado" : "Líder desasignado",
+        description: esLider
+          ? "El líder del equipo fue actualizado exitosamente"
+          : "El líder del equipo fue desasignado exitosamente",
       })
 
       await loadData()
@@ -219,7 +221,12 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
                   <div className="space-y-2">
                     {equipo.servidores.map((servidor) => (
                       (() => {
-                        const servidorCompleto = servidoresDisponibles.find((s) => s.id === servidor.id) || servidor
+                        const servidorDisponible = servidoresDisponibles.find((s) => s.id === servidor.id)
+                        const servidorCompleto = servidorDisponible
+                          ? { ...servidor, ...servidorDisponible, es_lider_equipo: servidor.es_lider_equipo }
+                          : servidor
+                        const equipoTieneLider = equipo.servidores.some((miembro) => miembro.es_lider_equipo)
+                        const esLiderEquipo = !!servidorCompleto.es_lider_equipo
 
                         return (
                           <div
@@ -251,7 +258,7 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
                                 {servidorCompleto.tipo_servidor}
                               </p>
                             )}
-                            {servidorCompleto.es_lider_equipo && (
+                            {esLiderEquipo && (
                               <Badge variant="default" className="mt-1 gap-1">
                                 <Crown className="h-3 w-3" />
                                 Líder de equipo
@@ -261,12 +268,13 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
                             </div>
                             {adminUser.is_super && (
                               <div className="flex items-center gap-1">
-                                {equipo.servidores.length > 1 && !servidorCompleto.es_lider_equipo && (
+                                {equipo.servidores.length > 1 && (
                                   <Button
-                                    variant="ghost"
+                                    variant={esLiderEquipo ? "default" : "ghost"}
                                     size="sm"
-                                    onClick={() => setEquipoLeader(equipo.id, servidor.id)}
-                                    title="Designar líder de equipo"
+                                    onClick={() => setEquipoLeader(equipo.id, servidor.id, !esLiderEquipo)}
+                                    disabled={equipoTieneLider && !esLiderEquipo}
+                                    title={esLiderEquipo ? "Desasignar líder de equipo" : "Designar líder de equipo"}
                                   >
                                     <Crown className="h-4 w-4" />
                                   </Button>

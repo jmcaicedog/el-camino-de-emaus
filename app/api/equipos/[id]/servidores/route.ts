@@ -139,6 +139,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params
     const body = await request.json()
     const { servidor_id } = body
+    const esLider = body.es_lider !== false
 
     if (!servidor_id) {
       return NextResponse.json({ message: "servidor_id es requerido" }, { status: 400 })
@@ -168,7 +169,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     if (relacionesError) throw relacionesError
 
-    if (!relaciones || relaciones.length < 2) {
+    if (esLider && (!relaciones || relaciones.length < 2)) {
       return NextResponse.json({ message: "Solo se puede designar líder en equipos con más de un miembro" }, { status: 400 })
     }
 
@@ -176,22 +177,24 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ message: "El servidor no pertenece a este equipo" }, { status: 400 })
     }
 
-    const { error: clearError } = await supabase
-      .from("servidor_equipo")
-      .update({ es_lider: false })
-      .eq("equipo_id", id)
+    if (esLider) {
+      const { error: clearError } = await supabase
+        .from("servidor_equipo")
+        .update({ es_lider: false })
+        .eq("equipo_id", id)
 
-    if (clearError) throw clearError
+      if (clearError) throw clearError
+    }
 
     const { error: setError } = await supabase
       .from("servidor_equipo")
-      .update({ es_lider: true })
+      .update({ es_lider: esLider })
       .eq("equipo_id", id)
       .eq("servidor_id", servidor_id)
 
     if (setError) throw setError
 
-    return NextResponse.json({ message: "Líder de equipo actualizado exitosamente" })
+    return NextResponse.json({ message: esLider ? "Líder de equipo actualizado exitosamente" : "Líder de equipo desasignado exitosamente" })
   } catch (error) {
     console.error("Error updating equipo leader:", error)
     return NextResponse.json({ message: "Error al actualizar líder de equipo" }, { status: 500 })
