@@ -296,7 +296,7 @@ export function MinutoDashboard() {
       {/* Barra de Controles y Filtros */}
       <div className="space-y-3">
         {/* Selector de Día */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="rounded-xl border bg-card p-2 space-y-2 lg:flex lg:items-center lg:justify-between lg:gap-3 lg:border-0 lg:bg-transparent lg:p-0 lg:space-y-0">
           <Tabs
             value={selectedDayKey}
             onValueChange={(val: any) => setSelectedDayKey(val)}
@@ -322,55 +322,57 @@ export function MinutoDashboard() {
             </TabsList>
           </Tabs>
 
-          {availableColors.length > 0 && (
-            <div className="flex flex-wrap items-center justify-center gap-2 rounded-lg border bg-card p-1.5 lg:mx-auto">
-              <Button
-                variant={selectedColorIds.length === 0 ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedColorIds([])}
-                className="h-8 px-2.5 text-xs"
-              >
-                Todos
-              </Button>
-              {availableColors.map((color) => {
-                const isSelected = selectedColorIds.includes(color.id)
-                return (
-                  <Button
-                    key={color.id}
-                    variant={isSelected ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleColorFilter(color.id)}
-                    className="h-8 w-8 p-0"
-                    title={color.label}
-                    aria-label={`Filtrar por ${color.label}`}
-                  >
-                    <span className={`h-4 w-4 rounded-full ${color.accent}`} />
-                  </Button>
-                )
-              })}
-            </div>
-          )}
+          <div className="flex flex-wrap items-center justify-between gap-2 lg:contents">
+            {availableColors.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 lg:mx-auto lg:justify-center">
+                <Button
+                  variant={selectedColorIds.length === 0 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedColorIds([])}
+                  className="h-8 px-2.5 text-xs"
+                >
+                  Todos
+                </Button>
+                {availableColors.map((color) => {
+                  const isSelected = selectedColorIds.includes(color.id)
+                  return (
+                    <Button
+                      key={color.id}
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleColorFilter(color.id)}
+                      className="h-8 w-8 p-0"
+                      title={color.label}
+                      aria-label={`Filtrar por ${color.label}`}
+                    >
+                      <span className={`h-4 w-4 rounded-full ${color.accent}`} />
+                    </Button>
+                  )
+                })}
+              </div>
+            )}
 
-          {/* Toggle de Modo de Vista (Lista vs Compacta) */}
-          <div className="flex items-center gap-1 bg-muted p-1 rounded-lg self-end lg:self-auto">
-            <Button
-              variant={viewMode === "lista" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("lista")}
-              className="h-8 text-xs gap-1.5 px-3"
-            >
-              <List className="h-3.5 w-3.5" />
-              <span>Detallada</span>
-            </Button>
-            <Button
-              variant={viewMode === "compacta" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("compacta")}
-              className="h-8 text-xs gap-1.5 px-3"
-            >
-              <LayoutList className="h-3.5 w-3.5" />
-              <span>Compacta</span>
-            </Button>
+            {/* Toggle de Modo de Vista (Lista vs Compacta) */}
+            <div className="ml-auto flex items-center gap-1 bg-muted p-1 rounded-lg">
+              <Button
+                variant={viewMode === "lista" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("lista")}
+                className="h-8 text-xs gap-1.5 px-3"
+              >
+                <List className="h-3.5 w-3.5" />
+                <span>Detallada</span>
+              </Button>
+              <Button
+                variant={viewMode === "compacta" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("compacta")}
+                className="h-8 text-xs gap-1.5 px-3"
+              >
+                <LayoutList className="h-3.5 w-3.5" />
+                <span>Compacta</span>
+              </Button>
+            </div>
           </div>
         </div>
 
