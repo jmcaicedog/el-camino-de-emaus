@@ -160,6 +160,16 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
+    const service = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    )
 
     // This will be protected by RLS - only admins can view all servidores
     const { data: servidores, error } = await supabase.from("servidores").select("*").order("created_at", { ascending: false })
@@ -169,14 +179,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
-    const { data: eventosMinuto } = await supabase
+    const { data: eventosMinuto, error: eventosMinutoError } = await service
       .from("minuto_eventos")
       .select("id, titulo")
       .order("fecha_inicio", { ascending: true })
 
-    const { data: responsablesMinuto } = await supabase
+    if (eventosMinutoError) {
+      console.error("[v0] Error fetching minuto eventos for servidores:", eventosMinutoError)
+      return NextResponse.json({ message: eventosMinutoError.message }, { status: 400 })
+    }
+
+    const { data: responsablesMinuto, error: responsablesMinutoError } = await service
       .from("minuto_evento_responsables")
       .select("evento_id, tipo_responsable, servidor_id, equipo_id")
+
+    if (responsablesMinutoError) {
+      console.error("[v0] Error fetching minuto responsables for servidores:", responsablesMinutoError)
+      return NextResponse.json({ message: responsablesMinutoError.message }, { status: 400 })
+    }
 
     const eventosPorId = new Map((eventosMinuto || []).map((evento) => [evento.id, evento.titulo]))
 
