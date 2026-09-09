@@ -37,7 +37,7 @@ INSERT INTO equipos (nombre, descripcion, tipo) VALUES
   ('Mantelitos', 'Preparacion y entrega de mantelitos', 'equipo'),
   ('Dinámica de Carta de Jesús', 'Coordinacion de la dinamica carta de Jesus', 'actividad'),
   ('Dinámica de la pared', 'Coordinacion de la dinamica de la pared', 'actividad'),
-  ('Abrazos', 'Coordinacion de la dinamica de abrazos', 'equipo'),
+  ('Comité de abrazos y rompehielos', 'Coordinacion del comite de abrazos y rompehielos', 'equipo'),
   ('Contabilidad', 'Gestion de pagos de caminantes y servidores', 'equipo'),
   ('Entrega de biblias', 'Organizacion de entrega de biblias', 'actividad'),
   ('Campanero', 'Responsable de campana y tiempos', 'equipo'),

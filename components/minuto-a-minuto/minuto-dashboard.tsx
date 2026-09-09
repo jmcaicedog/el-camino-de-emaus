@@ -30,7 +30,7 @@ import {
 import { EventoModal } from "./evento-modal"
 import { EventoCard } from "./evento-card"
 import { getRetiroDays, type RetiroDayInfo, formatISODate, formatTimeRange, getDurationLabel, isEventActiveNow } from "./minuto-helpers"
-import { getColorConfig } from "./minuto-colors"
+import { getColorConfig, MINUTO_COLORS } from "./minuto-colors"
 import type { MinutoEvento, Servidor, Equipo } from "@/lib/types"
 
 export function MinutoDashboard() {
@@ -51,6 +51,7 @@ export function MinutoDashboard() {
   const [viewMode, setViewMode] = useState<"lista" | "compacta">("lista")
   const [searchTerm, setSearchTerm] = useState("")
   const [onlyMine, setOnlyMine] = useState(false)
+  const [selectedColorIds, setSelectedColorIds] = useState<string[]>([])
 
   // Modales
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -166,9 +167,25 @@ export function MinutoDashboard() {
     }
   }
 
+  const availableColors = useMemo(() => {
+    const eventColorIds = new Set(eventos.map((evento) => getColorConfig(evento.color).id))
+    return Object.values(MINUTO_COLORS).filter((color) => eventColorIds.has(color.id))
+  }, [eventos])
+
+  const toggleColorFilter = (colorId: string) => {
+    setSelectedColorIds((prev) =>
+      prev.includes(colorId) ? prev.filter((id) => id !== colorId) : [...prev, colorId]
+    )
+  }
+
   // Filtrado de eventos
   const filteredEventos = useMemo(() => {
     return eventos.filter((ev) => {
+      // Filtro por color
+      if (selectedColorIds.length > 0 && !selectedColorIds.includes(getColorConfig(ev.color).id)) {
+        return false
+      }
+
       // Filtro por día
       if (selectedDayKey !== "todos") {
         const targetDay = retiroDays.find((d) => d.key === selectedDayKey)
@@ -207,7 +224,7 @@ export function MinutoDashboard() {
 
       return true
     })
-  }, [eventos, selectedDayKey, retiroDays, searchTerm, onlyMine, servidorNombre])
+  }, [eventos, selectedColorIds, selectedDayKey, retiroDays, searchTerm, onlyMine, servidorNombre])
 
   // Agrupamiento por día
   const groupedByDay = useMemo(() => {
@@ -240,7 +257,7 @@ export function MinutoDashboard() {
   return (
     <div className="space-y-6">
       {/* Banner Superior */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-card to-muted/40 p-4 sm:p-6 rounded-xl border shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-linear-to-r from-card to-muted/40 p-4 sm:p-6 rounded-xl border shadow-xs">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
@@ -346,7 +363,7 @@ export function MinutoDashboard() {
               variant={onlyMine ? "default" : "outline"}
               size="sm"
               onClick={() => setOnlyMine(!onlyMine)}
-              className="h-9 text-xs gap-1.5 flex-shrink-0"
+              className="h-9 text-xs gap-1.5 shrink-0"
             >
               <User className="h-3.5 w-3.5" />
               <span>Mis actividades asignadas</span>
@@ -358,12 +375,45 @@ export function MinutoDashboard() {
             <span>{filteredEventos.length} {filteredEventos.length === 1 ? "actividad" : "actividades"}</span>
           </div>
         </div>
+
+        {availableColors.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-2">
+            <div className="flex items-center gap-1.5 px-1 text-xs font-medium text-muted-foreground">
+              <Filter className="h-3.5 w-3.5" />
+              <span>Colores</span>
+            </div>
+            <Button
+              variant={selectedColorIds.length === 0 ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedColorIds([])}
+              className="h-7 px-2.5 text-xs"
+            >
+              Todos
+            </Button>
+            {availableColors.map((color) => {
+              const isSelected = selectedColorIds.includes(color.id)
+              return (
+                <Button
+                  key={color.id}
+                  variant={isSelected ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => toggleColorFilter(color.id)}
+                  className="h-7 gap-1.5 px-2.5 text-xs"
+                  title={color.label}
+                >
+                  <span className={`h-2.5 w-2.5 rounded-full ${color.accent}`} />
+                  <span>{color.label}</span>
+                </Button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Mensaje Informativo para Servidores con vista acotada */}
       {!isFullViewer && (
         <div className="bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 p-3 rounded-lg flex items-start gap-2.5 text-xs text-sky-900 dark:text-sky-200">
-          <Info className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0 mt-0.5" />
+          <Info className="h-4 w-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
           <div>
             <strong>Vista personalizada:</strong> Estás visualizando únicamente las actividades en las que tú o tus equipos están asignados como responsables.
           </div>
@@ -380,7 +430,7 @@ export function MinutoDashboard() {
             <div className="space-y-1 max-w-md">
               <h3 className="text-base font-semibold">No hay actividades para mostrar</h3>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                {searchTerm
+                {searchTerm || selectedColorIds.length > 0
                   ? "No se encontraron coincidencias con los términos de búsqueda."
                   : !isFullViewer
                   ? "No tienes actividades programadas bajo tu responsabilidad en este momento."
@@ -473,7 +523,7 @@ export function MinutoDashboard() {
                           </span>
 
                           {isActive && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded flex-shrink-0 animate-pulse">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded shrink-0 animate-pulse">
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 inline-block" />
                               En curso
                             </span>
@@ -481,7 +531,7 @@ export function MinutoDashboard() {
                         </div>
 
                         {canManage && (
-                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                          <div className="flex items-center gap-0.5 shrink-0">
                             <Button
                               size="icon"
                               variant="ghost"
