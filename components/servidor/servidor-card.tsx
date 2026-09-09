@@ -26,7 +26,16 @@ export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCar
   const [isViewing, setIsViewing] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
 
+  const hasMedicalChanges =
+    medicamentos !== (servidor.medicamentos || "") ||
+    restricciones !== (servidor.restricciones_alimenticias || "")
+
   const updateMedicalInfo = async () => {
+    if (!hasMedicalChanges) {
+      setIsEditing(false)
+      return
+    }
+
     setIsUpdating(true)
     try {
       const res = await fetch(`/api/servidores/${servidor.id}`, {
@@ -183,7 +192,7 @@ export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCar
             <DialogTrigger asChild>
               <Button variant="outline" className="w-full md:w-66 bg-transparent flex items-center justify-center gap-2">
                 <Pill className="h-4 w-4" />
-                {canEdit ? 'Ver/Editar Información Médica' : 'Ver Información Médica'}
+                Información médica y observaciones
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
@@ -212,7 +221,7 @@ export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCar
                     <Button variant="outline" onClick={() => setIsEditing(false)} disabled={isUpdating}>
                       Cancelar
                     </Button>
-                    <Button onClick={updateMedicalInfo} disabled={isUpdating}>
+                    <Button onClick={updateMedicalInfo} disabled={isUpdating || !hasMedicalChanges}>
                       {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Guardar Cambios
                     </Button>

@@ -28,8 +28,15 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
   const [observaciones, setObservaciones] = useState(caminante.observaciones || "")
   const [cartasCount, setCartasCount] = useState<number>(caminante.cartas_recibidas ?? 0)
   const [fotosCount, setFotosCount] = useState<number>(caminante.fotos_recibidas ?? 0)
+  const [savedCartasCount, setSavedCartasCount] = useState<number>(caminante.cartas_recibidas ?? 0)
+  const [savedFotosCount, setSavedFotosCount] = useState<number>(caminante.fotos_recibidas ?? 0)
   const [caminantesContactados, setCaminantesContactados] = useState<boolean>(caminante.caminantes_contactados ?? false)
   const [familiaresContactados, setFamiliaresContactados] = useState<boolean>(caminante.familiares_contactados ?? false)
+
+  const hasMedicalChanges =
+    medicamentos !== (caminante.medicamentos || "") ||
+    restricciones !== (caminante.restricciones_alimenticias || "") ||
+    observaciones !== (caminante.observaciones || "")
 
   async function compressImage(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -113,6 +120,11 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
   }
 
   const saveMedicalInfo = async () => {
+    if (!hasMedicalChanges) {
+      setIsEditingMedical(false)
+      return
+    }
+
     setIsUpdating(true)
     try {
       const res = await fetch(`/api/caminantes/${caminante.id}`, {
@@ -168,6 +180,9 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
   }
 
   const saveTrackingValue = async (field: 'cartas_recibidas' | 'fotos_recibidas', value: number) => {
+    const currentValue = field === 'cartas_recibidas' ? savedCartasCount : savedFotosCount
+    if (value === currentValue) return
+
     setIsUpdating(true)
     try {
       const res = await fetch(`/api/caminantes/${caminante.id}`, {
@@ -179,6 +194,11 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
       if (!res.ok) throw new Error('Error al actualizar')
 
       toast({ title: 'Actualizado', description: `${field === 'cartas_recibidas' ? 'Cartas' : 'Fotos'} actualizado correctamente` })
+      if (field === 'cartas_recibidas') {
+        setSavedCartasCount(value)
+      } else {
+        setSavedFotosCount(value)
+      }
       if (typeof onUpdate === 'function') onUpdate()
     } catch (e) {
       console.error(e)
@@ -301,7 +321,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
             {caminante.medicamentos ? (
               <div className="text-sm">
                 <div className="font-medium">Medicamentos</div>
-                <div className="text-muted-foreground whitespace-pre-wrap break-words">{caminante.medicamentos}</div>
+                <div className="text-muted-foreground whitespace-pre-wrap wrap-break-word">{caminante.medicamentos}</div>
               </div>
             ) : (
               <div className="text-sm text-muted-foreground">Sin medicamentos registrados</div>
@@ -310,7 +330,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
             {caminante.restricciones_alimenticias ? (
               <div className="text-sm">
                 <div className="font-medium">Restricciones alimenticias</div>
-                <div className="text-muted-foreground whitespace-pre-wrap break-words">{caminante.restricciones_alimenticias}</div>
+                <div className="text-muted-foreground whitespace-pre-wrap wrap-break-word">{caminante.restricciones_alimenticias}</div>
               </div>
             ) : (
               <div className="text-sm text-muted-foreground">Sin restricciones registradas</div>
@@ -376,7 +396,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-full md:w-66 bg-transparent flex items-center justify-center gap-2">
                   <Clipboard className="w-4 h-4" />
-                  {canEdit ? 'Ver/Editar Información Médica' : 'Ver Información Médica'}
+                  Información médica y observaciones
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
@@ -404,7 +424,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                       <Button variant="outline" onClick={() => setIsEditingMedical(false)} disabled={isUpdating}>
                         Cancelar
                       </Button>
-                      <Button onClick={saveMedicalInfo} disabled={isUpdating}>
+                      <Button onClick={saveMedicalInfo} disabled={isUpdating || !hasMedicalChanges}>
                         {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Guardar Cambios
                       </Button>
@@ -428,7 +448,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
 
                 <div className="space-y-1 text-sm overflow-x-hidden">
                   <div className="grid grid-cols-1 md:grid-cols-[36%_1fr] gap-4 md:gap-6 items-start">
-                    <div className="relative flex-shrink-0 flex justify-center md:justify-start">
+                    <div className="relative shrink-0 flex justify-center md:justify-start">
                       <img
                         src={caminante.imagen || uiAvatarUrl(caminante.nombre_completo, 512)}
                         alt={caminante.nombre_completo}
@@ -475,7 +495,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                       <div>
                         <div className="font-medium">Celular</div>
                         <a href={`https://wa.me/57${caminante.celular.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium truncate">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 flex-shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                           {caminante.celular}
                         </a>
                       </div>
@@ -510,7 +530,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                           <div className="font-medium">Celular</div>
                           {caminante.celular_contacto ? (
                             <a href={`https://wa.me/57${caminante.celular_contacto.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium truncate">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 flex-shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                               {caminante.celular_contacto}
                             </a>
                           ) : (
@@ -532,7 +552,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                           <div className="font-medium">Celular</div>
                           {caminante.celular_contacto_2 ? (
                             <a href={`https://wa.me/57${caminante.celular_contacto_2.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium truncate">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 flex-shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.940 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.390-1.475-.883-.788-1.480-1.761-1.653-2.059-.173-.297-.018-.458.130-.606.134-.133.298-.347.446-.520.149-.174.198-.298.298-.497.099-.198.050-.371-.025-.520-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.500-.669-.510-.173-.008-.371-.010-.570-.010-.198 0-.520.074-.792.372-.272.297-1.040 1.016-1.040 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.200 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.360.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.570-.347m-5.421 7.403h-.004a9.870 9.870 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.860 9.860 0 01-1.510-5.260c.001-5.450 4.436-9.884 9.888-9.884 2.640 0 5.122 1.030 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.450-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.050 0C5.495 0 .160 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.480-8.413z"/></svg>
                               {caminante.celular_contacto_2}
                             </a>
                           ) : (
@@ -548,11 +568,11 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <div className="font-medium">Medicamentos</div>
-                        <div className="text-muted-foreground whitespace-pre-wrap break-words" title={caminante.medicamentos || '-'}>{caminante.medicamentos || '-'}</div>
+                        <div className="text-muted-foreground whitespace-pre-wrap wrap-break-word" title={caminante.medicamentos || '-'}>{caminante.medicamentos || '-'}</div>
                       </div>
                       <div>
                         <div className="font-medium">Restricciones alimenticias</div>
-                        <div className="text-muted-foreground whitespace-pre-wrap break-words" title={caminante.restricciones_alimenticias || '-'}>{caminante.restricciones_alimenticias || '-'}</div>
+                        <div className="text-muted-foreground whitespace-pre-wrap wrap-break-word" title={caminante.restricciones_alimenticias || '-'}>{caminante.restricciones_alimenticias || '-'}</div>
                       </div>
 
                       <div>
@@ -567,7 +587,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
 
                       <div className="md:col-span-2">
                         <div className="font-medium">Observaciones (líderes)</div>
-                        <div className="text-muted-foreground whitespace-pre-wrap break-words" title={caminante.observaciones || '-'}>{caminante.observaciones || '-'}</div>
+                        <div className="text-muted-foreground whitespace-pre-wrap wrap-break-word" title={caminante.observaciones || '-'}>{caminante.observaciones || '-'}</div>
                       </div>
                     </div>
                   </section>
