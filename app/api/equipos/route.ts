@@ -17,31 +17,32 @@ export async function GET() {
     // Para cada equipo, obtener los servidores asignados
     const equiposConServidores = await Promise.all(
       (equipos || []).map(async (equipo) => {
-        const { data: relaciones } = await supabase
+        const { data: relaciones, error: relacionesError } = await supabase
           .from("servidor_equipo")
-          .select("servidor_id")
+          .select(`
+            servidor_id,
+            es_lider,
+            servidores (
+              id,
+              nombre_completo,
+              celular,
+              tipo_servidor,
+              imagen
+            )
+          `)
           .eq("equipo_id", equipo.id)
 
-        const servidorIds = relaciones?.map((r) => r.servidor_id) || []
-
-        if (servidorIds.length > 0) {
-          const { data: servidores } = await supabase
-            .from("servidores")
-            .select("id, nombre_completo, celular, tipo_servidor, imagen")
-            .in("id", servidorIds)
-
-          return {
-            ...equipo,
-            servidores: (servidores || []).map((s) => ({
-              ...s,
-              nombre_completo: formatPersonName(s.nombre_completo),
-            })),
-          }
-        }
+        if (relacionesError) throw relacionesError
 
         return {
           ...equipo,
-          servidores: [],
+          servidores: (relaciones || [])
+            .map((relacion: any) => relacion.servidores ? ({
+              ...relacion.servidores,
+              nombre_completo: formatPersonName(relacion.servidores.nombre_completo),
+              es_lider_equipo: relacion.es_lider,
+            }) : null)
+            .filter(Boolean),
         }
       })
     )

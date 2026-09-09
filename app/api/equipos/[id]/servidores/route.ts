@@ -14,6 +14,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .from("servidor_equipo")
       .select(`
         servidor_id,
+        es_lider,
         servidores (
           id,
           nombre_completo,
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const servidoresList =
       servidores
-        ?.map((r: any) => r.servidores)
+        ?.map((r: any) => r.servidores ? ({ ...r.servidores, es_lider_equipo: r.es_lider }) : null)
         .filter(Boolean)
         .map((s: any) => ({
           ...s,
@@ -130,6 +131,70 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     console.error("Error adding servidor to equipo:", error)
     return NextResponse.json({ message: "Error al agregar servidor al equipo" }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+    const { servidor_id } = body
+
+    if (!servidor_id) {
+      return NextResponse.json({ message: "servidor_id es requerido" }, { status: 400 })
+    }
+
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ message: "No autenticado" }, { status: 401 })
+    }
+
+    const { data: adminUser } = await supabase
+      .from("admin_users")
+      .select("is_super")
+      .eq("id", user.id)
+      .single()
+
+    if (!adminUser?.is_super) {
+      return NextResponse.json({ message: "No autorizado. Solo superadmin puede gestionar equipos" }, { status: 403 })
+    }
+
+    const { data: relaciones, error: relacionesError } = await supabase
+      .from("servidor_equipo")
+      .select("id, servidor_id")
+      .eq("equipo_id", id)
+
+    if (relacionesError) throw relacionesError
+
+    if (!relaciones || relaciones.length < 2) {
+      return NextResponse.json({ message: "Solo se puede designar líder en equipos con más de un miembro" }, { status: 400 })
+    }
+
+    if (!relaciones.some((relacion) => relacion.servidor_id === servidor_id)) {
+      return NextResponse.json({ message: "El servidor no pertenece a este equipo" }, { status: 400 })
+    }
+
+    const { error: clearError } = await supabase
+      .from("servidor_equipo")
+      .update({ es_lider: false })
+      .eq("equipo_id", id)
+
+    if (clearError) throw clearError
+
+    const { error: setError } = await supabase
+      .from("servidor_equipo")
+      .update({ es_lider: true })
+      .eq("equipo_id", id)
+      .eq("servidor_id", servidor_id)
+
+    if (setError) throw setError
+
+    return NextResponse.json({ message: "Líder de equipo actualizado exitosamente" })
+  } catch (error) {
+    console.error("Error updating equipo leader:", error)
+    return NextResponse.json({ message: "Error al actualizar líder de equipo" }, { status: 500 })
   }
 }
 

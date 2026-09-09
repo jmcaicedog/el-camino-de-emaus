@@ -133,6 +133,7 @@ CREATE TABLE IF NOT EXISTS servidor_equipo (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   servidor_id UUID NOT NULL REFERENCES servidores(id) ON DELETE CASCADE,
   equipo_id UUID NOT NULL REFERENCES equipos(id) ON DELETE CASCADE,
+  es_lider BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (servidor_id, equipo_id)
 );
@@ -178,6 +179,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users(email);
 
 CREATE INDEX IF NOT EXISTS idx_servidor_equipo_servidor ON servidor_equipo(servidor_id);
 CREATE INDEX IF NOT EXISTS idx_servidor_equipo_equipo ON servidor_equipo(equipo_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_servidor_equipo_one_lider_per_equipo ON servidor_equipo(equipo_id) WHERE es_lider;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_lista_espera_correo_unique ON lista_espera (lower(correo));
 CREATE INDEX IF NOT EXISTS idx_lista_espera_created_at ON lista_espera (created_at DESC);

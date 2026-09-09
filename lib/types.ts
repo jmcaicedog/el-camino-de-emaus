@@ -97,6 +97,7 @@ export interface Servidor {
   mesa_id?: string
   equipos?: string[]
   actividades?: string[]
+  es_lider_equipo?: boolean
   created_at: string
   updated_at: string
 }
@@ -133,6 +134,7 @@ export interface ServidorEquipo {
   id: string
   servidor_id: string
   equipo_id: string
+  es_lider: boolean
   created_at: string
 }
 

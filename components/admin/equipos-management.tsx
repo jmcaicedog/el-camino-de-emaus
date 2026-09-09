@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge"
 import { ServidorCard } from "@/components/servidor/servidor-card"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Search, Plus, X, Users } from "lucide-react"
+import { Crown, Loader2, Search, Plus, X, Users } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Equipo, Servidor, AdminUser } from "@/lib/types"
 
@@ -108,6 +108,34 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
       toast({
         title: "Error",
         description: "Error al remover servidor del equipo",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const setEquipoLeader = async (equipoId: string, servidorId: string) => {
+    try {
+      const response = await fetch(`/api/equipos/${equipoId}/servidores`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ servidor_id: servidorId }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        throw new Error(error.message || "Error al designar líder")
+      }
+
+      toast({
+        title: "Líder actualizado",
+        description: "El líder del equipo fue actualizado exitosamente",
+      })
+
+      await loadData()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al designar líder de equipo",
         variant: "destructive",
       })
     }
@@ -223,16 +251,35 @@ export function EquiposManagement({ adminUser }: EquiposManagementProps) {
                                 {servidorCompleto.tipo_servidor}
                               </p>
                             )}
+                            {servidorCompleto.es_lider_equipo && (
+                              <Badge variant="default" className="mt-1 gap-1">
+                                <Crown className="h-3 w-3" />
+                                Líder de equipo
+                              </Badge>
+                            )}
                           </div>
                             </div>
                             {adminUser.is_super && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeServidorFromEquipo(equipo.id, servidor.id)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
+                              <div className="flex items-center gap-1">
+                                {equipo.servidores.length > 1 && !servidorCompleto.es_lider_equipo && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setEquipoLeader(equipo.id, servidor.id)}
+                                    title="Designar líder de equipo"
+                                  >
+                                    <Crown className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeServidorFromEquipo(equipo.id, servidor.id)}
+                                  title="Remover servidor del equipo"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
                             )}
                           </div>
                         )
