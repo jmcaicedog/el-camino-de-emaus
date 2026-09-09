@@ -17,7 +17,6 @@ import {
   CalendarDays,
   List,
   LayoutList,
-  Filter,
   User,
   Shield,
   Sparkles,
@@ -297,13 +296,13 @@ export function MinutoDashboard() {
       {/* Barra de Controles y Filtros */}
       <div className="space-y-3">
         {/* Selector de Día */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <Tabs
             value={selectedDayKey}
             onValueChange={(val: any) => setSelectedDayKey(val)}
-            className="w-full sm:w-auto"
+            className="w-full lg:w-auto"
           >
-            <TabsList className="grid grid-cols-4 w-full sm:w-auto h-auto p-1">
+            <TabsList className="grid grid-cols-4 w-full lg:w-auto h-auto p-1">
               {retiroDays.map((d) => (
                 <TabsTrigger
                   key={d.key}
@@ -323,8 +322,37 @@ export function MinutoDashboard() {
             </TabsList>
           </Tabs>
 
+          {availableColors.length > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 rounded-lg border bg-card p-1.5 lg:mx-auto">
+              <Button
+                variant={selectedColorIds.length === 0 ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedColorIds([])}
+                className="h-8 px-2.5 text-xs"
+              >
+                Todos
+              </Button>
+              {availableColors.map((color) => {
+                const isSelected = selectedColorIds.includes(color.id)
+                return (
+                  <Button
+                    key={color.id}
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => toggleColorFilter(color.id)}
+                    className="h-8 w-8 p-0"
+                    title={color.label}
+                    aria-label={`Filtrar por ${color.label}`}
+                  >
+                    <span className={`h-4 w-4 rounded-full ${color.accent}`} />
+                  </Button>
+                )
+              })}
+            </div>
+          )}
+
           {/* Toggle de Modo de Vista (Lista vs Compacta) */}
-          <div className="flex items-center gap-1 bg-muted p-1 rounded-lg self-end sm:self-auto">
+          <div className="flex items-center gap-1 bg-muted p-1 rounded-lg self-end lg:self-auto">
             <Button
               variant={viewMode === "lista" ? "default" : "ghost"}
               size="sm"
@@ -376,38 +404,6 @@ export function MinutoDashboard() {
           </div>
         </div>
 
-        {availableColors.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-2">
-            <div className="flex items-center gap-1.5 px-1 text-xs font-medium text-muted-foreground">
-              <Filter className="h-3.5 w-3.5" />
-              <span>Colores</span>
-            </div>
-            <Button
-              variant={selectedColorIds.length === 0 ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedColorIds([])}
-              className="h-7 px-2.5 text-xs"
-            >
-              Todos
-            </Button>
-            {availableColors.map((color) => {
-              const isSelected = selectedColorIds.includes(color.id)
-              return (
-                <Button
-                  key={color.id}
-                  variant={isSelected ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => toggleColorFilter(color.id)}
-                  className="h-7 gap-1.5 px-2.5 text-xs"
-                  title={color.label}
-                >
-                  <span className={`h-2.5 w-2.5 rounded-full ${color.accent}`} />
-                  <span>{color.label}</span>
-                </Button>
-              )
-            })}
-          </div>
-        )}
       </div>
 
       {/* Mensaje Informativo para Servidores con vista acotada */}
