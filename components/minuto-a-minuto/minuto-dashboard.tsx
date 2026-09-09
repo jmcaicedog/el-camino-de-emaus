@@ -335,15 +335,15 @@ export function MinutoDashboard() {
             </TabsList>
           </Tabs>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-0.5 lg:contents lg:overflow-visible lg:pb-0">
-            <div className="flex shrink-0 items-center gap-1 bg-muted p-1 rounded-lg">
+          <div className="flex flex-wrap items-center justify-between gap-2 lg:contents">
+            <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
               <Button
                 variant={selectedTimePeriod === "todo" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setSelectedTimePeriod("todo")}
                 className="h-8 px-2.5 text-xs"
               >
-                Todo el día
+                Todo
               </Button>
               <Button
                 variant={selectedTimePeriod === "am" ? "default" : "ghost"}
@@ -364,7 +364,7 @@ export function MinutoDashboard() {
             </div>
 
             {availableColors.length > 0 && (
-              <div className="flex shrink-0 items-center gap-1.5 lg:mx-auto lg:justify-center">
+              <div className="flex items-center gap-1.5 lg:mx-auto lg:justify-center">
                 <Button
                   variant={selectedColorIds.length === 0 ? "default" : "outline"}
                   size="sm"
@@ -393,7 +393,7 @@ export function MinutoDashboard() {
             )}
 
             {/* Toggle de Modo de Vista (Lista vs Compacta) */}
-            <div className="ml-auto flex shrink-0 items-center gap-1 bg-muted p-1 rounded-lg">
+            <div className="ml-auto flex items-center gap-1 bg-muted p-1 rounded-lg">
               <Button
                 variant={viewMode === "lista" ? "default" : "ghost"}
                 size="sm"
@@ -401,7 +401,7 @@ export function MinutoDashboard() {
                 className="h-8 text-xs gap-1.5 px-3"
               >
                 <List className="h-3.5 w-3.5" />
-                <span>Detallada</span>
+                <span className="hidden sm:inline">Detallada</span>
               </Button>
               <Button
                 variant={viewMode === "compacta" ? "default" : "ghost"}
@@ -410,7 +410,7 @@ export function MinutoDashboard() {
                 className="h-8 text-xs gap-1.5 px-3"
               >
                 <LayoutList className="h-3.5 w-3.5" />
-                <span>Compacta</span>
+                <span className="hidden sm:inline">Compacta</span>
               </Button>
             </div>
           </div>
