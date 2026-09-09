@@ -335,7 +335,7 @@ export function MinutoDashboard() {
             </TabsList>
           </Tabs>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 lg:contents">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 lg:contents">
             <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
               <Button
                 variant={selectedTimePeriod === "todo" ? "default" : "ghost"}
@@ -364,14 +364,16 @@ export function MinutoDashboard() {
             </div>
 
             {availableColors.length > 0 && (
-              <div className="flex items-center gap-1.5 lg:mx-auto lg:justify-center">
+              <div className="flex min-w-0 items-center justify-center gap-1.5 lg:mx-auto lg:justify-center">
                 <Button
                   variant={selectedColorIds.length === 0 ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedColorIds([])}
-                  className="h-8 px-2.5 text-xs"
+                    className="h-8 px-2.5 text-xs"
+                    title="Todos los colores"
                 >
-                  Todos
+                    <span className="sm:hidden">T</span>
+                    <span className="hidden sm:inline">Todos</span>
                 </Button>
                 {availableColors.map((color) => {
                   const isSelected = selectedColorIds.includes(color.id)
@@ -393,7 +395,7 @@ export function MinutoDashboard() {
             )}
 
             {/* Toggle de Modo de Vista (Lista vs Compacta) */}
-            <div className="ml-auto flex items-center gap-1 bg-muted p-1 rounded-lg">
+            <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
               <Button
                 variant={viewMode === "lista" ? "default" : "ghost"}
                 size="sm"
