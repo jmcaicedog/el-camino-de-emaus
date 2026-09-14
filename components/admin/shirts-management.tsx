@@ -1,23 +1,20 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Shirt, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import type { Servidor } from "@/lib/types"
 
 interface ShirtsManagementProps {
-  canManage: boolean
 }
 
 function formatMoney(value: number) {
   return `$${value.toLocaleString("es-CO")}`
 }
 
-export function ShirtsManagement({ canManage }: ShirtsManagementProps) {
+export function ShirtsManagement({}: ShirtsManagementProps) {
   const { toast } = useToast()
-  const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [servers, setServers] = useState<Servidor[]>([])
@@ -46,8 +43,8 @@ export function ShirtsManagement({ canManage }: ShirtsManagementProps) {
   }
 
   useEffect(() => {
-    if (open) void loadData()
-  }, [open])
+    void loadData()
+  }, [])
 
   const togglePaid = async (server: Servidor) => {
     setUpdatingId(server.id)
@@ -68,25 +65,33 @@ export function ShirtsManagement({ canManage }: ShirtsManagementProps) {
     }
   }
 
-  if (!canManage) return null
-
   const shirtServers = servers.filter((server) => {
     const colors = Array.isArray(server.colores_camisa) ? server.colores_camisa : []
     return colors.length > 0 || Boolean(server.talla_camisa)
-  })
+  }).sort((a, b) => a.nombre_completo.localeCompare(b.nombre_completo, "es", { sensitivity: "base" }))
+
+  const getShirtTotal = (server: Servidor) => {
+    const colors = Array.isArray(server.colores_camisa) ? server.colores_camisa : []
+    return price * Math.max(colors.length, 1)
+  }
+  const totalToCollect = shirtServers.reduce((sum, server) => sum + getShirtTotal(server), 0)
+  const totalCollected = shirtServers.reduce((sum, server) => sum + (server.camisa_pagada ? getShirtTotal(server) : 0), 0)
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon" aria-label="Abrir panel de camisas" title="Panel de camisas">
-          <Shirt className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-5xl max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:w-[96vw] sm:max-h-[90vh] sm:p-6">
-        <DialogHeader className="space-y-1">
-          <DialogTitle>Panel de camisas</DialogTitle>
-          {!isLoading && <p className="text-left text-xs text-muted-foreground">{shirtServers.length} solicitud{shirtServers.length === 1 ? "" : "es"} · Precio por camisa: {formatMoney(price)}</p>}
-        </DialogHeader>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Panel de camisas</h1>
+        <p className="text-sm text-muted-foreground">{shirtServers.length} solicitud{shirtServers.length === 1 ? "" : "es"} · Precio por camisa: {formatMoney(price)}</p>
+      </div>
+      <div className="rounded-lg border bg-slate-50 p-4 dark:bg-slate-900/40">
+        <p className="text-xs font-medium text-muted-foreground">Recaudado / total de camisas</p>
+        <p className="mt-1 text-xl font-bold">
+          <span className="text-emerald-700 dark:text-emerald-300">{formatMoney(totalCollected)}</span>
+          <span className="px-1 text-muted-foreground">/</span>
+          {formatMoney(totalToCollect)}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">Verde: pagadas · Rojo: pendientes</p>
+      </div>
         {isLoading ? (
           <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : shirtServers.length === 0 ? (
@@ -99,7 +104,7 @@ export function ShirtsManagement({ canManage }: ShirtsManagementProps) {
               const quantity = Math.max(colors.length, 1)
               const total = price * quantity
               return (
-                <article key={server.id} className="rounded-lg border bg-card p-4 shadow-sm">
+                <article key={server.id} className={`rounded-lg border p-4 shadow-sm ${server.camisa_pagada ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-950/20" : "border-red-300 bg-red-50 dark:bg-red-950/20"}`}>
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="min-w-0 text-sm font-semibold leading-snug">{server.nombre_completo}</h3>
                     <span className="shrink-0 text-base font-bold">{formatMoney(total)}</span>
@@ -145,7 +150,7 @@ export function ShirtsManagement({ canManage }: ShirtsManagementProps) {
                   const quantity = Math.max(colors.length, 1)
                   const total = price * quantity
                   return (
-                    <tr key={server.id} className="border-t">
+                    <tr key={server.id} className={`border-t ${server.camisa_pagada ? "bg-emerald-50/70 dark:bg-emerald-950/20" : "bg-red-50/70 dark:bg-red-950/20"}`}>
                       <td className="px-4 py-3 font-medium">{server.nombre_completo}</td>
                       <td className="px-4 py-3">{server.talla_camisa || "Sin especificar"}</td>
                       <td className="px-4 py-3">{colors.length ? colors.join(", ") : "Sin color especificado"}</td>
@@ -170,7 +175,6 @@ export function ShirtsManagement({ canManage }: ShirtsManagementProps) {
           </>
         )}
         <p className="text-xs text-muted-foreground sm:hidden">El total se calcula según los colores solicitados.</p>
-      </DialogContent>
-    </Dialog>
+    </div>
   )
 }
