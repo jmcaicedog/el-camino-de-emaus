@@ -173,7 +173,7 @@ export function ReportsManagement({
     {
       id: "tallas",
       title: "Tallas de Camiseta (Caminantes)",
-      description: "Listado de caminantes con sus tallas de camiseta",
+      description: "Listado de caminantes y resumen de cantidades por talla",
       icon: FileText,
     },
     {

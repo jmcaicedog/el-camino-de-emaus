@@ -371,6 +371,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           { key: "nombre", label: "Nombre" },
           { key: "talla", label: "Talla de Camiseta" },
         ]
+        const tallas = new Map<string, { color: string; talla: string; cantidad: number }>()
+        for (const caminante of caminantes || []) {
+          const talla = caminante.talla_camisa || "Sin especificar"
+          const current = tallas.get(talla) || { color: "No aplica", talla, cantidad: 0 }
+          current.cantidad += 1
+          tallas.set(talla, current)
+        }
+        summaryData = Array.from(tallas.values()).sort((a, b) => a.talla.localeCompare(b.talla, "es"))
+        summaryColumns = [
+          { key: "color", label: "Color" },
+          { key: "talla", label: "Talla" },
+          { key: "cantidad", label: "Cantidad" },
+        ]
         title = "Tallas de Camiseta (Caminantes)"
         break
       }
