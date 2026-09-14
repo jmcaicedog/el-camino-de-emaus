@@ -179,7 +179,7 @@ export function ReportsManagement({
     {
       id: "tallas-servidores",
       title: "Tallas y Colores (Servidores)",
-      description: "Servidores que marcaron colores en el formulario y sus tallas/colores",
+      description: "Camisas solicitadas, estado de pago y resumen por color y talla",
       icon: FileText,
     },
     ...(isSuperAdmin || isLogisticaTeam

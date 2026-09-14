@@ -83,6 +83,7 @@ export async function PUT(request: NextRequest) {
       max_servidores: body?.max_servidores,
       costo_servidor: body?.costo_servidor,
       costo_caminante: body?.costo_caminante,
+      precio_camisas: body?.precio_camisas,
       countdown_enabled: body?.countdown_enabled,
       caminante_form_enabled: body?.caminante_form_enabled,
     })

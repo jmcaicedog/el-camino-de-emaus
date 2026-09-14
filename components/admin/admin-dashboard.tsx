@@ -10,6 +10,7 @@ import { ReportsManagement } from "@/components/admin/reports-management"
 import { AdminsManagement } from "@/components/admin/admins-management"
 import { MesaReport } from "@/components/admin/mesa-report"
 import { SystemSettingsPanel } from "@/components/admin/system-settings-panel"
+import { ShirtsManagement } from "@/components/admin/shirts-management"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2, ClipboardCheck, Timer } from "lucide-react"
@@ -170,6 +171,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {adminUser.is_super && <SystemSettingsPanel />}
+              <ShirtsManagement canManage={adminUser.is_super || isContabilidadTeam} />
               {(adminUser.is_super || isLogisticaTeam) && (
                 <Link href="/admin/alojamiento">
                   <Button variant="outline" size="icon" aria-label="Abrir módulo de alojamiento" title="Alojamiento">

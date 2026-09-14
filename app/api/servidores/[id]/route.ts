@@ -24,6 +24,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!isSuper) {
       const bodyKeys = Object.keys(body)
       const isPaymentOnlyUpdate = bodyKeys.length === 1 && bodyKeys[0] === 'monto_pagado'
+      const isShirtPaymentOnlyUpdate = bodyKeys.length === 1 && bodyKeys[0] === 'camisa_pagada'
 
       const allowedFields = [
         'nombre_completo',
@@ -40,6 +41,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         'cargo',
         'talla_camisa',
         'colores_camisa',
+        'camisa_pagada',
         'nombre_contacto_emergencia',
         'parentesco_contacto',
         'celular_contacto',
@@ -90,7 +92,28 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         }
       }
 
-      if (!isPaymentOnlyUpdate) {
+      if (isShirtPaymentOnlyUpdate) {
+        const { data: servidorRecord } = await supabase
+          .from("servidores")
+          .select("id")
+          .eq("auth_user_id", currentUser.id)
+          .maybeSingle()
+
+        const { data: memberships } = servidorRecord?.id
+          ? await supabase.from("servidor_equipo").select("equipos(nombre)").eq("servidor_id", servidorRecord.id)
+          : { data: [] }
+
+        const isContabilidadTeam = (memberships || []).some((membership: any) => {
+          const nombre = String(membership?.equipos?.nombre || "")
+          return nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes("contabilidad")
+        })
+
+        if (!isContabilidadTeam) {
+          return NextResponse.json({ message: 'No autorizado para actualizar el pago de camisas' }, { status: 403 })
+        }
+      }
+
+      if (!isPaymentOnlyUpdate && !isShirtPaymentOnlyUpdate) {
         const { data: targetServidor } = await supabase
           .from("servidores")
           .select("mesa_id")

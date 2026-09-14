@@ -74,6 +74,7 @@ export interface Servidor {
   cargo?: string
   talla_camisa?: string
   colores_camisa?: string[]
+  camisa_pagada?: boolean
   nombre_contacto_emergencia: string
   parentesco_contacto: string
   celular_contacto: string

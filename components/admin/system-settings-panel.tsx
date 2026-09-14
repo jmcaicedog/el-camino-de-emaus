@@ -31,6 +31,7 @@ export function SystemSettingsPanel() {
   const [cupoServidores, setCupoServidores] = useState(MAX_SERVIDORES)
   const [costoServidores, setCostoServidores] = useState(400000)
   const [costoCaminantes, setCostoCaminantes] = useState(490000)
+  const [precioCamisas, setPrecioCamisas] = useState(0)
   const [countdownEnabled, setCountdownEnabled] = useState(true)
   const [caminanteFormEnabled, setCaminanteFormEnabled] = useState(true)
 
@@ -62,6 +63,7 @@ export function SystemSettingsPanel() {
       setCupoServidores(Number(settings.max_servidores) || MAX_SERVIDORES)
       setCostoServidores(Number(settings.costo_servidor) || 400000)
       setCostoCaminantes(Number(settings.costo_caminante) || 490000)
+      setPrecioCamisas(Math.max(0, Number(settings.precio_camisas) || 0))
       setCountdownEnabled(Boolean(settings.countdown_enabled))
       setCaminanteFormEnabled(
         typeof settings.caminante_form_enabled === "boolean" ? settings.caminante_form_enabled : true,
@@ -136,6 +138,7 @@ export function SystemSettingsPanel() {
           max_servidores: cupoServidores,
           costo_servidor: costoServidores,
           costo_caminante: costoCaminantes,
+          precio_camisas: precioCamisas,
           countdown_enabled: countdownEnabled,
           caminante_form_enabled: caminanteFormEnabled,
         }),
@@ -342,6 +345,19 @@ export function SystemSettingsPanel() {
                   step={1000}
                   value={costoCaminantes}
                   onChange={(e) => setCostoCaminantes(Number(e.target.value) || 0)}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="precio-camisas">Precio de las camisas</Label>
+                <Input
+                  id="precio-camisas"
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={precioCamisas}
+                  onChange={(e) => setPrecioCamisas(Number(e.target.value) || 0)}
                   disabled={isLoading}
                 />
               </div>

@@ -11,6 +11,7 @@ export interface RetiroSettings {
   max_servidores: number
   costo_servidor: number
   costo_caminante: number
+  precio_camisas: number
   countdown_enabled: boolean
   caminante_form_enabled: boolean
 }
@@ -24,6 +25,7 @@ export const DEFAULT_RETIRO_SETTINGS: RetiroSettings = {
   max_servidores: MAX_SERVIDORES,
   costo_servidor: 400000,
   costo_caminante: 490000,
+  precio_camisas: 0,
   countdown_enabled: true,
   caminante_form_enabled: true,
 }
@@ -47,6 +49,7 @@ function normalizeSettings(input: Partial<RetiroSettings> | null | undefined): R
     max_servidores: Number(input?.max_servidores) || DEFAULT_RETIRO_SETTINGS.max_servidores,
     costo_servidor: Number(input?.costo_servidor) || DEFAULT_RETIRO_SETTINGS.costo_servidor,
     costo_caminante: Number(input?.costo_caminante) || DEFAULT_RETIRO_SETTINGS.costo_caminante,
+    precio_camisas: Math.max(0, Number(input?.precio_camisas) || DEFAULT_RETIRO_SETTINGS.precio_camisas),
     countdown_enabled:
       typeof input?.countdown_enabled === "boolean"
         ? input.countdown_enabled

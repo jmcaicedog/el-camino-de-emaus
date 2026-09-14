@@ -56,6 +56,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   let data: any[] = []
   let columns: { key: string; label: string }[] = []
+  let summaryData: any[] = []
+  let summaryColumns: { key: string; label: string }[] = []
   let title = ""
 
     switch (type) {
@@ -377,8 +379,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         // Mostrar sólo servidores que marcaron al menos un color y listar esos colores
         const { data: servidores } = await supabase
           .from("servidores")
-          .select("nombre_completo, talla_camisa, colores_camisa")
+          .select("nombre_completo, talla_camisa, colores_camisa, camisa_pagada")
           .order("nombre_completo")
+        const { data: settings } = await supabase.from("retiro_settings").select("precio_camisas").eq("id", 1).maybeSingle()
+        const precioCamisas = Math.max(0, Number(settings?.precio_camisas) || 0)
 
         const servidoresConColores = (servidores || []).filter(
           (s: any) => Array.isArray(s.colores_camisa) && s.colores_camisa.length > 0
@@ -388,12 +392,33 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           nombre: s.nombre_completo,
           talla: s.talla_camisa || "Sin especificar",
           colores: (s.colores_camisa || []).join(", "),
+          total: precioCamisas * Math.max((s.colores_camisa || []).length, 1),
+          pago: s.camisa_pagada ? "Pagada" : "Pendiente",
         }))
 
         columns = [
           { key: "nombre", label: "Nombre" },
           { key: "talla", label: "Talla de Camiseta" },
           { key: "colores", label: "Colores de Camiseta" },
+          { key: "total", label: "Total a pagar" },
+          { key: "pago", label: "Estado de pago" },
+        ]
+
+        const summary = new Map<string, { color: string; talla: string; cantidad: number }>()
+        for (const servidor of servidoresConColores as any[]) {
+          const talla = servidor.talla_camisa || "Sin especificar"
+          for (const color of servidor.colores_camisa || []) {
+            const key = `${color}::${talla}`
+            const current = summary.get(key) || { color, talla, cantidad: 0 }
+            current.cantidad += 1
+            summary.set(key, current)
+          }
+        }
+        summaryData = Array.from(summary.values()).sort((a, b) => a.color.localeCompare(b.color, "es") || a.talla.localeCompare(b.talla, "es"))
+        summaryColumns = [
+          { key: "color", label: "Color" },
+          { key: "talla", label: "Talla" },
+          { key: "cantidad", label: "Cantidad" },
         ]
 
         title = "Tallas y Colores (Servidores)"
@@ -551,6 +576,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           sheet.addRow(typedRow)
         })
 
+        if (summaryColumns.length > 0) {
+          const summarySheet = workbook.addWorksheet("Resumen")
+          summarySheet.addRow(summaryColumns.map((column) => column.label))
+          summarySheet.getRow(1).font = { bold: true }
+          summaryData.forEach((item) => summarySheet.addRow(summaryColumns.map((column) => item[column.key] ?? "")))
+          summarySheet.columns.forEach((column) => {
+            column.width = 18
+          })
+        }
+
         // Simple formatting: set column widths and number/date formats when applicable
         sheet.columns.forEach((col, idx) => {
           try {
@@ -608,6 +643,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         html = generateVerificacionExistenciaHTML(data, title)
       } else if (type === "servidores") {
         html = generateHTML(data, columns, title);
+      } else if (summaryColumns.length > 0) {
+        html = generateHTMLWithSummary(data, columns, title, summaryData, summaryColumns)
       } else {
         html = generateHTML(data, columns, title);
       }
@@ -958,6 +995,49 @@ function generateHTML(data: any[], columns: { key: string; label: string }[], ti
           ${tableRows}
         </tbody>
       </table>
+    </body>
+    </html>
+  `
+}
+
+function generateHTMLWithSummary(
+  data: any[],
+  columns: { key: string; label: string }[],
+  title: string,
+  summaryData: any[],
+  summaryColumns: { key: string; label: string }[],
+): string {
+  const renderTable = (rows: any[], tableColumns: { key: string; label: string }[]) => `
+    <table>
+      <thead><tr>${tableColumns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map((item) => `<tr>${tableColumns.map((column) => `<td>${escapeHtml(formatValue(item[column.key]))}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table>
+  `
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>${escapeHtml(title)}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0 30px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .date { color: #666; font-size: 14px; }
+        @media print { button { display: none; } }
+      </style>
+    </head>
+    <body>
+      <h1>${escapeHtml(title)}</h1>
+      <p class="date">Fecha: ${new Date().toLocaleDateString("es-CO")}</p>
+      <button onclick="window.print()">Imprimir / Guardar como PDF</button>
+      ${renderTable(data, columns)}
+      <h2>Resumen de camisas</h2>
+      ${renderTable(summaryData, summaryColumns)}
     </body>
     </html>
   `
