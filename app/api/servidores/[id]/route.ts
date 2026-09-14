@@ -26,6 +26,31 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       const isPaymentOnlyUpdate = bodyKeys.length === 1 && bodyKeys[0] === 'monto_pagado'
 
       const allowedFields = [
+        'nombre_completo',
+        'cedula',
+        'fecha_nacimiento',
+        'edad',
+        'celular',
+        'correo',
+        'direccion',
+        'ciudad',
+        'estado_civil',
+        'profesion',
+        'empresa',
+        'cargo',
+        'talla_camisa',
+        'nombre_contacto_emergencia',
+        'parentesco_contacto',
+        'celular_contacto',
+        'nombre_contacto_emergencia_2',
+        'parentesco_contacto_2',
+        'celular_contacto_2',
+        'condicion_especial',
+        'parroco',
+        'ronca_al_dormir',
+        'eps',
+        'tipo_sangre',
+        'parroquia',
         'medicamentos',
         'restricciones_alimenticias',
         'imagen',
@@ -61,6 +86,26 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           }
         } else {
           return NextResponse.json({ message: 'No autorizado para modificar pagos' }, { status: 403 })
+        }
+      }
+
+      if (!isPaymentOnlyUpdate) {
+        const { data: targetServidor } = await supabase
+          .from("servidores")
+          .select("mesa_id")
+          .eq("id", id)
+          .single()
+
+        const { data: editorServidor } = await supabase
+          .from("servidores")
+          .select("id")
+          .eq("auth_user_id", currentUser.id)
+          .eq("mesa_id", targetServidor?.mesa_id || "")
+          .in("tipo_servidor", ["lider", "colider"])
+          .maybeSingle()
+
+        if (!editorServidor) {
+          return NextResponse.json({ message: 'Solo los líderes y colíderes de la mesa pueden editar servidores' }, { status: 403 })
         }
       }
     }

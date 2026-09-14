@@ -185,7 +185,12 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
                     </CardHeader>
                     {mesaCaminantes.length > 0 && (
                       <CardContent>
-                        <CaminanteGridView caminantes={mesaCaminantes} onUpdate={refreshCaminantes} canEdit={true} />
+                        <CaminanteGridView
+                          caminantes={mesaCaminantes}
+                          onUpdate={refreshCaminantes}
+                          canEdit={true}
+                          canEditFull={false}
+                        />
                       </CardContent>
                     )}
                   </Card>
@@ -246,7 +251,12 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
             ) : (
               <Card>
                 <CardContent className="pt-6">
-                  <CaminanteGridView caminantes={caminantes} onUpdate={refreshCaminantes} canEdit={true} />
+                  <CaminanteGridView
+                    caminantes={caminantes}
+                    onUpdate={refreshCaminantes}
+                    canEdit={servidor.tipo_servidor === "lider" || servidor.tipo_servidor === "colider"}
+                    canEditFull={servidor.tipo_servidor === "lider" || servidor.tipo_servidor === "colider"}
+                  />
                 </CardContent>
               </Card>
             )}

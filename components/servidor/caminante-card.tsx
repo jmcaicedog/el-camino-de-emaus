@@ -9,20 +9,23 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { ImageIcon, Phone, Loader2, Pill, Eye, Clipboard, UtensilsCrossed, Tablets } from "lucide-react"
+import { ImageIcon, Phone, Loader2, Pill, Eye, Clipboard, UtensilsCrossed, Tablets, Pencil } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Caminante } from "@/lib/types"
+import { PersonEditForm } from "@/components/servidor/person-edit-form"
 
 interface CaminanteCardProps {
   caminante: Caminante
   onUpdate?: () => void
   canEdit?: boolean
+  canEditFull?: boolean
 }
 
-export function CaminanteCard({ caminante, onUpdate, canEdit = true }: CaminanteCardProps) {
+export function CaminanteCard({ caminante, onUpdate, canEdit = true, canEditFull = canEdit }: CaminanteCardProps) {
   const { toast } = useToast()
   const [isUpdating, setIsUpdating] = useState(false)
   const [isEditingMedical, setIsEditingMedical] = useState(false)
+  const [isEditingFull, setIsEditingFull] = useState(false)
   const [medicamentos, setMedicamentos] = useState(caminante.medicamentos || "")
   const [restricciones, setRestricciones] = useState(caminante.restricciones_alimenticias || "")
   const [observaciones, setObservaciones] = useState(caminante.observaciones || "")
@@ -143,6 +146,26 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
       toast({ title: 'Error', description: 'No se pudo guardar la información médica', variant: 'destructive' })
     } finally {
       setIsUpdating(false)
+    }
+  }
+
+  const saveFullInfo = async (changes: Record<string, unknown>) => {
+    try {
+      const response = await fetch(`/api/caminantes/${caminante.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(changes),
+      })
+      if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        throw new Error(error?.message || "No se pudo actualizar la información")
+      }
+      toast({ title: "Actualizado", description: "Información guardada correctamente" })
+      setIsEditingFull(false)
+      onUpdate?.()
+    } catch (error) {
+      toast({ title: "Error", description: error instanceof Error ? error.message : "No se pudo guardar la información", variant: "destructive" })
+      throw error
     }
   }
 
@@ -442,10 +465,18 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
-                <DialogHeader>
+                <DialogHeader className="flex-row items-center justify-between space-y-0">
                   <DialogTitle className="text-lg md:text-xl">{caminante.nombre_completo}</DialogTitle>
+                  {canEditFull && (
+                    <Button variant="ghost" size="icon" aria-label="Editar información" title="Editar información" onClick={() => setIsEditingFull(true)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
                 </DialogHeader>
 
+                {isEditingFull && canEditFull ? (
+                  <PersonEditForm person={caminante} kind="caminante" onSave={saveFullInfo} onCancel={() => setIsEditingFull(false)} />
+                ) : (
                 <div className="space-y-1 text-sm overflow-x-hidden">
                   <div className="grid grid-cols-1 md:grid-cols-[36%_1fr] gap-4 md:gap-6 items-start">
                     <div className="relative shrink-0 flex justify-center md:justify-start">
@@ -685,6 +716,7 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true }: Caminante
                     </div>
                   </section>
                 </div>
+                )}
               </DialogContent>
             </Dialog>
         </div>

@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, Pill, UtensilsCrossed, Eye, Tablets } from "lucide-react"
+import { Loader2, Pill, UtensilsCrossed, Eye, Tablets, Pencil } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Servidor } from "@/lib/types"
 import ServidorDetails from "@/components/servidor/servidor-details"
 import { useToast } from "@/hooks/use-toast"
+import { PersonEditForm } from "@/components/servidor/person-edit-form"
 
 interface ServidorCardProps {
   servidor: Servidor
@@ -24,6 +25,7 @@ export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCar
   const [restricciones, setRestricciones] = useState(servidor.restricciones_alimenticias || "")
   const [isEditing, setIsEditing] = useState(false)
   const [isViewing, setIsViewing] = useState(false)
+  const [isEditingFull, setIsEditingFull] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
 
   const hasMedicalChanges =
@@ -53,6 +55,26 @@ export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCar
       toast({ title: "Error", description: "No se pudo actualizar", variant: "destructive" })
     } finally {
       setIsUpdating(false)
+    }
+  }
+
+  const saveFullInfo = async (changes: Record<string, unknown>) => {
+    try {
+      const response = await fetch(`/api/servidores/${servidor.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(changes),
+      })
+      if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        throw new Error(error?.message || "No se pudo actualizar la información")
+      }
+      toast({ title: "Actualizado", description: "Información guardada correctamente" })
+      setIsEditingFull(false)
+      onUpdate?.()
+    } catch (error) {
+      toast({ title: "Error", description: error instanceof Error ? error.message : "No se pudo guardar la información", variant: "destructive" })
+      throw error
     }
   }
 
@@ -239,10 +261,19 @@ export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCar
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
-              <DialogHeader>
+              <DialogHeader className="flex-row items-center justify-between space-y-0">
                 <DialogTitle className="text-lg md:text-xl">{servidor.nombre_completo}</DialogTitle>
+                {canEdit && (
+                  <Button variant="ghost" size="icon" aria-label="Editar información" title="Editar información" onClick={() => setIsEditingFull(true)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
               </DialogHeader>
-              <ServidorDetails servidor={servidor} onImageChange={handleImageChange} canEdit={canEdit} />
+              {isEditingFull ? (
+                <PersonEditForm person={servidor} kind="servidor" onSave={saveFullInfo} onCancel={() => setIsEditingFull(false)} />
+              ) : (
+                <ServidorDetails servidor={servidor} onImageChange={handleImageChange} canEdit={canEdit} />
+              )}
             </DialogContent>
           </Dialog>
         </div>

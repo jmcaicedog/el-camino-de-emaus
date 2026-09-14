@@ -11,9 +11,10 @@ interface CaminanteGridViewProps {
   caminantes: Caminante[]
   onUpdate?: () => void
   canEdit?: boolean
+  canEditFull?: boolean
 }
 
-export function CaminanteGridView({ caminantes, onUpdate, canEdit = true }: CaminanteGridViewProps) {
+export function CaminanteGridView({ caminantes, onUpdate, canEdit = true, canEditFull = canEdit }: CaminanteGridViewProps) {
   const [selectedCaminanteId, setSelectedCaminanteId] = useState<string | null>(null)
   const selectedCaminante = caminantes.find((c) => c.id === selectedCaminanteId)
 
@@ -57,6 +58,7 @@ export function CaminanteGridView({ caminantes, onUpdate, canEdit = true }: Cami
                 caminante={selectedCaminante} 
                 onUpdate={onUpdate} 
                 canEdit={canEdit}
+                canEditFull={canEditFull}
               />
             </DialogContent>
           )}

@@ -123,6 +123,16 @@ export function CaminantesManagement({ adminUser, readOnly = false, canManagePay
     return isLiderOrColider
   }
 
+  const canEditFullCaminante = (caminante: Caminante) => {
+    if (readOnly || adminUser?.is_super) return !!adminUser?.is_super && !readOnly
+    if (!adminUser || !caminante.mesa_id) return false
+    return servidores.some(s =>
+      s.auth_user_id === adminUser.id &&
+      s.mesa_id === caminante.mesa_id &&
+      (s.tipo_servidor === 'lider' || s.tipo_servidor === 'colider')
+    )
+  }
+
   const updatePayment = async () => {
     if (!selectedCaminante) return
 
@@ -431,7 +441,7 @@ export function CaminantesManagement({ adminUser, readOnly = false, canManagePay
                           <DialogHeader>
                             <DialogTitle>{caminante.nombre_completo}</DialogTitle>
                           </DialogHeader>
-                          <CaminanteCard caminante={caminante} onUpdate={loadCaminantes} canEdit={canEditCaminante(caminante)} />
+                          <CaminanteCard caminante={caminante} onUpdate={loadCaminantes} canEdit={canEditCaminante(caminante)} canEditFull={canEditFullCaminante(caminante)} />
                         </DialogContent>
                       </Dialog>
                     </TableCell>
@@ -451,7 +461,7 @@ export function CaminantesManagement({ adminUser, readOnly = false, canManagePay
                           <DialogHeader>
                             <DialogTitle>{caminante.nombre_completo}</DialogTitle>
                           </DialogHeader>
-                          <CaminanteCard caminante={caminante} onUpdate={loadCaminantes} canEdit={canEditCaminante(caminante)} />
+                          <CaminanteCard caminante={caminante} onUpdate={loadCaminantes} canEdit={canEditCaminante(caminante)} canEditFull={canEditFullCaminante(caminante)} />
                         </DialogContent>
                       </Dialog>
                     </TableCell>
@@ -566,7 +576,7 @@ export function CaminantesManagement({ adminUser, readOnly = false, canManagePay
                                             <button className="text-sm underline underline-offset-2 text-primary/90">{c.nombre_completo}</button>
                                           </DialogTrigger>
                                           <DialogContent>
-                                            <CaminanteCard caminante={c} onUpdate={loadCaminantes} canEdit={canEditCaminante(c)} />
+                                            <CaminanteCard caminante={c} onUpdate={loadCaminantes} canEdit={canEditCaminante(c)} canEditFull={canEditFullCaminante(c)} />
                                           </DialogContent>
                                         </Dialog>
                                       </li>
