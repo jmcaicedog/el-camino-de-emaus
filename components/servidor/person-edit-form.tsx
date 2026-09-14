@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import type { Caminante, Servidor } from "@/lib/types"
 
@@ -47,8 +49,12 @@ const textAreas = new Set(["condicion_especial", "medicamentos", "restricciones_
 export function PersonEditForm({ person, kind, onSave, onCancel }: PersonEditFormProps) {
   const [values, setValues] = useState<Record<string, unknown>>({ ...person })
   const [isSaving, setIsSaving] = useState(false)
+  const shirtColors = Array.isArray(values.colores_camisa) ? values.colores_camisa.map(String) : []
 
   const setValue = (field: string, value: unknown) => setValues((current) => ({ ...current, [field]: value }))
+  const toggleShirtColor = (color: string, checked: boolean) => {
+    setValue("colores_camisa", checked ? [...shirtColors, color] : shirtColors.filter((current) => current !== color))
+  }
   const renderField = (field: string, label: string, type = "text") => (
     <div key={field} className="space-y-1">
       <Label htmlFor={`edit-${kind}-${field}`}>{label}</Label>
@@ -85,6 +91,7 @@ export function PersonEditForm({ person, kind, onSave, onCancel }: PersonEditFor
             : String(values.sacramentos_recibidos ?? "").split(",").map((value) => value.trim()).filter(Boolean),
         } : {
           talla_camisa: values.talla_camisa ?? "",
+          colores_camisa: shirtColors,
           experiencia_servicio: values.experiencia_servicio ?? "",
         }),
       })
@@ -98,7 +105,33 @@ export function PersonEditForm({ person, kind, onSave, onCancel }: PersonEditFor
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {commonFields.map(([field, label, type]) => renderField(field, label, type))}
         {renderField("edad", "Edad", "number")}
-        {renderField("talla_camisa", "Talla de camisa")}
+        {kind === "servidor" ? (
+          <div className="space-y-1">
+            <Label htmlFor="edit-servidor-talla_camisa">Talla de camisa</Label>
+            <Select value={String(values.talla_camisa || "none")} onValueChange={(value) => setValue("talla_camisa", value === "none" ? "" : value)}>
+              <SelectTrigger id="edit-servidor-talla_camisa">
+                <SelectValue placeholder="Selecciona tu talla" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sin talla</SelectItem>
+                {['S', 'M', 'L', 'XL', 'XXL'].map((size) => <SelectItem key={size} value={size}>{size}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : renderField("talla_camisa", "Talla de camisa")}
+        {kind === "servidor" && (
+          <div className="space-y-2 md:col-span-2">
+            <Label>Colores de camisa necesarios</Label>
+            <div className="flex flex-wrap gap-4">
+              {['Roja', 'Azul', 'Blanca'].map((color) => (
+                <label key={color} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={shirtColors.includes(color)} onCheckedChange={(checked) => toggleShirtColor(color, checked === true)} />
+                  {color}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
         {kind === "servidor" && renderField("retiros_anteriores", "Retiros anteriores", "number")}
         {kind === "servidor" && renderField("experiencia_servicio", "Experiencia en servicio")}
         {kind === "caminante" && renderField("quien_invito", "¿Quién lo invitó?")}

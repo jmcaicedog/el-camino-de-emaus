@@ -39,6 +39,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         'empresa',
         'cargo',
         'talla_camisa',
+        'colores_camisa',
         'nombre_contacto_emergencia',
         'parentesco_contacto',
         'celular_contacto',
