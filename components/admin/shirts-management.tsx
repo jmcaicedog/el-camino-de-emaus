@@ -67,7 +67,7 @@ export function ShirtsManagement({}: ShirtsManagementProps) {
 
   const shirtServers = servers.filter((server) => {
     const colors = Array.isArray(server.colores_camisa) ? server.colores_camisa : []
-    return colors.length > 0 || Boolean(server.talla_camisa)
+    return colors.length > 0
   }).sort((a, b) => a.nombre_completo.localeCompare(b.nombre_completo, "es", { sensitivity: "base" }))
 
   const getShirtTotal = (server: Servidor) => {
