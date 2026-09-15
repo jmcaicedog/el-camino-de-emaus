@@ -374,7 +374,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         const tallas = new Map<string, { color: string; talla: string; cantidad: number }>()
         for (const caminante of caminantes || []) {
           const talla = caminante.talla_camisa || "Sin especificar"
-          const current = tallas.get(talla) || { color: "No aplica", talla, cantidad: 0 }
+          const current = tallas.get(talla) || { color: "Blanca", talla, cantidad: 0 }
           current.cantidad += 1
           tallas.set(talla, current)
         }
