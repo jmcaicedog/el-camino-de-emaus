@@ -200,6 +200,16 @@ export interface CaminanteAsistenciaResumen {
   llegada_at?: string | null
 }
 
+export interface ServidorAsistenciaResumen {
+  id: string
+  nombre_completo: string
+  celular: string
+  imagen?: string | null
+  habitacion_nombre?: string | null
+  llego: boolean
+  llegada_at?: string | null
+}
+
 export type TipoResponsable = "servidor" | "equipo" | "todos"
 
 export interface MinutoResponsable {

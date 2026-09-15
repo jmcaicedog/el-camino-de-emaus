@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getServiceClient, requireSuperAdmin } from "./utils"
-import type { CaminanteAsistenciaResumen, Mesa } from "@/lib/types"
+import type { CaminanteAsistenciaResumen, Mesa, ServidorAsistenciaResumen } from "@/lib/types"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -18,15 +18,17 @@ export async function GET() {
       { data: servidores, error: servidoresErr },
       { data: asignaciones, error: asignacionesErr },
       { data: asistencias, error: asistenciasErr },
+      { data: asistenciasServidores, error: asistenciasServidoresErr },
     ] = await Promise.all([
       service.from("caminantes").select("id, nombre_completo, celular, imagen, mesa_id").order("nombre_completo"),
       service.from("mesas").select("id, numero, nombre, created_at, updated_at").order("numero"),
-      service.from("servidores").select("mesa_id, nombre_completo, tipo_servidor").not("mesa_id", "is", null),
+      service.from("servidores").select("id, mesa_id, nombre_completo, celular, imagen, tipo_servidor").order("nombre_completo"),
       service
         .from("asignaciones_alojamiento")
         .select("persona_id, habitaciones(nombre)")
-        .eq("persona_tipo", "caminante"),
+        .in("persona_tipo", ["caminante", "servidor"]),
       service.from("asistencia_caminantes").select("caminante_id, llego, llegada_at"),
+      service.from("asistencia_servidores").select("servidor_id, llego, llegada_at"),
     ])
 
     if (caminantesErr) throw caminantesErr
@@ -34,6 +36,7 @@ export async function GET() {
     if (servidoresErr) throw servidoresErr
     if (asignacionesErr) throw asignacionesErr
     if (asistenciasErr) throw asistenciasErr
+    if (asistenciasServidoresErr) throw asistenciasServidoresErr
 
     // Build lookup maps
     const mesaMap = new Map<string, { numero: number; nombre?: string }>()
@@ -52,6 +55,11 @@ export async function GET() {
     const asistenciaMap = new Map<string, { llego: boolean; llegada_at: string | null }>()
     for (const a of asistencias ?? []) {
       asistenciaMap.set(a.caminante_id, { llego: a.llego, llegada_at: a.llegada_at })
+    }
+
+    const asistenciaServidorMap = new Map<string, { llego: boolean; llegada_at: string | null }>()
+    for (const a of asistenciasServidores ?? []) {
+      asistenciaServidorMap.set(a.servidor_id, { llego: a.llego, llegada_at: a.llegada_at })
     }
 
     const mesaResponsables: Record<string, { lider: string | null; colider: string | null }> = {}
@@ -88,8 +96,22 @@ export async function GET() {
       }
     })
 
+    const servidoresResult: ServidorAsistenciaResumen[] = (servidores ?? []).map((s: { id: string; nombre_completo: string; celular: string; imagen: string | null }) => {
+      const asistencia = asistenciaServidorMap.get(s.id)
+      return {
+        id: s.id,
+        nombre_completo: s.nombre_completo,
+        celular: s.celular,
+        imagen: s.imagen ?? null,
+        habitacion_nombre: habitacionMap.get(s.id) ?? null,
+        llego: asistencia?.llego ?? false,
+        llegada_at: asistencia?.llegada_at ?? null,
+      }
+    })
+
     return NextResponse.json({
       caminantes: result,
+      servidores: servidoresResult,
       mesas: (mesas ?? []) as Mesa[],
       mesa_responsables: mesaResponsables,
     })
