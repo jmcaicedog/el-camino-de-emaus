@@ -124,7 +124,7 @@ export function EventoCard({
             {evento.titulo}
           </h3>
           {evento.descripcion && (
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1 whitespace-pre-line line-clamp-3">
+            <p className="mt-1 whitespace-pre-line wrap-break-word text-xs text-muted-foreground sm:text-sm">
               {evento.descripcion}
             </p>
           )}

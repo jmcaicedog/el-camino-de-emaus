@@ -13,7 +13,6 @@ import {
   Plus,
   Search,
   Loader2,
-  CalendarDays,
   List,
   LayoutList,
   User,
@@ -314,74 +313,66 @@ export function MinutoDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Banner Superior */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-linear-to-r from-card to-muted/40 p-4 sm:p-6 rounded-xl border shadow-xs">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <CalendarDays className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Minuto a Minuto</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Cronograma y agenda operativa del Retiro de Emaús
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="gap-1.5"
-            title="Actualizar agenda"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Sincronizar</span>
-          </Button>
-
-          {canManage && (
-            <Button onClick={handleOpenCreate} size="sm" className="gap-1.5 shadow-sm">
-              <Plus className="h-4 w-4" />
-              <span>Nueva Actividad</span>
-            </Button>
-          )}
-        </div>
-      </div>
-
       {/* Barra de Controles y Filtros */}
       <div className="space-y-3">
         {/* Selector de Día */}
-        <div className="rounded-xl border bg-card p-2 space-y-2 lg:flex lg:items-center lg:justify-between lg:gap-3 lg:border-0 lg:bg-transparent lg:p-0 lg:space-y-0">
-          <Tabs
-            value={selectedDayKey}
-            onValueChange={(val: any) => setSelectedDayKey(val)}
-            className="w-full lg:w-auto"
-          >
-            <TabsList className="grid grid-cols-4 w-full lg:w-auto h-auto p-1">
-              {retiroDays.map((d) => (
+        <div className="space-y-2 rounded-xl border bg-card p-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <Tabs
+              value={selectedDayKey}
+              onValueChange={(val: any) => setSelectedDayKey(val)}
+              className="min-w-0 flex-1"
+            >
+              <TabsList className="grid h-auto w-full grid-cols-4 p-1">
+                {retiroDays.map((d) => (
+                  <TabsTrigger
+                    key={d.key}
+                    value={d.key}
+                    className="min-w-0 px-1 py-1.5 text-xs data-[state=active]:font-semibold sm:px-2.5 sm:text-sm"
+                  >
+                    <span className="sm:hidden">{d.name.slice(0, 3)}</span>
+                    <span className="hidden sm:inline">{d.name}</span>
+                  </TabsTrigger>
+                ))}
                 <TabsTrigger
-                  key={d.key}
-                  value={d.key}
-                  className="text-xs sm:text-sm py-1.5 px-2.5 data-[state=active]:font-semibold"
+                  value="todos"
+                  className="min-w-0 px-1 py-1.5 text-xs data-[state=active]:font-semibold sm:px-2.5 sm:text-sm"
                 >
-                  <span className="sm:hidden">{d.name.slice(0, 3)}</span>
-                  <span className="hidden sm:inline">{d.name}</span>
+                  Todos
                 </TabsTrigger>
-              ))}
-              <TabsTrigger
-                value="todos"
-                className="text-xs sm:text-sm py-1.5 px-2.5 data-[state=active]:font-semibold"
-              >
-                Todos
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+              </TabsList>
+            </Tabs>
 
-          <div className="grid min-w-0 grid-cols-1 gap-2 lg:contents">
+            <div className="flex shrink-0 items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="h-8 w-8 p-0 lg:w-auto lg:px-3"
+                title="Actualizar agenda"
+                aria-label="Actualizar agenda"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                <span className="hidden lg:inline">Sincronizar</span>
+              </Button>
+
+              {canManage && (
+                <Button
+                  onClick={handleOpenCreate}
+                  size="sm"
+                  className="h-8 w-8 p-0 shadow-sm lg:w-auto lg:px-3"
+                  title="Nueva actividad"
+                  aria-label="Nueva actividad"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden lg:inline">Nueva Actividad</span>
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-[auto_minmax(0,1fr)]">
             <div className="grid w-full grid-cols-4 items-center gap-1 rounded-lg bg-muted p-1 lg:flex lg:w-auto">
               <Button
                 variant={selectedTimePeriod === "todo" ? "default" : "ghost"}
@@ -426,57 +417,59 @@ export function MinutoDashboard() {
               </Button>
             </div>
 
-            {availableColors.length > 0 && (
-              <div className="flex min-w-0 flex-wrap items-center justify-center gap-1.5 lg:mx-auto">
-                <Button
-                  variant={selectedColorIds.length === 0 ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedColorIds([])}
-                    className="h-8 px-2.5 text-xs"
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+              {availableColors.length > 0 && (
+                <div className="flex min-w-0 flex-wrap items-center justify-center gap-1">
+                  <Button
+                    variant={selectedColorIds.length === 0 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedColorIds([])}
+                    className="h-7 w-7 p-0 text-xs sm:h-8 sm:w-auto sm:px-2.5"
                     title="Todos los colores"
-                >
+                  >
                     <span className="sm:hidden">T</span>
                     <span className="hidden sm:inline">Todos</span>
-                </Button>
-                {availableColors.map((color) => {
-                  const isSelected = selectedColorIds.includes(color.id)
-                  return (
-                    <Button
-                      key={color.id}
-                      variant={isSelected ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => toggleColorFilter(color.id)}
-                      className="h-8 w-8 p-0"
-                      title={color.label}
-                      aria-label={`Filtrar por ${color.label}`}
-                    >
-                      <span className={`h-4 w-4 rounded-full ${color.accent}`} />
-                    </Button>
-                  )
-                })}
-              </div>
-            )}
+                  </Button>
+                  {availableColors.map((color) => {
+                    const isSelected = selectedColorIds.includes(color.id)
+                    return (
+                      <Button
+                        key={color.id}
+                        variant={isSelected ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleColorFilter(color.id)}
+                        className="h-7 w-7 p-0 sm:h-8 sm:w-8"
+                        title={color.label}
+                        aria-label={`Filtrar por ${color.label}`}
+                      >
+                        <span className={`h-3.5 w-3.5 rounded-full sm:h-4 sm:w-4 ${color.accent}`} />
+                      </Button>
+                    )
+                  })}
+                </div>
+              )}
 
-            {/* Toggle de Modo de Vista (Lista vs Compacta) */}
-            <div className="flex items-center justify-center gap-1 rounded-lg bg-muted p-1 lg:justify-start">
-              <Button
-                variant={viewMode === "lista" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("lista")}
-                className="h-8 text-xs gap-1.5 px-3"
-              >
-                <List className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Detallada</span>
-              </Button>
-              <Button
-                variant={viewMode === "compacta" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("compacta")}
-                className="h-8 text-xs gap-1.5 px-3"
-              >
-                <LayoutList className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Compacta</span>
-              </Button>
+              {/* Toggle de Modo de Vista (Lista vs Compacta) */}
+              <div className="ml-auto flex shrink-0 items-center gap-1 rounded-lg bg-muted p-1">
+                <Button
+                  variant={viewMode === "lista" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("lista")}
+                  className="h-7 w-7 p-0 text-xs sm:h-8 sm:w-auto sm:px-3"
+                >
+                  <List className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Detallada</span>
+                </Button>
+                <Button
+                  variant={viewMode === "compacta" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("compacta")}
+                  className="h-7 w-7 p-0 text-xs sm:h-8 sm:w-auto sm:px-3"
+                >
+                  <LayoutList className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Compacta</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -627,16 +620,23 @@ export function MinutoDashboard() {
                             isActive ? "bg-emerald-50/40 dark:bg-emerald-950/30" : ""
                           }`}
                         >
-                          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+                          <div className="flex min-w-0 flex-1 items-start gap-2.5 sm:gap-3.5">
                             <span
                               className={`font-mono text-xs font-semibold px-2 py-0.5 rounded border whitespace-nowrap ${colorCfg.bg} ${colorCfg.text} ${colorCfg.border}`}
                             >
                               {timeRangeStr}
                             </span>
 
-                            <span className="font-semibold text-xs sm:text-sm text-foreground truncate">
-                              {evento.titulo}
-                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-semibold text-foreground sm:text-sm">
+                                {evento.titulo}
+                              </div>
+                              {evento.descripcion && (
+                                <p className="mt-0.5 whitespace-pre-line wrap-break-word text-xs text-muted-foreground">
+                                  {evento.descripcion}
+                                </p>
+                              )}
+                            </div>
 
                             {isActive && (
                               <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded shrink-0 animate-pulse">
