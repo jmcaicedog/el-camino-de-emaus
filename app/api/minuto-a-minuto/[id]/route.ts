@@ -22,6 +22,15 @@ interface RouteParams {
   params: Promise<{ id: string }>
 }
 
+function getBogotaDateKey(date: Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Bogota",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date)
+}
+
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
@@ -52,8 +61,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (typeof body.ubicacion !== "undefined") updateData.ubicacion = body.ubicacion ? body.ubicacion.trim() : null
     if (typeof body.requerimientos !== "undefined") updateData.requerimientos = body.requerimientos ? body.requerimientos.trim() : null
     if (typeof body.color === "string") updateData.color = body.color
-    if (typeof body.fecha_inicio === "string") updateData.fecha_inicio = new Date(body.fecha_inicio).toISOString()
-    if (typeof body.fecha_fin === "string") updateData.fecha_fin = new Date(body.fecha_fin).toISOString()
+    const requestedStart = typeof body.fecha_inicio === "string" ? new Date(body.fecha_inicio) : null
+    const requestedEnd = typeof body.fecha_fin === "string" ? new Date(body.fecha_fin) : null
+
+    if (requestedStart && Number.isNaN(requestedStart.getTime())) {
+      return NextResponse.json({ message: "Formato de fecha de inicio inválido" }, { status: 400 })
+    }
+    if (requestedEnd && Number.isNaN(requestedEnd.getTime())) {
+      return NextResponse.json({ message: "Formato de fecha de fin inválido" }, { status: 400 })
+    }
+
+    if (requestedStart) updateData.fecha_inicio = requestedStart.toISOString()
+    if (requestedEnd) updateData.fecha_fin = requestedEnd.toISOString()
 
     if (updateData.fecha_inicio && updateData.fecha_fin) {
       if (new Date(updateData.fecha_fin) < new Date(updateData.fecha_inicio)) {
@@ -63,12 +82,58 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const service = getServiceClient()
 
-    const { data: updatedEvento, error: updateError } = await service
+    const { data: currentEvento, error: currentError } = await service
       .from("minuto_eventos")
-      .update(updateData)
+      .select("*")
       .eq("id", id)
-      .select()
       .single()
+
+    if (currentError || !currentEvento) {
+      return NextResponse.json({ message: currentError?.message || "Evento no encontrado" }, { status: 404 })
+    }
+
+    const currentStart = new Date(currentEvento.fecha_inicio)
+    const currentEnd = new Date(currentEvento.fecha_fin)
+    const startDeltaMs = requestedStart ? requestedStart.getTime() - currentStart.getTime() : 0
+    const endDeltaMs = requestedEnd ? requestedEnd.getTime() - currentEnd.getTime() : 0
+    const deltaMs = endDeltaMs !== 0 ? endDeltaMs : startDeltaMs
+    const shouldMoveFollowing = body.mover_siguientes === true && deltaMs !== 0
+    let followingEventos: Record<string, any>[] = []
+
+    if (shouldMoveFollowing) {
+      if (requestedStart && getBogotaDateKey(requestedStart) !== getBogotaDateKey(currentStart)) {
+        return NextResponse.json({ message: "Solo se pueden mover actividades posteriores dentro del mismo día" }, { status: 400 })
+      }
+
+      const dayStart = new Date(`${getBogotaDateKey(currentStart)}T00:00:00-05:00`)
+      const nextDayStart = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+      const { data, error } = await service
+        .from("minuto_eventos")
+        .select("*")
+        .gt("fecha_inicio", currentEvento.fecha_inicio)
+        .lt("fecha_inicio", nextDayStart.toISOString())
+        .order("fecha_inicio", { ascending: true })
+
+      if (error) {
+        return NextResponse.json({ message: error.message }, { status: 400 })
+      }
+      followingEventos = data || []
+    }
+
+    const scheduleRows = [
+      { ...currentEvento, ...updateData },
+      ...followingEventos.map((evento) => ({
+        ...evento,
+        fecha_inicio: new Date(new Date(evento.fecha_inicio).getTime() + deltaMs).toISOString(),
+        fecha_fin: new Date(new Date(evento.fecha_fin).getTime() + deltaMs).toISOString(),
+      })),
+    ]
+    const { data: updatedSchedule, error: updateError } = await service
+      .from("minuto_eventos")
+      .upsert(scheduleRows, { onConflict: "id" })
+      .select()
+
+    const updatedEvento = updatedSchedule?.find((evento) => evento.id === id)
 
     if (updateError || !updatedEvento) {
       return NextResponse.json({ message: updateError?.message || "Error al actualizar evento" }, { status: 400 })
@@ -128,6 +193,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const fullEvento = {
       ...updatedEvento,
+      actividades_movidas: followingEventos.length,
       responsables: (responsablesCompletos || []).map((r: any) => ({
         id: r.id,
         evento_id: r.evento_id,

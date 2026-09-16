@@ -24,7 +24,7 @@ interface SelectedResponsable {
 interface EventoModalProps {
   isOpen: boolean
   onClose: () => void
-  onSaved: (evento: MinutoEvento) => void
+  onSaved: (evento: MinutoEvento, actividadesMovidas: number) => void
   eventoParaEditar?: MinutoEvento | null
   retiroDays: RetiroDayInfo[]
   defaultDayIndex?: number
@@ -44,6 +44,8 @@ export function EventoModal({
 }: EventoModalProps) {
   const { toast } = useToast()
   const [isSaving, setIsSaving] = useState(false)
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false)
+  const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null)
 
   const [titulo, setTitulo] = useState("")
   const [descripcion, setDescripcion] = useState("")
@@ -125,6 +127,8 @@ export function EventoModal({
     }
     setServidorSearch("")
     setEquipoSearch("")
+    setIsMoveDialogOpen(false)
+    setPendingPayload(null)
   }, [isOpen, eventoParaEditar, retiroDays, defaultDayIndex])
 
   // Calcular duración estimada
@@ -177,7 +181,50 @@ export function EventoModal({
     setResponsables((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const saveEvento = async (payload: Record<string, unknown>, moverSiguientes: boolean) => {
+    setIsSaving(true)
+
+    try {
+      const url = eventoParaEditar
+        ? `/api/minuto-a-minuto/${eventoParaEditar.id}`
+        : "/api/minuto-a-minuto"
+      const method = eventoParaEditar ? "PATCH" : "POST"
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, mover_siguientes: moverSiguientes }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.message || "Error al guardar el evento")
+      }
+
+      toast({
+        title: "Éxito",
+        description: data.actividades_movidas > 0
+          ? `Actividad actualizada y ${data.actividades_movidas} actividades posteriores movidas`
+          : eventoParaEditar ? "Evento actualizado correctamente" : "Evento creado correctamente",
+      })
+
+      onSaved(data, data.actividades_movidas || 0)
+      setIsMoveDialogOpen(false)
+      setPendingPayload(null)
+      onClose()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo guardar el evento",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!titulo.trim()) {
@@ -207,11 +254,8 @@ export function EventoModal({
       return
     }
 
-    const startIso = `${selectedDayIso}T${horaInicio}:00-05:00`
-    const endIso = `${selectedDayIso}T${horaFin}:00-05:00`
-
-    const startDate = new Date(startIso)
-    const endDate = new Date(endIso)
+    const startDate = new Date(`${selectedDayIso}T${horaInicio}:00-05:00`)
+    const endDate = new Date(`${selectedDayIso}T${horaFin}:00-05:00`)
 
     if (endDate < startDate) {
       toast({
@@ -222,57 +266,38 @@ export function EventoModal({
       return
     }
 
-    setIsSaving(true)
-
-    try {
-      const payload = {
-        titulo: titulo.trim(),
-        descripcion: descripcion.trim() || null,
-        ubicacion: ubicacion.trim() || null,
-        requerimientos: requerimientos.trim() || null,
-        fecha_inicio: startDate.toISOString(),
-        fecha_fin: endDate.toISOString(),
-        color,
-        responsables: responsables.map((r) => ({
-          tipo_responsable: r.tipo_responsable,
-          servidor_id: r.servidor_id || null,
-          equipo_id: r.equipo_id || null,
-        })),
-      }
-
-      const url = eventoParaEditar
-        ? `/api/minuto-a-minuto/${eventoParaEditar.id}`
-        : "/api/minuto-a-minuto"
-      const method = eventoParaEditar ? "PATCH" : "POST"
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.message || "Error al guardar el evento")
-      }
-
-      toast({
-        title: "Éxito",
-        description: eventoParaEditar ? "Evento actualizado correctamente" : "Evento creado correctamente",
-      })
-
-      onSaved(data)
-      onClose()
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "No se pudo guardar el evento",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSaving(false)
+    const payload = {
+      titulo: titulo.trim(),
+      descripcion: descripcion.trim() || null,
+      ubicacion: ubicacion.trim() || null,
+      requerimientos: requerimientos.trim() || null,
+      fecha_inicio: startDate.toISOString(),
+      fecha_fin: endDate.toISOString(),
+      color,
+      responsables: responsables.map((r) => ({
+        tipo_responsable: r.tipo_responsable,
+        servidor_id: r.servidor_id || null,
+        equipo_id: r.equipo_id || null,
+      })),
     }
+
+    const originalDay = eventoParaEditar
+      ? `${new Date(eventoParaEditar.fecha_inicio).getFullYear()}-${String(new Date(eventoParaEditar.fecha_inicio).getMonth() + 1).padStart(2, "0")}-${String(new Date(eventoParaEditar.fecha_inicio).getDate()).padStart(2, "0")}`
+      : null
+    const changedTime = eventoParaEditar
+      && originalDay === selectedDayIso
+      && (
+        formatTime24(eventoParaEditar.fecha_inicio) !== horaInicio
+        || formatTime24(eventoParaEditar.fecha_fin) !== horaFin
+      )
+
+    if (changedTime) {
+      setPendingPayload(payload)
+      setIsMoveDialogOpen(true)
+      return
+    }
+
+    void saveEvento(payload, false)
   }
 
   const filteredServidores = servidores.filter((s) => {
@@ -303,6 +328,7 @@ export function EventoModal({
   const isTodosSelected = responsables.some((r) => r.tipo_responsable === "todos")
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-4 md:p-6">
         <DialogHeader>
@@ -733,5 +759,34 @@ export function EventoModal({
         </form>
       </DialogContent>
     </Dialog>
+    <Dialog open={isMoveDialogOpen} onOpenChange={setIsMoveDialogOpen}>
+      <DialogContent className="md:max-w-lg" showCloseButton={!isSaving}>
+        <DialogHeader>
+          <DialogTitle>¿Cómo deseas aplicar el cambio de hora?</DialogTitle>
+          <DialogDescription>
+            Puedes modificar solo esta actividad o mover por la misma cantidad de minutos todas las actividades posteriores de este día.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSaving}
+            onClick={() => pendingPayload && void saveEvento(pendingPayload, false)}
+          >
+            Solo esta actividad
+          </Button>
+          <Button
+            type="button"
+            disabled={isSaving}
+            onClick={() => pendingPayload && void saveEvento(pendingPayload, true)}
+          >
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Mover las siguientes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

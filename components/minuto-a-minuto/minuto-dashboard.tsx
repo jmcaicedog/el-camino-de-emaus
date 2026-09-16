@@ -128,7 +128,12 @@ export function MinutoDashboard() {
     setIsModalOpen(true)
   }
 
-  const handleSaveEvento = (savedEvento: MinutoEvento) => {
+  const handleSaveEvento = (savedEvento: MinutoEvento, actividadesMovidas: number) => {
+    if (actividadesMovidas > 0) {
+      void loadAllData()
+      return
+    }
+
     setEventos((prev) => {
       const exists = prev.some((e) => e.id === savedEvento.id)
       if (exists) {
