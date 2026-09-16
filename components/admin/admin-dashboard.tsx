@@ -153,53 +153,52 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center">
               <Image src={logoSrc} alt="El Camino de Emaús" width={40} height={40} className="object-contain flex-shrink-0 md:w-[50px] md:h-[50px]" />
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg md:text-2xl font-bold truncate">Panel de Administración</h1>
-                <div className="mt-0.5 flex flex-col items-start gap-1 text-xs md:text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-2">
-                  <span className="max-w-[170px] truncate sm:max-w-none">{adminUser.nombre_completo}</span>
-                  {pagoServidor ? (
-                    <Badge variant="secondary" className={getPaymentBadgeClass(pagoServidor.status)}>
-                      {pagoServidor.text}
-                    </Badge>
-                  ) : null}
-                </div>
-              </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {adminUser.is_super && <SystemSettingsPanel />}
-              {(adminUser.is_super || isContabilidadTeam) && (
-                <Link href="/admin/camisas">
-                  <Button variant="outline" size="icon" aria-label="Abrir panel de camisas" title="Panel de camisas">
-                    <Shirt className="h-4 w-4" />
+            <div className="flex min-w-0 flex-col items-end gap-1.5">
+              <div className="flex shrink-0 items-center gap-1 md:gap-2">
+                {adminUser.is_super && <SystemSettingsPanel />}
+                {(adminUser.is_super || isContabilidadTeam) && (
+                  <Link href="/admin/camisas">
+                    <Button variant="outline" size="icon" aria-label="Abrir panel de camisas" title="Panel de camisas">
+                      <Shirt className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+                {(adminUser.is_super || isLogisticaTeam) && (
+                  <Link href="/admin/alojamiento">
+                    <Button variant="outline" size="icon" aria-label="Abrir módulo de alojamiento" title="Alojamiento">
+                      <Building2 className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+                {(adminUser.is_super || isLogisticaTeam) && (
+                  <Link href="/admin/asistencia">
+                    <Button variant="outline" size="icon" aria-label="Abrir control de asistencia" title="Control de asistencia">
+                      <ClipboardCheck className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+                <Link href="/minuto-a-minuto">
+                  <Button variant="outline" size="icon" aria-label="Abrir Minuto a Minuto" title="Minuto a Minuto">
+                    <Timer className="h-4 w-4" />
                   </Button>
                 </Link>
-              )}
-              {(adminUser.is_super || isLogisticaTeam) && (
-                <Link href="/admin/alojamiento">
-                  <Button variant="outline" size="icon" aria-label="Abrir módulo de alojamiento" title="Alojamiento">
-                    <Building2 className="h-4 w-4" />
-                  </Button>
-                </Link>
-              )}
-              {(adminUser.is_super || isLogisticaTeam) && (
-                <Link href="/admin/asistencia">
-                  <Button variant="outline" size="icon" aria-label="Abrir control de asistencia" title="Control de asistencia">
-                    <ClipboardCheck className="h-4 w-4" />
-                  </Button>
-                </Link>
-              )}
-              <Link href="/minuto-a-minuto">
-                <Button variant="outline" size="icon" aria-label="Abrir Minuto a Minuto" title="Minuto a Minuto">
-                  <Timer className="h-4 w-4" />
+                <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
+                  <LogOut className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Cerrar Sesión</span>
                 </Button>
-              </Link>
-              <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
-                <LogOut className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Cerrar Sesión</span>
-              </Button>
+              </div>
+              <div className="flex max-w-full flex-wrap items-center justify-end gap-1 text-xs text-muted-foreground md:text-sm">
+                <span className="max-w-55 truncate sm:max-w-none">{adminUser.nombre_completo}</span>
+                {pagoServidor ? (
+                  <Badge variant="secondary" className={getPaymentBadgeClass(pagoServidor.status)}>
+                    {pagoServidor.text}
+                  </Badge>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

@@ -381,13 +381,13 @@ export function MinutoDashboard() {
             </TabsList>
           </Tabs>
 
-          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 lg:contents">
-            <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+          <div className="grid min-w-0 grid-cols-1 gap-2 lg:contents">
+            <div className="grid w-full grid-cols-4 items-center gap-1 rounded-lg bg-muted p-1 lg:flex lg:w-auto">
               <Button
                 variant={selectedTimePeriod === "todo" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setSelectedTimePeriod("todo")}
-                className="h-8 px-2.5 text-xs"
+                className="h-8 min-w-0 px-2.5 text-xs"
               >
                 Todo
               </Button>
@@ -427,7 +427,7 @@ export function MinutoDashboard() {
             </div>
 
             {availableColors.length > 0 && (
-              <div className="flex min-w-0 items-center justify-center gap-1.5 lg:mx-auto lg:justify-center">
+              <div className="flex min-w-0 flex-wrap items-center justify-center gap-1.5 lg:mx-auto">
                 <Button
                   variant={selectedColorIds.length === 0 ? "default" : "outline"}
                   size="sm"
@@ -458,7 +458,7 @@ export function MinutoDashboard() {
             )}
 
             {/* Toggle de Modo de Vista (Lista vs Compacta) */}
-            <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+            <div className="flex items-center justify-center gap-1 rounded-lg bg-muted p-1 lg:justify-start">
               <Button
                 variant={viewMode === "lista" ? "default" : "ghost"}
                 size="sm"
