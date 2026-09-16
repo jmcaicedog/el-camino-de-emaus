@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Clock, MapPin, Users, User, Edit3, Trash2, Phone, ClipboardList } from "lucide-react"
+import { Clock, MapPin, Users, User, Edit3, Trash2, Phone, ClipboardList, Copy, Loader2 } from "lucide-react"
 import { getColorConfig } from "./minuto-colors"
 import { formatTimeRange, getDurationLabel, isEventActiveNow, isEventUpcoming } from "./minuto-helpers"
 import type { MinutoEvento } from "@/lib/types"
@@ -12,7 +12,9 @@ interface EventoCardProps {
   evento: MinutoEvento
   canManage?: boolean
   onEdit?: (evento: MinutoEvento) => void
+  onClone?: (evento: MinutoEvento) => void
   onDelete?: (eventoId: string) => void
+  isCloning?: boolean
   layout?: "list" | "compact"
 }
 
@@ -20,7 +22,9 @@ export function EventoCard({
   evento,
   canManage = false,
   onEdit,
+  onClone,
   onDelete,
+  isCloning = false,
   layout = "list",
 }: EventoCardProps) {
   const colorCfg = getColorConfig(evento.color)
@@ -84,6 +88,19 @@ export function EventoCard({
                   title="Editar actividad"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {onClone && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={() => onClone(evento)}
+                  disabled={isCloning}
+                  title="Clonar actividad después de esta"
+                  aria-label="Clonar actividad después de esta"
+                >
+                  {isCloning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
                 </Button>
               )}
               {onDelete && (

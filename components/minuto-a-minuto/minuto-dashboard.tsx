@@ -23,7 +23,11 @@ import {
   RefreshCw,
   Info,
   Edit3,
+  Copy,
   Trash2,
+  Sunrise,
+  Sun,
+  Moon,
 } from "lucide-react"
 import { EventoModal } from "./evento-modal"
 import { EventoCard } from "./evento-card"
@@ -50,13 +54,14 @@ export function MinutoDashboard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [onlyMine, setOnlyMine] = useState(false)
   const [selectedColorIds, setSelectedColorIds] = useState<string[]>([])
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState<"todo" | "am" | "pm">("todo")
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState<"todo" | "manana" | "tarde" | "noche">("todo")
 
   // Modales
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [eventoParaEditar, setEventoParaEditar] = useState<MinutoEvento | null>(null)
   const [eventoParaEliminar, setEventoParaEliminar] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [cloningEventoId, setCloningEventoId] = useState<string | null>(null)
 
   const retiroDays = useMemo<RetiroDayInfo[]>(() => {
     return getRetiroDays(retiroSettings?.retiro_datetime)
@@ -143,6 +148,34 @@ export function MinutoDashboard() {
     })
   }
 
+  const handleCloneEvento = async (evento: MinutoEvento) => {
+    setCloningEventoId(evento.id)
+    try {
+      const res = await fetch(`/api/minuto-a-minuto/${evento.id}/clone`, { method: "POST" })
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.message || "No se pudo clonar la actividad")
+      }
+
+      await loadAllData()
+      toast({
+        title: "Actividad clonada",
+        description: data.actividades_movidas > 0
+          ? `La copia se agregó después de la original y se movieron ${data.actividades_movidas} actividades posteriores`
+          : "La copia se agregó inmediatamente después de la original",
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error al clonar",
+        description: error.message || "No se pudo clonar la actividad",
+        variant: "destructive",
+      })
+    } finally {
+      setCloningEventoId(null)
+    }
+  }
+
   const handleDeleteEvento = async () => {
     if (!eventoParaEliminar) return
     setIsDeleting(true)
@@ -182,11 +215,19 @@ export function MinutoDashboard() {
     )
   }
 
-  const getTimePeriod = (fechaInicio: string) => new Date(fechaInicio).getHours() < 12 ? "am" : "pm"
+  const getTimePeriod = (fechaInicio: string): "manana" | "tarde" | "noche" => {
+    const hour = new Date(fechaInicio).getHours()
+    if (hour < 12) return "manana"
+    if (hour < 18) return "tarde"
+    return "noche"
+  }
 
-  const shouldShowAfternoonDivider = (dayEvents: MinutoEvento[], index: number) => {
+  const getPeriodDividerLabel = (dayEvents: MinutoEvento[], index: number) => {
     if (selectedTimePeriod !== "todo" || index === 0) return false
-    return getTimePeriod(dayEvents[index - 1].fecha_inicio) === "am" && getTimePeriod(dayEvents[index].fecha_inicio) === "pm"
+    const previousPeriod = getTimePeriod(dayEvents[index - 1].fecha_inicio)
+    const currentPeriod = getTimePeriod(dayEvents[index].fecha_inicio)
+    if (previousPeriod === currentPeriod) return false
+    return currentPeriod === "tarde" ? "Tarde" : "Noche"
   }
 
   // Filtrado de eventos
@@ -351,20 +392,37 @@ export function MinutoDashboard() {
                 Todo
               </Button>
               <Button
-                variant={selectedTimePeriod === "am" ? "default" : "ghost"}
+                variant={selectedTimePeriod === "manana" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setSelectedTimePeriod("am")}
-                className="h-8 px-2.5 text-xs"
+                onClick={() => setSelectedTimePeriod("manana")}
+                className="h-8 w-8 p-0 text-xs sm:w-auto sm:px-2.5"
+                title="Mañana"
+                aria-label="Filtrar actividades de la mañana"
               >
-                AM
+                <Sunrise className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Mañana</span>
               </Button>
               <Button
-                variant={selectedTimePeriod === "pm" ? "default" : "ghost"}
+                variant={selectedTimePeriod === "tarde" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setSelectedTimePeriod("pm")}
-                className="h-8 px-2.5 text-xs"
+                onClick={() => setSelectedTimePeriod("tarde")}
+                className="h-8 w-8 p-0 text-xs sm:w-auto sm:px-2.5"
+                title="Tarde"
+                aria-label="Filtrar actividades de la tarde"
               >
-                PM
+                <Sun className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Tarde</span>
+              </Button>
+              <Button
+                variant={selectedTimePeriod === "noche" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedTimePeriod("noche")}
+                className="h-8 w-8 p-0 text-xs sm:w-auto sm:px-2.5"
+                title="Noche"
+                aria-label="Filtrar actividades de la noche"
+              >
+                <Moon className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Noche</span>
               </Button>
             </div>
 
@@ -508,10 +566,10 @@ export function MinutoDashboard() {
                 <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
                   {dayEvents.map((evento, index) => (
                     <Fragment key={evento.id}>
-                      {shouldShowAfternoonDivider(dayEvents, index) && (
+                      {getPeriodDividerLabel(dayEvents, index) && (
                         <div className="flex items-center gap-3 py-1.5 text-xs font-semibold text-muted-foreground">
                           <div className="h-px flex-1 bg-border" />
-                          <span>Tarde</span>
+                          <span>{getPeriodDividerLabel(dayEvents, index)}</span>
                           <div className="h-px flex-1 bg-border" />
                         </div>
                       )}
@@ -519,7 +577,9 @@ export function MinutoDashboard() {
                         evento={evento}
                         canManage={canManage}
                         onEdit={handleOpenEdit}
+                        onClone={handleCloneEvento}
                         onDelete={(id) => setEventoParaEliminar(id)}
+                        isCloning={cloningEventoId === evento.id}
                       />
                     </Fragment>
                   ))}
@@ -555,10 +615,10 @@ export function MinutoDashboard() {
 
                     return (
                       <Fragment key={evento.id}>
-                        {shouldShowAfternoonDivider(dayEvents, index) && (
+                        {getPeriodDividerLabel(dayEvents, index) && (
                           <div className="flex items-center gap-3 bg-muted/30 px-3 py-2 text-xs font-semibold text-muted-foreground sm:px-4">
                             <div className="h-px flex-1 bg-border" />
-                            <span>Tarde</span>
+                            <span>{getPeriodDividerLabel(dayEvents, index)}</span>
                             <div className="h-px flex-1 bg-border" />
                           </div>
                         )}
@@ -596,6 +656,19 @@ export function MinutoDashboard() {
                                 title="Editar actividad"
                               >
                                 <Edit3 className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                onClick={() => handleCloneEvento(evento)}
+                                disabled={cloningEventoId === evento.id}
+                                title="Clonar actividad después de esta"
+                                aria-label="Clonar actividad después de esta"
+                              >
+                                {cloningEventoId === evento.id
+                                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  : <Copy className="h-3.5 w-3.5" />}
                               </Button>
                               <Button
                                 size="icon"
