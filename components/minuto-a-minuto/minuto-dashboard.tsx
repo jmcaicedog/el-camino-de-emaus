@@ -628,14 +628,9 @@ export function MinutoDashboard() {
                             </span>
 
                             <div className="min-w-0 flex-1">
-                              <div className="truncate text-xs font-semibold text-foreground sm:text-sm">
+                              <div className="whitespace-normal wrap-break-word text-xs font-semibold leading-snug text-foreground sm:text-sm">
                                 {evento.titulo}
                               </div>
-                              {evento.descripcion && (
-                                <p className="mt-0.5 whitespace-pre-line wrap-break-word text-xs text-muted-foreground">
-                                  {evento.descripcion}
-                                </p>
-                              )}
                             </div>
 
                             {isActive && (
