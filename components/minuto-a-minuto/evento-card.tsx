@@ -97,8 +97,8 @@ export function EventoCard({
                   className="h-7 w-7 text-muted-foreground hover:text-foreground"
                   onClick={() => onClone(evento)}
                   disabled={isCloning}
-                  title="Clonar actividad después de esta"
-                  aria-label="Clonar actividad después de esta"
+                  title="Clonar actividad (copia exacta)"
+                  aria-label="Clonar actividad (copia exacta)"
                 >
                   {isCloning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
                 </Button>

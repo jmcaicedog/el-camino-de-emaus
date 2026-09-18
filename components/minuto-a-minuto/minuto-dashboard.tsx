@@ -160,9 +160,7 @@ export function MinutoDashboard() {
       await loadAllData()
       toast({
         title: "Actividad clonada",
-        description: data.actividades_movidas > 0
-          ? `La copia se agregó después de la original y se movieron ${data.actividades_movidas} actividades posteriores`
-          : "La copia se agregó inmediatamente después de la original",
+        description: "Se creó una copia exacta con el mismo día y hora de la original",
       })
     } catch (error: any) {
       toast({
@@ -658,8 +656,8 @@ export function MinutoDashboard() {
                                 className="h-7 w-7 text-muted-foreground hover:text-foreground"
                                 onClick={() => handleCloneEvento(evento)}
                                 disabled={cloningEventoId === evento.id}
-                                title="Clonar actividad después de esta"
-                                aria-label="Clonar actividad después de esta"
+                                title="Clonar actividad (copia exacta)"
+                                aria-label="Clonar actividad (copia exacta)"
                               >
                                 {cloningEventoId === evento.id
                                   ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
