@@ -44,6 +44,7 @@ export function exportMinutoPDF({ eventos, retiroDays, selectedDayKey, columns }
 
   let cursorY = 27
   const daysToRender = retiroDays.filter((d) => selectedDayKey === "todos" || d.key === selectedDayKey)
+  let isFirstRenderedDay = true
 
   daysToRender.forEach((day) => {
     const dayEvents = eventos
@@ -52,13 +53,17 @@ export function exportMinutoPDF({ eventos, retiroDays, selectedDayKey, columns }
 
     if (dayEvents.length === 0) return
 
-    if (cursorY > 30) {
-      doc.setFontSize(11)
-      doc.setFont("helvetica", "bold")
-      doc.text(day.fullLabel, marginX, cursorY)
-      doc.setFont("helvetica", "normal")
-      cursorY += 3
+    if (!isFirstRenderedDay) {
+      doc.addPage()
+      cursorY = 15
     }
+    isFirstRenderedDay = false
+
+    doc.setFontSize(11)
+    doc.setFont("helvetica", "bold")
+    doc.text(day.fullLabel, marginX, cursorY)
+    doc.setFont("helvetica", "normal")
+    cursorY += 5
 
     const body = dayEvents.map((ev) => {
       const row = [formatTimeRange(ev.fecha_inicio, ev.fecha_fin), ev.titulo]
