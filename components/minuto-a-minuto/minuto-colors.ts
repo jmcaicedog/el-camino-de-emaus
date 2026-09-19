@@ -98,3 +98,25 @@ export function getColorConfig(colorId?: string | null): MinutoColorConfig {
   }
   return MINUTO_COLORS[colorId]
 }
+
+// Equivalentes RGB de la paleta Tailwind usada arriba, para renderizado en PDF (jsPDF no lee clases CSS)
+export interface MinutoColorRGB {
+  fill: [number, number, number] // tono claro (fondo de fila)
+  border: [number, number, number] // tono medio (borde/acento)
+}
+
+export const MINUTO_COLOR_RGB: Record<string, MinutoColorRGB> = {
+  sky: { fill: [240, 249, 255], border: [14, 165, 233] },
+  emerald: { fill: [236, 253, 245], border: [16, 185, 129] },
+  amber: { fill: [255, 251, 235], border: [245, 158, 11] },
+  purple: { fill: [250, 245, 255], border: [168, 85, 247] },
+  rose: { fill: [255, 241, 242], border: [244, 63, 94] },
+  orange: { fill: [255, 247, 237], border: [249, 115, 22] },
+  indigo: { fill: [238, 242, 255], border: [99, 102, 241] },
+  slate: { fill: [248, 250, 252], border: [100, 116, 139] },
+}
+
+export function getColorRGB(colorId?: string | null): MinutoColorRGB {
+  const id = getColorConfig(colorId).id
+  return MINUTO_COLOR_RGB[id] || MINUTO_COLOR_RGB.sky
+}

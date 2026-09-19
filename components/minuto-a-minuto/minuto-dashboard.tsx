@@ -27,9 +27,12 @@ import {
   Sunrise,
   Sun,
   Moon,
+  FileDown,
 } from "lucide-react"
 import { EventoModal } from "./evento-modal"
 import { EventoCard } from "./evento-card"
+import { ExportColumnsDialog } from "./export-columns-dialog"
+import { exportMinutoPDF, type MinutoPdfColumns } from "./minuto-pdf-export"
 import { getRetiroDays, type RetiroDayInfo, formatISODate, formatTimeRange, getDurationLabel, isEventActiveNow } from "./minuto-helpers"
 import { getColorConfig, MINUTO_COLORS } from "./minuto-colors"
 import type { MinutoEvento, Servidor, Equipo } from "@/lib/types"
@@ -61,6 +64,7 @@ export function MinutoDashboard() {
   const [eventoParaEliminar, setEventoParaEliminar] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [cloningEventoId, setCloningEventoId] = useState<string | null>(null)
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
 
   const retiroDays = useMemo<RetiroDayInfo[]>(() => {
     return getRetiroDays(retiroSettings?.retiro_datetime)
@@ -300,6 +304,15 @@ export function MinutoDashboard() {
   const defaultDayIndex = selectedDayInfo ? selectedDayInfo.index : 0
   const hasActiveFilters = Boolean(searchTerm.trim()) || selectedColorIds.length > 0 || selectedTimePeriod !== "todo"
 
+  const handleExportPDF = (columns: MinutoPdfColumns) => {
+    exportMinutoPDF({
+      eventos: filteredEventos,
+      retiroDays,
+      selectedDayKey,
+      columns,
+    })
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-3">
@@ -495,6 +508,17 @@ export function MinutoDashboard() {
               <span>Mis actividades asignadas</span>
             </Button>
           )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsExportDialogOpen(true)}
+            className="h-9 text-xs gap-1.5 shrink-0"
+            disabled={filteredEventos.length === 0}
+          >
+            <FileDown className="h-3.5 w-3.5" />
+            <span>Exportar PDF</span>
+          </Button>
 
         </div>
 
@@ -710,6 +734,14 @@ export function MinutoDashboard() {
         description="Esta acción eliminará la actividad y sus asignaciones del minuto a minuto. ¿Deseas continuar?"
         onConfirm={handleDeleteEvento}
         confirmLabel="Eliminar"
+      />
+
+      {/* Modal de Selección de Columnas para Exportar PDF */}
+      <ExportColumnsDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+        onConfirm={handleExportPDF}
+        eventCount={filteredEventos.length}
       />
     </div>
   )
