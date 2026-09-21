@@ -58,6 +58,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   let columns: { key: string; label: string }[] = []
   let summaryData: any[] = []
   let summaryColumns: { key: string; label: string }[] = []
+  let restrictionSections: { name: string; data: any[] }[] = []
   let title = ""
 
     switch (type) {
@@ -282,37 +283,33 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         const { data: mesas } = await supabase.from("mesas").select("id, numero")
         const mesaById = new Map((mesas || []).map((mesa) => [mesa.id, mesa.numero]))
 
-        data = [
-          ...(caminantes?.filter((c) => c.medicamentos || c.restricciones_alimenticias || c.condicion_especial).map((c) => ({
-            tipo: "Caminante",
+        const caminantesConRestricciones = caminantes?.filter(
+          (c) => c.medicamentos || c.restricciones_alimenticias || c.condicion_especial,
+        ).map((c) => ({
             mesa_numero: c.mesa_id ? mesaById.get(c.mesa_id) ?? "Sin mesa" : "Sin mesa",
             nombre: c.nombre_completo,
-            celular: c.celular,
-            eps: c.eps,
-            tipo_sangre: c.tipo_sangre,
             medicamentos: c.medicamentos || "Ninguno",
             restricciones_alimenticias: c.restricciones_alimenticias || "Ninguna",
             condicion_especial: c.condicion_especial || "Ninguna",
-          })) || []),
-          ...(servidores?.filter((s) => s.medicamentos || s.restricciones_alimenticias || s.condicion_especial).map((s) => ({
-            tipo: "Servidor",
+          })) || []
+        const servidoresConRestricciones = servidores?.filter(
+          (s) => s.medicamentos || s.restricciones_alimenticias || s.condicion_especial,
+        ).map((s) => ({
             mesa_numero: "N/A",
             nombre: s.nombre_completo,
-            celular: s.celular,
-            eps: s.eps,
-            tipo_sangre: s.tipo_sangre,
             medicamentos: s.medicamentos || "Ninguno",
             restricciones_alimenticias: s.restricciones_alimenticias || "Ninguna",
             condicion_especial: s.condicion_especial || "Ninguna",
-          })) || []),
+          })) || []
+
+        restrictionSections = [
+          { name: "Caminantes", data: caminantesConRestricciones },
+          { name: "Servidores", data: servidoresConRestricciones },
         ]
+        data = [...caminantesConRestricciones, ...servidoresConRestricciones]
         columns = [
-          { key: "tipo", label: "Tipo" },
           { key: "mesa_numero", label: "Mesa #" },
           { key: "nombre", label: "Nombre" },
-          { key: "celular", label: "Celular" },
-          { key: "eps", label: "EPS" },
-          { key: "tipo_sangre", label: "Tipo de Sangre" },
           { key: "medicamentos", label: "Medicamentos" },
           { key: "restricciones_alimenticias", label: "Restricciones Alimenticias" },
           { key: "condicion_especial", label: "Condición Especial" },
@@ -549,45 +546,64 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     data = normalizeReportNames(data)
+    restrictionSections = restrictionSections.map((section) => ({
+      ...section,
+      data: normalizeReportNames(section.data),
+    }))
 
     if (format === "excel") {
       try {
         const workbook = new ExcelJS.Workbook()
-        const sheet = workbook.addWorksheet(title || "Reporte")
+        const sections = restrictionSections.length > 0 ? restrictionSections : [{ name: title || "Reporte", data }]
 
-        // Add header row
-        sheet.addRow(columns.map((c) => c.label))
-        // Bold header
-        const headerRow = sheet.getRow(1)
-        headerRow.font = { bold: true }
+        for (const section of sections) {
+          const sheet = workbook.addWorksheet(section.name)
+          sheet.addRow(columns.map((c) => c.label))
+          sheet.getRow(1).font = { bold: true }
 
-        // Add data rows with typed values so Excel recognizes numbers/dates
-        data.forEach((item) => {
-          const typedRow = columns.map((col) => {
-            const v = item[col.key]
-            if (v === null || v === undefined) return ""
+          section.data.forEach((item) => {
+            const typedRow = columns.map((col) => {
+              const v = item[col.key]
+              if (v === null || v === undefined) return ""
+              if (Array.isArray(v)) return v.join(", ")
+              if (typeof v === "object") return JSON.stringify(v)
+              if (typeof v === "number") return v
+              if (typeof v === "string") {
+                const maybeNumber = Number(v)
+                if (!Number.isNaN(maybeNumber) && String(maybeNumber) === v.trim()) return maybeNumber
 
-            // Handle arrays and objects
-            if (Array.isArray(v)) return v.join(", ")
-            if (typeof v === "object") return JSON.stringify(v)
+                const maybeDate = new Date(v)
+                if (!Number.isNaN(maybeDate.getTime()) && /\d{4}-\d{2}-\d{2}/.test(v)) return maybeDate
 
-            // Detect numeric values
-            if (typeof v === "number") return v
-            if (typeof v === "string") {
-              const maybeNumber = Number(v)
-              if (!Number.isNaN(maybeNumber) && String(maybeNumber) === v.trim()) return maybeNumber
-
-              // Detect ISO date strings
-              const maybeDate = new Date(v)
-              if (!Number.isNaN(maybeDate.getTime()) && /\d{4}-\d{2}-\d{2}/.test(v)) return maybeDate
-
-              return v
-            }
-
-            return String(v)
+                return v
+              }
+              return String(v)
+            })
+            sheet.addRow(typedRow)
           })
-          sheet.addRow(typedRow)
-        })
+
+          sheet.columns.forEach((col, idx) => {
+            try {
+              let maxLength = 10
+              if (col && typeof (col as any).eachCell === "function") {
+                ;(col as any).eachCell({ includeEmpty: true }, (cell: any) => {
+                  const len = cell && cell.value ? String(cell.value).length : 0
+                  if (len > maxLength) maxLength = len
+                })
+              }
+              ;(col as any).width = Math.min(Math.max(maxLength + 2, 10), 80)
+              const key = columns[idx] && columns[idx].key ? columns[idx].key.toLowerCase() : ""
+              if (/(monto|saldo|total|pagado|amount|price)/i.test(key)) {
+                ;(sheet.getColumn(idx + 1) as any).numFmt = '#,##0.00'
+              }
+              if (/(fecha|date|created_at|updated_at)/i.test(key)) {
+                ;(sheet.getColumn(idx + 1) as any).numFmt = 'dd/mm/yyyy'
+              }
+            } catch (e) {
+              // ignore formatting errors
+            }
+          })
+        }
 
         if (summaryColumns.length > 0) {
           const summarySheet = workbook.addWorksheet("Resumen")
@@ -598,37 +614,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             column.width = 18
           })
         }
-
-        // Simple formatting: set column widths and number/date formats when applicable
-        sheet.columns.forEach((col, idx) => {
-          try {
-            // calculate max length
-            let maxLength = 10
-            if (col && typeof (col as any).eachCell === "function") {
-              ;(col as any).eachCell({ includeEmpty: true }, (cell: any) => {
-                const len = cell && cell.value ? String(cell.value).length : 0
-                if (len > maxLength) maxLength = len
-              })
-            }
-            ;(col as any).width = Math.min(Math.max(maxLength + 2, 10), 80)
-
-            // Determine the original key for this column
-            const key = columns[idx] && columns[idx].key ? columns[idx].key.toLowerCase() : ""
-
-            // Numeric/monetary columns
-            if (/(monto|saldo|total|pagado|amount|price)/i.test(key)) {
-              // Apply currency/number format
-              ;(sheet.getColumn(idx + 1) as any).numFmt = '#,##0.00'
-            }
-
-            // Date-like columns
-            if (/(fecha|date|created_at|updated_at)/i.test(key)) {
-              ;(sheet.getColumn(idx + 1) as any).numFmt = 'dd/mm/yyyy'
-            }
-          } catch (e) {
-            // ignore formatting errors
-          }
-        })
 
         const buffer = await workbook.xlsx.writeBuffer()
 
@@ -654,6 +639,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         html = generateFichaHTML(data, title, paperSize, orientation);
       } else if (type === "verificacion-existencia") {
         html = generateVerificacionExistenciaHTML(data, title)
+      } else if (type === "restricciones") {
+        html = generateRestriccionesHTML(restrictionSections, columns, title)
       } else if (type === "servidores") {
         html = generateHTML(data, columns, title);
       } else if (summaryColumns.length > 0) {
@@ -1008,6 +995,55 @@ function generateHTML(data: any[], columns: { key: string; label: string }[], ti
           ${tableRows}
         </tbody>
       </table>
+    </body>
+    </html>
+  `
+}
+
+function generateRestriccionesHTML(
+  sections: { name: string; data: any[] }[],
+  columns: { key: string; label: string }[],
+  title: string,
+): string {
+  const renderTable = (section: { name: string; data: any[] }) => `
+    <h2>${escapeHtml(section.name)}</h2>
+    <table>
+      <thead>
+        <tr>${columns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join("")}</tr>
+      </thead>
+      <tbody>
+        ${section.data.map((item) => `
+          <tr>${columns
+            .map((column) => `<td>${escapeHtml(formatValue(item[column.key])).replace(/\n/g, "<br>")}</td>`)
+            .join("")}</tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>${escapeHtml(title)}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #333; }
+        h2 { margin-top: 28px; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0 28px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .date { color: #666; font-size: 14px; }
+        @media print { button { display: none; } }
+      </style>
+    </head>
+    <body>
+      <h1>${escapeHtml(title)}</h1>
+      <p class="date">Fecha: ${new Date().toLocaleDateString("es-CO")}</p>
+      <button onclick="window.print()">Imprimir / Guardar como PDF</button>
+      ${sections.map(renderTable).join("")}
     </body>
     </html>
   `
