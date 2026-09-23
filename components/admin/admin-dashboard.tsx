@@ -35,6 +35,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const [isMesaRegistroTeam, setIsMesaRegistroTeam] = useState(false)
   const [isAdditionalTeam, setIsAdditionalTeam] = useState(false)
   const [pagoServidor, setPagoServidor] = useState<{ text: string; status: "zero" | "partial" | "complete" } | null>(null)
+  const [alojamientoServidor, setAlojamientoServidor] = useState<{ edificio_nombre: string; habitacion_nombre: string } | null>(null)
 
   const getPaymentBadgeClass = (status: "zero" | "partial" | "complete") => {
     if (status === "zero") return "bg-red-100 text-red-800 border-red-300"
@@ -89,6 +90,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             text: `$${montoPagado.toLocaleString("es-CO")} / $${montoTotal.toLocaleString("es-CO")}`,
             status,
           })
+          setAlojamientoServidor(myServidor.alojamiento || null)
         }
         const myEquipos: string[] = (myServidor?.equipos || []).map((e: string) => e.normalize('NFC').toLowerCase())
         const equiposConPermisoDefinido = [
@@ -193,6 +195,14 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
               </div>
               <div className="flex max-w-full flex-wrap items-center justify-end gap-1 text-xs text-muted-foreground md:text-sm">
                 <span className="max-w-55 truncate sm:max-w-none">{adminUser.nombre_completo}</span>
+                {alojamientoServidor ? (
+                  <span className="flex min-w-0 items-center gap-1">
+                    <Building2 className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{alojamientoServidor.edificio_nombre}</span>
+                    <span aria-hidden="true">-</span>
+                    <span className="truncate">{alojamientoServidor.habitacion_nombre}</span>
+                  </span>
+                ) : null}
                 {pagoServidor ? (
                   <Badge variant="secondary" className={getPaymentBadgeClass(pagoServidor.status)}>
                     {pagoServidor.text}
