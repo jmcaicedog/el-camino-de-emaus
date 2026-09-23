@@ -161,6 +161,11 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             </div>
             <div className="flex min-w-0 flex-col items-end gap-1.5">
               <div className="flex shrink-0 items-center gap-1 md:gap-2">
+                {pagoServidor ? (
+                  <Badge variant="secondary" className={getPaymentBadgeClass(pagoServidor.status)}>
+                    {pagoServidor.text}
+                  </Badge>
+                ) : null}
                 {adminUser.is_super && <SystemSettingsPanel />}
                 {(adminUser.is_super || isContabilidadTeam) && (
                   <Link href="/admin/camisas">
@@ -205,11 +210,6 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                     </span>
                   ) : null}
                 </div>
-                {pagoServidor ? (
-                  <Badge variant="secondary" className={getPaymentBadgeClass(pagoServidor.status)}>
-                    {pagoServidor.text}
-                  </Badge>
-                ) : null}
               </div>
             </div>
           </div>
