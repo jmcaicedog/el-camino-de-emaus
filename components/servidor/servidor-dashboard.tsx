@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Users, Mail, Loader2, FileSpreadsheet, FileText, Timer } from "lucide-react"
+import { Building2, LogOut, Users, Mail, Loader2, FileSpreadsheet, FileText, Timer } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -90,6 +90,14 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
                 <h1 className="text-lg md:text-2xl font-bold">Panel de Servidor</h1>
                 <div className="mt-0.5 flex flex-col items-start gap-1 text-xs md:text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-2">
                   <span className="max-w-[170px] truncate sm:max-w-none">{servidor.nombre_completo}</span>
+                  {servidor.alojamiento ? (
+                    <span className="flex min-w-0 items-center gap-1">
+                      <Building2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{servidor.alojamiento.edificio_nombre}</span>
+                      <span aria-hidden="true">-</span>
+                      <span className="truncate">{servidor.alojamiento.habitacion_nombre}</span>
+                    </span>
+                  ) : null}
                   <Badge variant="secondary" className={getPaymentBadgeClass()}>
                     {pagoServidor}
                   </Badge>

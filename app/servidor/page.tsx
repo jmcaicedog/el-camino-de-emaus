@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { ServidorDashboard } from "@/components/servidor/servidor-dashboard"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 export default async function ServidorPage() {
   const supabase = await createClient()
@@ -18,6 +19,34 @@ export default async function ServidorPage() {
 
   if (!servidorData) {
     redirect("/auth/login")
+  }
+
+  const service = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  )
+  const { data: asignacionAlojamiento } = await service
+    .from("asignaciones_alojamiento")
+    .select("habitacion_id")
+    .eq("persona_id", servidorData.id)
+    .eq("persona_tipo", "servidor")
+    .maybeSingle()
+
+  let alojamiento = null
+  if (asignacionAlojamiento) {
+    const { data: habitacion } = await service
+      .from("habitaciones")
+      .select("nombre, edificio_id")
+      .eq("id", asignacionAlojamiento.habitacion_id)
+      .maybeSingle()
+
+    if (habitacion) {
+      const { data: edificio } = await service.from("edificios").select("nombre").eq("id", habitacion.edificio_id).maybeSingle()
+      if (edificio) {
+        alojamiento = { edificio_nombre: edificio.nombre, habitacion_nombre: habitacion.nombre }
+      }
+    }
   }
 
   // Check equipo memberships
@@ -54,7 +83,7 @@ export default async function ServidorPage() {
 
   return (
     <ServidorDashboard
-      servidor={servidorData}
+      servidor={{ ...servidorData, alojamiento }}
       mesa={mesaData}
       caminantes={caminantesData}
       isCartasTeam={isCartasTeam}
