@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { CircleX } from "lucide-react"
 import { HabitacionModal } from "@/components/admin/alojamiento/habitacion-modal"
 import type { EdificioConHabitaciones, HabitacionConAsignaciones, PersonaAlojamientoResumen } from "@/lib/types"
 
@@ -78,15 +79,6 @@ export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onU
                         ? "border-emerald-300 bg-emerald-50 hover:bg-emerald-100"
                         : "border-amber-300 bg-amber-50 hover:bg-amber-100"
 
-                  const dotFreeClass = roomState === "full" ? "bg-red-200" : roomState === "empty" ? "bg-emerald-300" : "bg-amber-300"
-
-                  const dotAssignedClass =
-                    roomState === "full"
-                      ? "bg-red-600"
-                      : roomState === "empty"
-                        ? "bg-emerald-600"
-                        : "bg-amber-600"
-
                   return (
                     <Button
                       key={habitacion.id}
@@ -95,27 +87,30 @@ export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onU
                       onClick={() => openHabitacion(habitacion)}
                     >
                       <div className="w-full text-left">
-                        <div className="font-semibold">{habitacion.nombre}</div>
-                        <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                          <Badge variant="secondary">{ocupadas} ocupadas</Badge>
-                          <Badge variant="outline">{libres} libres</Badge>
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="font-semibold">{habitacion.nombre}</div>
+                          <div className="flex shrink-0 flex-wrap justify-end gap-1">
                           {Array.from({ length: habitacion.camas_total }, (_, i) => i + 1).map((bedNumber) => {
                             const assignment = habitacion.asignaciones.find((a) => a.cama_numero === bedNumber)
                             if (!assignment) {
-                              return <span key={bedNumber} className={`h-2.5 w-2.5 rounded-full ${dotFreeClass}`} />
+                              return (
+                                <span
+                                  key={bedNumber}
+                                  className="h-3.5 w-3.5 rounded-full border border-slate-400 bg-white"
+                                  title={`Cama ${bedNumber} libre`}
+                                />
+                              )
                             }
 
-                            const typeRing = assignment.persona_tipo === "caminante" ? "ring-blue-900/30" : "ring-emerald-900/30"
                             return (
-                              <span
+                              <CircleX
                                 key={bedNumber}
-                                className={`h-2.5 w-2.5 rounded-full ring-1 ${dotAssignedClass} ${typeRing}`}
-                                title={`${assignment.persona_nombre}${assignment.ronca_al_dormir ? " (ronca)" : ""}`}
+                                className="h-3.5 w-3.5 text-red-600"
+                                aria-label={`Cama ${bedNumber} ocupada por ${assignment.persona_nombre}`}
                               />
                             )
                           })}
+                          </div>
                         </div>
                         {habitacion.asignaciones.length > 0 ? (
                           <div className="mt-2 space-y-0.5 text-[10px] leading-tight text-slate-700">
