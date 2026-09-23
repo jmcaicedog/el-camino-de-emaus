@@ -70,10 +70,12 @@ export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onU
                 edificio.habitaciones.map((habitacion) => {
                   const ocupadas = habitacion.asignaciones.length
                   const libres = Math.max(habitacion.camas_total - ocupadas, 0)
-                  const roomState = ocupadas === 0 ? "empty" : libres === 0 ? "full" : "partial"
+                  const roomState = habitacion.camas_total === 0 ? "noBeds" : ocupadas === 0 ? "empty" : libres === 0 ? "full" : "partial"
 
                   const roomClasses =
-                    roomState === "full"
+                    roomState === "noBeds"
+                      ? "border-slate-300 bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      : roomState === "full"
                       ? "border-red-300 bg-red-50 hover:bg-red-100"
                       : roomState === "empty"
                         ? "border-emerald-300 bg-emerald-50 hover:bg-emerald-100"
@@ -84,6 +86,7 @@ export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onU
                       key={habitacion.id}
                       variant="outline"
                       className={`h-auto justify-start p-3 ${roomClasses}`}
+                      disabled={habitacion.camas_total === 0}
                       onClick={() => openHabitacion(habitacion)}
                     >
                       <div className="w-full text-left">
@@ -112,6 +115,7 @@ export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onU
                           })}
                           </div>
                         </div>
+                        {habitacion.camas_total === 0 ? <div className="mt-1 text-xs">Sin camas</div> : null}
                         {habitacion.asignaciones.length > 0 ? (
                           <div className="mt-2 space-y-0.5 text-[10px] leading-tight text-slate-700">
                             {[...habitacion.asignaciones]

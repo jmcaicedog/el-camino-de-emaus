@@ -112,7 +112,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const nombre = typeof body?.nombre === "string" ? body.nombre.trim() : ""
     const habitacionesCount = Math.max(0, Number(body?.habitaciones_count) || 0)
-    const camasPorHabitacion = Math.max(1, Number(body?.camas_por_habitacion) || 1)
+    const requestedBeds = Number(body?.camas_por_habitacion)
+    const camasPorHabitacion = Number.isFinite(requestedBeds) ? Math.max(0, requestedBeds) : 1
 
     if (!nombre) {
       return NextResponse.json({ message: "El nombre del edificio es obligatorio" }, { status: 400 })

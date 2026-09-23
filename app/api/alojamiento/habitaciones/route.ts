@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "El nombre de la habitación es obligatorio" }, { status: 400 })
     }
 
-    if (!Number.isInteger(camasTotal) || camasTotal < 1) {
-      return NextResponse.json({ message: "La cantidad de camas debe ser un entero mayor a 0" }, { status: 400 })
+    if (!Number.isInteger(camasTotal) || camasTotal < 0) {
+      return NextResponse.json({ message: "La cantidad de camas debe ser un entero igual o mayor a 0" }, { status: 400 })
     }
 
     const service = getServiceClient()

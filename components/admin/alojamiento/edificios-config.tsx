@@ -83,9 +83,9 @@ export function EdificiosConfig({
             <Input
               id="edificio-camas"
               type="number"
-              min={1}
+              min={0}
               value={newEdificioBedsPerRoom}
-              onChange={(e) => setNewEdificioBedsPerRoom(Math.max(1, Number(e.target.value) || 1))}
+              onChange={(e) => setNewEdificioBedsPerRoom(Math.max(0, Number(e.target.value) || 0))}
             />
           </div>
           <Button
@@ -94,7 +94,7 @@ export function EdificiosConfig({
               void onCreateEdificio({
                 nombre: newEdificioName.trim(),
                 habitaciones_count: Math.max(0, newEdificioRoomsCount),
-                camas_por_habitacion: Math.max(1, newEdificioBedsPerRoom),
+                camas_por_habitacion: Math.max(0, newEdificioBedsPerRoom),
               }).then(() => {
                 setNewEdificioName("")
                 setNewEdificioRoomsCount(0)
@@ -151,7 +151,7 @@ export function EdificiosConfig({
                           ...prev,
                           [edificio.id]: {
                             nombre: e.target.value,
-                            camas_total: prev[edificio.id]?.camas_total || 1,
+                            camas_total: prev[edificio.id]?.camas_total ?? 1,
                           },
                         }))
                       }
@@ -162,14 +162,14 @@ export function EdificiosConfig({
                     <Label>Camas</Label>
                     <Input
                       type="number"
-                      min={1}
-                      value={newRoomByBuilding[edificio.id]?.camas_total || 1}
+                      min={0}
+                      value={newRoomByBuilding[edificio.id]?.camas_total ?? 1}
                       onChange={(e) =>
                         setNewRoomByBuilding((prev) => ({
                           ...prev,
                           [edificio.id]: {
                             nombre: prev[edificio.id]?.nombre || "",
-                            camas_total: Math.max(1, Number(e.target.value) || 1),
+                            camas_total: Math.max(0, Number(e.target.value) || 0),
                           },
                         }))
                       }
@@ -183,7 +183,7 @@ export function EdificiosConfig({
                       void onCreateHabitacion({
                         edificio_id: edificio.id,
                         nombre: payload.nombre.trim(),
-                        camas_total: Math.max(1, payload.camas_total || 1),
+                        camas_total: Math.max(0, payload.camas_total),
                       }).then(() => {
                         setNewRoomByBuilding((prev) => ({
                           ...prev,
@@ -226,14 +226,14 @@ export function EdificiosConfig({
                         <Label>Camas</Label>
                         <Input
                           type="number"
-                          min={1}
+                          min={0}
                           value={roomEdit.camas_total}
                           onChange={(e) =>
                             setRoomEdits((prev) => ({
                               ...prev,
                               [habitacion.id]: {
                                 ...roomEdit,
-                                camas_total: Math.max(1, Number(e.target.value) || 1),
+                                camas_total: Math.max(0, Number(e.target.value) || 0),
                               },
                             }))
                           }
