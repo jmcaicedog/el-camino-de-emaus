@@ -3,8 +3,10 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CircleX } from "lucide-react"
+import { CircleX, FileDown } from "lucide-react"
 import { HabitacionModal } from "@/components/admin/alojamiento/habitacion-modal"
+import { ExportEdificiosDialog } from "@/components/admin/alojamiento/export-edificios-dialog"
+import { exportAlojamientoPDF } from "@/components/admin/alojamiento/alojamiento-pdf-export"
 import type { EdificioConHabitaciones, HabitacionConAsignaciones, PersonaAlojamientoResumen } from "@/lib/types"
 
 interface AsignacionVisualProps {
@@ -18,6 +20,7 @@ interface AsignacionVisualProps {
 export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onUnassign, busy }: AsignacionVisualProps) {
   const [selectedHabitacion, setSelectedHabitacion] = useState<HabitacionConAsignaciones | null>(null)
   const [open, setOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
 
   const openHabitacion = (habitacion: HabitacionConAsignaciones) => {
     setSelectedHabitacion(habitacion)
@@ -26,6 +29,13 @@ export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onU
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button variant="outline" className="gap-1.5" onClick={() => setExportOpen(true)}>
+          <FileDown className="h-4 w-4" />
+          Exportar PDF
+        </Button>
+      </div>
+
       <div className="grid gap-4 xl:grid-cols-2">
         {edificios.map((edificio) => (
           <Card key={edificio.id}>
@@ -120,6 +130,13 @@ export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onU
         onAssign={onAssign}
         onUnassign={onUnassign}
         busy={busy}
+      />
+
+      <ExportEdificiosDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        edificios={edificios}
+        onConfirm={(edificioIds) => exportAlojamientoPDF({ edificios, edificioIds })}
       />
     </div>
   )
