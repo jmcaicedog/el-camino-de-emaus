@@ -117,6 +117,23 @@ export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onU
                             )
                           })}
                         </div>
+                        {habitacion.asignaciones.length > 0 ? (
+                          <div className="mt-2 space-y-0.5 text-[10px] leading-tight text-slate-700">
+                            {[...habitacion.asignaciones]
+                              .sort((a, b) => a.cama_numero - b.cama_numero)
+                              .map((asignacion) => (
+                                <div key={asignacion.id} className="flex items-center gap-1">
+                                  <span
+                                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                                      asignacion.ronca_al_dormir ? "bg-rose-600" : "bg-emerald-600"
+                                    }`}
+                                    title={asignacion.ronca_al_dormir ? "Ronca" : "No ronca"}
+                                  />
+                                  <span className="truncate">{asignacion.persona_nombre}</span>
+                                </div>
+                              ))}
+                          </div>
+                        ) : null}
                       </div>
                     </Button>
                   )

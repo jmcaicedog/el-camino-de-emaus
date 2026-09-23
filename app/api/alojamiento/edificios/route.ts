@@ -69,7 +69,9 @@ export async function GET() {
 
     const edificios = (edificiosRes.data || []).map((edificio) => ({
       ...edificio,
-      habitaciones: (habitacionesByEdificio.get(edificio.id) || []).sort((a, b) => a.nombre.localeCompare(b.nombre, "es")),
+      habitaciones: (habitacionesByEdificio.get(edificio.id) || []).sort((a, b) =>
+        a.nombre.localeCompare(b.nombre, "es", { numeric: true, sensitivity: "base" }),
+      ),
     }))
 
     const assignedCaminanteIds = new Set(
