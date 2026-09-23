@@ -1,8 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CircleX } from "lucide-react"
 import { HabitacionModal } from "@/components/admin/alojamiento/habitacion-modal"
@@ -20,24 +19,6 @@ export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onU
   const [selectedHabitacion, setSelectedHabitacion] = useState<HabitacionConAsignaciones | null>(null)
   const [open, setOpen] = useState(false)
 
-  const summary = useMemo(() => {
-    let totalBeds = 0
-    let totalAssigned = 0
-
-    for (const edificio of edificios) {
-      for (const habitacion of edificio.habitaciones) {
-        totalBeds += habitacion.camas_total
-        totalAssigned += habitacion.asignaciones.length
-      }
-    }
-
-    return {
-      totalBeds,
-      totalAssigned,
-      totalFree: Math.max(totalBeds - totalAssigned, 0),
-    }
-  }, [edificios])
-
   const openHabitacion = (habitacion: HabitacionConAsignaciones) => {
     setSelectedHabitacion(habitacion)
     setOpen(true)
@@ -45,18 +26,6 @@ export function AsignacionVisual({ edificios, personasDisponibles, onAssign, onU
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Resumen de alojamiento</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Badge variant="secondary">Camas totales: {summary.totalBeds}</Badge>
-          <Badge variant="secondary">Ocupadas: {summary.totalAssigned}</Badge>
-          <Badge variant="secondary">Libres: {summary.totalFree}</Badge>
-          <Badge variant="outline">Sin asignar: {personasDisponibles.length}</Badge>
-        </CardContent>
-      </Card>
-
       <div className="grid gap-4 xl:grid-cols-2">
         {edificios.map((edificio) => (
           <Card key={edificio.id}>

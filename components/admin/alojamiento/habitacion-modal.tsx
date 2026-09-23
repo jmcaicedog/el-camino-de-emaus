@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
 import type { HabitacionConAsignaciones, PersonaAlojamientoResumen } from "@/lib/types"
 
@@ -31,6 +32,7 @@ export function HabitacionModal({
   const [snoreFilter, setSnoreFilter] = useState<"all" | "yes" | "no">("all")
   const [minAge, setMinAge] = useState("")
   const [maxAge, setMaxAge] = useState("")
+  const [asignacionToUnassign, setAsignacionToUnassign] = useState<HabitacionConAsignaciones["asignaciones"][number] | null>(null)
 
   const assignedByBed = useMemo(() => {
     const map = new Map<number, HabitacionConAsignaciones["asignaciones"][number]>()
@@ -150,7 +152,7 @@ export function HabitacionModal({
                           variant="outline"
                           size="sm"
                           disabled={busy}
-                          onClick={() => void onUnassign(asignacion.id)}
+                          onClick={() => setAsignacionToUnassign(asignacion)}
                         >
                           Liberar
                         </Button>
@@ -267,6 +269,27 @@ export function HabitacionModal({
           </div>
         )}
       </DialogContent>
+      <ConfirmDialog
+        open={Boolean(asignacionToUnassign)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAsignacionToUnassign(null)
+          }
+        }}
+        title="Liberar cama"
+        description={
+          asignacionToUnassign
+            ? `Se liberará la cama asignada a ${asignacionToUnassign.persona_nombre}.`
+            : "Se liberará esta cama."
+        }
+        confirmLabel="Sí, liberar"
+        cancelLabel="Cancelar"
+        onConfirm={async () => {
+          if (!asignacionToUnassign) return
+          await onUnassign(asignacionToUnassign.id)
+          setAsignacionToUnassign(null)
+        }}
+      />
     </Dialog>
   )
 }

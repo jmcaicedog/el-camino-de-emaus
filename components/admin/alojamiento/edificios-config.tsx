@@ -36,6 +36,7 @@ export function EdificiosConfig({
   const [newRoomByBuilding, setNewRoomByBuilding] = useState<Record<string, { nombre: string; camas_total: number }>>({})
   const [roomEdits, setRoomEdits] = useState<Record<string, { nombre: string; camas_total: number }>>({})
   const [confirmDeleteBuildingId, setConfirmDeleteBuildingId] = useState<string | null>(null)
+  const [confirmDeleteRoom, setConfirmDeleteRoom] = useState<{ id: string; nombre: string } | null>(null)
 
   const buildingToDelete = edificios.find((e) => e.id === confirmDeleteBuildingId) || null
 
@@ -239,7 +240,11 @@ export function EdificiosConfig({
                           }
                         />
                       </div>
-                      <Button variant="destructive" disabled={busy} onClick={() => void onDeleteHabitacion(habitacion.id)}>
+                      <Button
+                        variant="destructive"
+                        disabled={busy}
+                        onClick={() => setConfirmDeleteRoom({ id: habitacion.id, nombre: habitacion.nombre })}
+                      >
                         Eliminar
                       </Button>
                     </div>
@@ -303,6 +308,28 @@ export function EdificiosConfig({
           if (!confirmDeleteBuildingId) return
           await onDeleteEdificio(confirmDeleteBuildingId)
           setConfirmDeleteBuildingId(null)
+        }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(confirmDeleteRoom)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmDeleteRoom(null)
+          }
+        }}
+        title="Eliminar habitación"
+        description={
+          confirmDeleteRoom
+            ? `Se eliminará la habitación "${confirmDeleteRoom.nombre}" junto con sus asignaciones. Esta acción no se puede deshacer.`
+            : "Se eliminará la habitación junto con sus asignaciones. Esta acción no se puede deshacer."
+        }
+        confirmLabel="Sí, eliminar"
+        cancelLabel="Cancelar"
+        onConfirm={async () => {
+          if (!confirmDeleteRoom) return
+          await onDeleteHabitacion(confirmDeleteRoom.id)
+          setConfirmDeleteRoom(null)
         }}
       />
     </div>
