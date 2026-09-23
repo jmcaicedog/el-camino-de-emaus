@@ -198,16 +198,20 @@ export function AlojamientoDashboard() {
                   "Habitación creada",
                 )
               }
-              onUpdateHabitacion={(id, payload) =>
-                runMutation(
-                  () =>
-                    fetch(`/api/alojamiento/habitaciones/${id}`, {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(payload),
-                    }),
-                  "Habitación actualizada",
-                )
+              onUpdateHabitaciones={(updates) =>
+                runMutation(async () => {
+                  const responses = await Promise.all(
+                    updates.map((update) =>
+                      fetch(`/api/alojamiento/habitaciones/${update.id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ nombre: update.nombre, camas_total: update.camas_total }),
+                      }),
+                    ),
+                  )
+
+                  return responses.find((response) => !response.ok) || responses[0]
+                }, "Habitaciones actualizadas")
               }
               onDeleteHabitacion={(id) =>
                 runMutation(() => fetch(`/api/alojamiento/habitaciones/${id}`, { method: "DELETE" }), "Habitación eliminada")

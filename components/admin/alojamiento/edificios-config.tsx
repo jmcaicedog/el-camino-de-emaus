@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,7 +15,7 @@ interface EdificiosConfigProps {
   onUpdateEdificio: (id: string, payload: { nombre: string }) => Promise<void>
   onDeleteEdificio: (id: string) => Promise<void>
   onCreateHabitacion: (payload: { edificio_id: string; nombre: string; camas_total: number }) => Promise<void>
-  onUpdateHabitacion: (id: string, payload: { nombre: string; camas_total: number }) => Promise<void>
+  onUpdateHabitaciones: (updates: Array<{ id: string; nombre: string; camas_total: number }>) => Promise<void>
   onDeleteHabitacion: (id: string) => Promise<void>
   busy: boolean
 }
@@ -26,7 +26,7 @@ export function EdificiosConfig({
   onUpdateEdificio,
   onDeleteEdificio,
   onCreateHabitacion,
-  onUpdateHabitacion,
+  onUpdateHabitaciones,
   onDeleteHabitacion,
   busy,
 }: EdificiosConfigProps) {
@@ -34,9 +34,23 @@ export function EdificiosConfig({
   const [newEdificioRoomsCount, setNewEdificioRoomsCount] = useState(0)
   const [newEdificioBedsPerRoom, setNewEdificioBedsPerRoom] = useState(1)
   const [newRoomByBuilding, setNewRoomByBuilding] = useState<Record<string, { nombre: string; camas_total: number }>>({})
+  const [roomEdits, setRoomEdits] = useState<Record<string, { nombre: string; camas_total: number }>>({})
   const [confirmDeleteBuildingId, setConfirmDeleteBuildingId] = useState<string | null>(null)
 
   const buildingToDelete = edificios.find((e) => e.id === confirmDeleteBuildingId) || null
+
+  useEffect(() => {
+    setRoomEdits(
+      Object.fromEntries(
+        edificios.flatMap((edificio) =>
+          edificio.habitaciones.map((habitacion) => [
+            habitacion.id,
+            { nombre: habitacion.nombre, camas_total: habitacion.camas_total },
+          ]),
+        ),
+      ),
+    )
+  }, [edificios])
 
   return (
     <div className="space-y-4">
@@ -187,21 +201,25 @@ export function EdificiosConfig({
                 {edificio.habitaciones.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Aún no hay habitaciones en este edificio.</p>
                 ) : (
-                  edificio.habitaciones.map((habitacion) => (
+                  <>
+                    {edificio.habitaciones.map((habitacion) => {
+                      const roomEdit = roomEdits[habitacion.id] || {
+                        nombre: habitacion.nombre,
+                        camas_total: habitacion.camas_total,
+                      }
+
+                      return (
                     <div key={habitacion.id} className="grid gap-2 rounded-md border p-3 md:grid-cols-[1fr_140px_auto] md:items-end">
                       <div className="space-y-1">
                         <Label>Nombre</Label>
                         <Input
-                          defaultValue={habitacion.nombre}
-                          onBlur={(e) => {
-                            const value = e.target.value.trim()
-                            if (value && value !== habitacion.nombre) {
-                              void onUpdateHabitacion(habitacion.id, {
-                                nombre: value,
-                                camas_total: habitacion.camas_total,
-                              })
-                            }
-                          }}
+                          value={roomEdit.nombre}
+                          onChange={(e) =>
+                            setRoomEdits((prev) => ({
+                              ...prev,
+                              [habitacion.id]: { ...roomEdit, nombre: e.target.value },
+                            }))
+                          }
                         />
                       </div>
                       <div className="space-y-1">
@@ -209,23 +227,56 @@ export function EdificiosConfig({
                         <Input
                           type="number"
                           min={1}
-                          defaultValue={habitacion.camas_total}
-                          onBlur={(e) => {
-                            const nextBeds = Math.max(1, Number(e.target.value) || 1)
-                            if (nextBeds !== habitacion.camas_total) {
-                              void onUpdateHabitacion(habitacion.id, {
-                                nombre: habitacion.nombre,
-                                camas_total: nextBeds,
-                              })
-                            }
-                          }}
+                          value={roomEdit.camas_total}
+                          onChange={(e) =>
+                            setRoomEdits((prev) => ({
+                              ...prev,
+                              [habitacion.id]: {
+                                ...roomEdit,
+                                camas_total: Math.max(1, Number(e.target.value) || 1),
+                              },
+                            }))
+                          }
                         />
                       </div>
                       <Button variant="destructive" disabled={busy} onClick={() => void onDeleteHabitacion(habitacion.id)}>
                         Eliminar
                       </Button>
                     </div>
-                  ))
+                      )
+                    })}
+                    <Button
+                      className="w-full"
+                      disabled={
+                        busy ||
+                        !edificio.habitaciones.some((habitacion) => {
+                          const roomEdit = roomEdits[habitacion.id]
+                          return (
+                            roomEdit &&
+                            (roomEdit.nombre.trim() !== habitacion.nombre || roomEdit.camas_total !== habitacion.camas_total)
+                          )
+                        })
+                      }
+                      onClick={() => {
+                        const updates = edificio.habitaciones.flatMap((habitacion) => {
+                          const roomEdit = roomEdits[habitacion.id]
+                          if (
+                            !roomEdit ||
+                            (roomEdit.nombre.trim() === habitacion.nombre && roomEdit.camas_total === habitacion.camas_total)
+                          ) {
+                            return []
+                          }
+
+                          return [{ id: habitacion.id, nombre: roomEdit.nombre.trim(), camas_total: roomEdit.camas_total }]
+                        })
+
+                        if (updates.some((update) => !update.nombre)) return
+                        void onUpdateHabitaciones(updates)
+                      }}
+                    >
+                      Guardar cambios
+                    </Button>
+                  </>
                 )}
               </div>
             </CardContent>
