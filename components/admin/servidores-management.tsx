@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -55,30 +55,6 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
     const equipos = equiposPorTipo.filter(e => e.tipo === "equipo").map(e => e.nombre)
     const actividades = servidor.actividades || []
     return { equipos, actividades }
-  }
-
-  const applyFilters = (list: typeof servidores) => {
-    let filtered = list.filter(
-      (s) =>
-        s.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.cedula.includes(searchTerm) ||
-        s.correo.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-
-    if (filterStatus !== "all") {
-      filtered = filtered.filter(s => {
-        const { equipos, actividades } = getEquiposYActividades(s)
-        const tieneEquipos = equipos.length > 0 || s.tipo_servidor === "lider" || s.tipo_servidor === "colider"
-        const tieneActividades = actividades.length > 0
-
-        if (filterStatus === "sin-equipos") return !tieneEquipos
-        if (filterStatus === "sin-actividades") return !tieneActividades
-        if (filterStatus === "ambas") return !tieneEquipos && !tieneActividades
-        return true
-      })
-    }
-
-    return filtered
   }
 
   const getPaymentStatus = (montoPagado: unknown, montoTotal: unknown) => {
@@ -231,7 +207,30 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
     }
   }
 
-  const filteredServidores = applyFilters(servidores)
+  const filteredServidores = useMemo(() => {
+    const normalizedSearchTerm = searchTerm.toLowerCase()
+    let filtered = servidores.filter(
+      (servidor) =>
+        servidor.nombre_completo.toLowerCase().includes(normalizedSearchTerm) ||
+        servidor.cedula.includes(searchTerm) ||
+        servidor.correo.toLowerCase().includes(normalizedSearchTerm),
+    )
+
+    if (filterStatus === "all") return filtered
+
+    return filtered.filter((servidor) => {
+      const equiposPorTipo = servidor.equiposPorTipo || []
+      const tieneEquipos =
+        equiposPorTipo.some((equipo) => equipo.tipo === "equipo") ||
+        servidor.tipo_servidor === "lider" ||
+        servidor.tipo_servidor === "colider"
+      const tieneActividades = (servidor.actividades || []).length > 0
+
+      if (filterStatus === "sin-equipos") return !tieneEquipos
+      if (filterStatus === "sin-actividades") return !tieneActividades
+      return !tieneEquipos && !tieneActividades
+    })
+  }, [filterStatus, searchTerm, servidores])
 
   const exportarPDF = () => {
     const doc = new jsPDF()

@@ -26,34 +26,24 @@ export default async function ServidorPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } },
   )
-  const { data: asignacionAlojamiento } = await service
-    .from("asignaciones_alojamiento")
-    .select("habitacion_id")
-    .eq("persona_id", servidorData.id)
-    .eq("persona_tipo", "servidor")
-    .maybeSingle()
+  const [{ data: asignacionAlojamiento }, { data: equipoMemberships }] = await Promise.all([
+    service
+      .from("asignaciones_alojamiento")
+      .select("habitaciones(nombre, edificios(nombre))")
+      .eq("persona_id", servidorData.id)
+      .eq("persona_tipo", "servidor")
+      .maybeSingle(),
+    supabase.from("servidor_equipo").select("equipos (nombre)").eq("servidor_id", servidorData.id),
+  ])
 
-  let alojamiento = null
-  if (asignacionAlojamiento) {
-    const { data: habitacion } = await service
-      .from("habitaciones")
-      .select("nombre, edificio_id")
-      .eq("id", asignacionAlojamiento.habitacion_id)
-      .maybeSingle()
+  const habitacion = (Array.isArray(asignacionAlojamiento?.habitaciones) ? asignacionAlojamiento?.habitaciones[0] : asignacionAlojamiento?.habitaciones) as unknown as {
+    nombre: string
+    edificios: { nombre: string } | null
+  } | null
+  const alojamiento = habitacion?.edificios
+    ? { edificio_nombre: habitacion.edificios.nombre, habitacion_nombre: habitacion.nombre }
+    : null
 
-    if (habitacion) {
-      const { data: edificio } = await service.from("edificios").select("nombre").eq("id", habitacion.edificio_id).maybeSingle()
-      if (edificio) {
-        alojamiento = { edificio_nombre: edificio.nombre, habitacion_nombre: habitacion.nombre }
-      }
-    }
-  }
-
-  // Check equipo memberships
-  const { data: equipoMemberships } = await supabase
-    .from("servidor_equipo")
-    .select("equipos (nombre)")
-    .eq("servidor_id", servidorData.id)
   const myEquipos = (equipoMemberships || [])
     .map((r: any) => (r.equipos?.nombre || '').normalize('NFC').toLowerCase())
     .filter(Boolean)

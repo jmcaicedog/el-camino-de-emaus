@@ -179,57 +179,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
-    const { data: eventosMinuto, error: eventosMinutoError } = await service
-      .from("minuto_eventos")
-      .select("id, titulo")
-      .order("fecha_inicio", { ascending: true })
-
-    if (eventosMinutoError) {
-      console.error("[v0] Error fetching minuto eventos for servidores:", eventosMinutoError)
-      return NextResponse.json({ message: eventosMinutoError.message }, { status: 400 })
-    }
-
-    const { data: responsablesMinuto, error: responsablesMinutoError } = await service
-      .from("minuto_evento_responsables")
-      .select("evento_id, tipo_responsable, servidor_id, equipo_id")
-
-    if (responsablesMinutoError) {
-      console.error("[v0] Error fetching minuto responsables for servidores:", responsablesMinutoError)
-      return NextResponse.json({ message: responsablesMinutoError.message }, { status: 400 })
-    }
-
-    const eventosPorId = new Map((eventosMinuto || []).map((evento) => [evento.id, evento.titulo]))
     const servidorIds = (servidores || []).map((servidor) => servidor.id)
-    const [{ data: asignaciones, error: asignacionesError }, { data: habitaciones, error: habitacionesError }, { data: edificios, error: edificiosError }] =
-      await Promise.all([
-        service.from("asignaciones_alojamiento").select("persona_id, habitacion_id").eq("persona_tipo", "servidor").in("persona_id", servidorIds),
-        service.from("habitaciones").select("id, edificio_id, nombre"),
-        service.from("edificios").select("id, nombre"),
-      ])
-
-    if (asignacionesError || habitacionesError || edificiosError) {
-      const message = asignacionesError?.message || habitacionesError?.message || edificiosError?.message || "No fue posible consultar alojamiento"
-      return NextResponse.json({ message }, { status: 400 })
-    }
-
-    const habitacionesPorId = new Map((habitaciones || []).map((habitacion) => [habitacion.id, habitacion]))
-    const edificiosPorId = new Map((edificios || []).map((edificio) => [edificio.id, edificio]))
-    const alojamientoPorServidorId = new Map(
-      (asignaciones || []).flatMap((asignacion) => {
-        const habitacion = habitacionesPorId.get(asignacion.habitacion_id)
-        const edificio = habitacion ? edificiosPorId.get(habitacion.edificio_id) : null
-        return habitacion && edificio
-          ? [[asignacion.persona_id, { edificio_nombre: edificio.nombre, habitacion_nombre: habitacion.nombre }] as const]
-          : []
-      }),
-    )
-
-    // Para cada servidor, obtener sus equipos y las actividades del minuto a minuto asignadas
-    const servidoresConEquipos = await Promise.all(
-      (servidores || []).map(async (servidor) => {
-        const { data: relaciones } = await supabase
+    const [
+      { data: eventosMinuto, error: eventosMinutoError },
+      { data: responsablesMinuto, error: responsablesMinutoError },
+      { data: relaciones, error: relacionesError },
+      { data: asignaciones, error: asignacionesError },
+    ] = await Promise.all([
+        service.from("minuto_eventos").select("id, titulo").order("fecha_inicio", { ascending: true }),
+        service.from("minuto_evento_responsables").select("evento_id, tipo_responsable, servidor_id, equipo_id"),
+        service
           .from("servidor_equipo")
           .select(`
+            servidor_id,
             equipo_id,
             equipos (
               id,
@@ -237,14 +199,52 @@ export async function GET(request: NextRequest) {
               tipo
             )
           `)
-          .eq("servidor_id", servidor.id)
+          .in("servidor_id", servidorIds),
+        service
+          .from("asignaciones_alojamiento")
+          .select("persona_id, habitaciones(nombre, edificios(nombre))")
+          .eq("persona_tipo", "servidor")
+          .in("persona_id", servidorIds),
+      ])
 
-        const equipos = relaciones
+    if (eventosMinutoError || responsablesMinutoError || relacionesError || asignacionesError) {
+      const message =
+        eventosMinutoError?.message ||
+        responsablesMinutoError?.message ||
+        relacionesError?.message ||
+        asignacionesError?.message ||
+        "No fue posible consultar datos de servidores"
+      return NextResponse.json({ message }, { status: 400 })
+    }
+
+    const eventosPorId = new Map((eventosMinuto || []).map((evento) => [evento.id, evento.titulo]))
+    const relacionesPorServidorId = new Map<string, any[]>()
+    for (const relacion of relaciones || []) {
+      const list = relacionesPorServidorId.get(relacion.servidor_id) || []
+      list.push(relacion)
+      relacionesPorServidorId.set(relacion.servidor_id, list)
+    }
+
+    const alojamientoPorServidorId = new Map(
+      (asignaciones || []).flatMap((asignacion) => {
+        const habitacion = (Array.isArray(asignacion.habitaciones) ? asignacion.habitaciones[0] : asignacion.habitaciones) as unknown as {
+          nombre: string
+          edificios: { nombre: string } | null
+        } | null
+        return habitacion?.edificios
+          ? [[asignacion.persona_id, { edificio_nombre: habitacion.edificios.nombre, habitacion_nombre: habitacion.nombre }] as const]
+          : []
+      }),
+    )
+
+    const servidoresConEquipos = (servidores || []).map((servidor) => {
+        const relacionesServidor = relacionesPorServidorId.get(servidor.id) || []
+        const equipos = relacionesServidor
           ?.map((r: any) => r.equipos)
           .filter((equipo: any) => equipo?.tipo === "equipo")
           .map((equipo: any) => equipo.nombre)
           .filter(Boolean) || []
-        const equiposPorTipo = relaciones?.map((r: any) => ({
+        const equiposPorTipo = relacionesServidor.map((r: any) => ({
           id: r.equipo_id || r.equipos?.id,
           nombre: r.equipos?.nombre,
           tipo: r.equipos?.tipo
@@ -273,7 +273,6 @@ export async function GET(request: NextRequest) {
           alojamiento: alojamientoPorServidorId.get(servidor.id) || null,
         }
       })
-    )
 
     return NextResponse.json(servidoresConEquipos, { status: 200 })
   } catch (error) {

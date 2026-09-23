@@ -25,6 +25,7 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState("equipos")
   const [logoSrc, setLogoSrc] = useState("/logo.png")
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isLiderOrColider, setIsLiderOrColider] = useState(false)
@@ -69,19 +70,17 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
 
     const checkRoles = async () => {
       try {
-        const res = await fetch("/api/servidores")
-        const servidores = await res.json()
+        const res = await fetch("/api/servidores/me")
+        if (!res.ok) throw new Error("No fue posible consultar el perfil del servidor")
+        const myServidor = await res.json()
 
-        // Check líder/colíder
-        const isLC = servidores.some(
-          (s: any) => s.auth_user_id === adminUser.id && 
-          (s.tipo_servidor === 'lider' || s.tipo_servidor === 'colider') &&
-          s.mesa_id
+        setIsLiderOrColider(
+          Boolean(
+            myServidor?.mesa_id &&
+              (myServidor.tipo_servidor === "lider" || myServidor.tipo_servidor === "colider"),
+          ),
         )
-        setIsLiderOrColider(isLC)
 
-        // Check equipo memberships
-        const myServidor = servidores.find((s: any) => s.auth_user_id === adminUser.id)
         if (myServidor) {
           const montoPagado = parseMoney(myServidor.monto_pagado)
           const montoTotal = parseMoney(myServidor.monto_total)
@@ -217,7 +216,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="equipos" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className={`grid w-full h-auto ${tabCount === 6 ? 'grid-cols-6' : tabCount === 5 ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="equipos" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
               <UsersRound className="h-4 w-4 md:mr-0" />
@@ -256,52 +255,56 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           </TabsList>
 
           <TabsContent value="equipos">
-            <EquiposManagement adminUser={adminUser} />
+            {activeTab === "equipos" ? <EquiposManagement adminUser={adminUser} /> : null}
           </TabsContent>
 
           <TabsContent value="mesas">
-            <MesasManagement adminUser={adminUser} readOnly={isReadOnlyByAdditionalTeam} />
+            {activeTab === "mesas" ? <MesasManagement adminUser={adminUser} readOnly={isReadOnlyByAdditionalTeam} /> : null}
           </TabsContent>
 
           <TabsContent value="caminantes">
-            <CaminantesManagement
-              adminUser={adminUser}
-              readOnly={isReadOnlyByAdditionalTeam}
-              canManagePayments={adminUser.is_super || isContabilidadTeam}
-            />
+            {activeTab === "caminantes" ? (
+              <CaminantesManagement
+                adminUser={adminUser}
+                readOnly={isReadOnlyByAdditionalTeam}
+                canManagePayments={adminUser.is_super || isContabilidadTeam}
+              />
+            ) : null}
           </TabsContent>
 
           <TabsContent value="servidores">
-            <ServidoresManagement
-              adminUser={adminUser}
-              readOnly={isReadOnlyByAdditionalTeam}
-              canManagePayments={adminUser.is_super || isContabilidadTeam}
-            />
+            {activeTab === "servidores" ? (
+              <ServidoresManagement
+                adminUser={adminUser}
+                readOnly={isReadOnlyByAdditionalTeam}
+                canManagePayments={adminUser.is_super || isContabilidadTeam}
+              />
+            ) : null}
           </TabsContent>
 
           {adminUser.is_super && (
             <TabsContent value="admins">
-              <AdminsManagement />
+              {activeTab === "admins" ? <AdminsManagement /> : null}
             </TabsContent>
           )}
 
           {hasMiMesaTab && (
             <TabsContent value="mi-mesa">
-              <MesaReport adminUser={adminUser} />
+              {activeTab === "mi-mesa" ? <MesaReport adminUser={adminUser} /> : null}
             </TabsContent>
           )}
 
           {hasReportesTab && (
             <TabsContent value="reportes">
-              {adminUser.is_super || isLogisticaTeam ? (
+              {activeTab === "reportes" && (adminUser.is_super || isLogisticaTeam) ? (
                 <ReportsManagement isSuperAdmin={adminUser.is_super} isLogisticaTeam={isLogisticaTeam} />
-              ) : isMesaRegistroTeam ? (
+              ) : activeTab === "reportes" && isMesaRegistroTeam ? (
                 <ReportsManagement onlyVerificacionExistencia isSuperAdmin={adminUser.is_super} isLogisticaTeam={isLogisticaTeam} />
-              ) : isCartasTeam ? (
+              ) : activeTab === "reportes" && isCartasTeam ? (
                 <ReportsManagement onlyCartas isSuperAdmin={adminUser.is_super} isLogisticaTeam={isLogisticaTeam} />
-              ) : (
+              ) : activeTab === "reportes" ? (
                 <ReportsManagement onlyRestricciones isSuperAdmin={adminUser.is_super} isLogisticaTeam={isLogisticaTeam} />
-              )}
+              ) : null}
             </TabsContent>
           )}
         </Tabs>

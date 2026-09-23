@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -339,12 +339,15 @@ export function CaminantesManagement({ adminUser, readOnly = false, canManagePay
     </Dialog>
   )
 
-  const filteredCaminantes = caminantes.filter(
-    (c) =>
-      c.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.cedula.includes(searchTerm) ||
-      c.correo.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredCaminantes = useMemo(() => {
+    const normalizedSearchTerm = searchTerm.toLowerCase()
+    return caminantes.filter(
+      (c) =>
+        c.nombre_completo.toLowerCase().includes(normalizedSearchTerm) ||
+        c.cedula.includes(searchTerm) ||
+        c.correo.toLowerCase().includes(normalizedSearchTerm),
+    )
+  }, [caminantes, searchTerm])
 
   const exportarPDF = () => {
     const doc = new jsPDF()
