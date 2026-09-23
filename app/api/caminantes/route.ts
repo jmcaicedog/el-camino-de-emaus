@@ -160,6 +160,11 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
+    const service = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    )
 
     // This will be protected by RLS - only admins and servidores can view
     const { data, error } = await supabase.from("caminantes").select("*").order("created_at", { ascending: false })
@@ -169,9 +174,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
+    const caminanteIds = (data || []).map((c) => c.id)
+    const [{ data: asignaciones, error: asignacionesError }, { data: habitaciones, error: habitacionesError }, { data: edificios, error: edificiosError }] =
+      await Promise.all([
+        service.from("asignaciones_alojamiento").select("persona_id, habitacion_id").eq("persona_tipo", "caminante").in("persona_id", caminanteIds),
+        service.from("habitaciones").select("id, edificio_id, nombre"),
+        service.from("edificios").select("id, nombre"),
+      ])
+
+    if (asignacionesError || habitacionesError || edificiosError) {
+      const message = asignacionesError?.message || habitacionesError?.message || edificiosError?.message || "No fue posible consultar alojamiento"
+      return NextResponse.json({ message }, { status: 400 })
+    }
+
+    const habitacionesPorId = new Map((habitaciones || []).map((habitacion) => [habitacion.id, habitacion]))
+    const edificiosPorId = new Map((edificios || []).map((edificio) => [edificio.id, edificio]))
+    const alojamientoPorCaminanteId = new Map(
+      (asignaciones || []).flatMap((asignacion) => {
+        const habitacion = habitacionesPorId.get(asignacion.habitacion_id)
+        const edificio = habitacion ? edificiosPorId.get(habitacion.edificio_id) : null
+        return habitacion && edificio
+          ? [[asignacion.persona_id, { edificio_nombre: edificio.nombre, habitacion_nombre: habitacion.nombre }] as const]
+          : []
+      }),
+    )
+
     const normalized = (data || []).map((c) => ({
       ...c,
       nombre_completo: formatPersonName(c.nombre_completo),
+      alojamiento: alojamientoPorCaminanteId.get(c.id) || null,
     }))
 
     return NextResponse.json(normalized, { status: 200 })

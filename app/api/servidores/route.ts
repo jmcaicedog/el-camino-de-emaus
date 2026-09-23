@@ -199,6 +199,30 @@ export async function GET(request: NextRequest) {
     }
 
     const eventosPorId = new Map((eventosMinuto || []).map((evento) => [evento.id, evento.titulo]))
+    const servidorIds = (servidores || []).map((servidor) => servidor.id)
+    const [{ data: asignaciones, error: asignacionesError }, { data: habitaciones, error: habitacionesError }, { data: edificios, error: edificiosError }] =
+      await Promise.all([
+        service.from("asignaciones_alojamiento").select("persona_id, habitacion_id").eq("persona_tipo", "servidor").in("persona_id", servidorIds),
+        service.from("habitaciones").select("id, edificio_id, nombre"),
+        service.from("edificios").select("id, nombre"),
+      ])
+
+    if (asignacionesError || habitacionesError || edificiosError) {
+      const message = asignacionesError?.message || habitacionesError?.message || edificiosError?.message || "No fue posible consultar alojamiento"
+      return NextResponse.json({ message }, { status: 400 })
+    }
+
+    const habitacionesPorId = new Map((habitaciones || []).map((habitacion) => [habitacion.id, habitacion]))
+    const edificiosPorId = new Map((edificios || []).map((edificio) => [edificio.id, edificio]))
+    const alojamientoPorServidorId = new Map(
+      (asignaciones || []).flatMap((asignacion) => {
+        const habitacion = habitacionesPorId.get(asignacion.habitacion_id)
+        const edificio = habitacion ? edificiosPorId.get(habitacion.edificio_id) : null
+        return habitacion && edificio
+          ? [[asignacion.persona_id, { edificio_nombre: edificio.nombre, habitacion_nombre: habitacion.nombre }] as const]
+          : []
+      }),
+    )
 
     // Para cada servidor, obtener sus equipos y las actividades del minuto a minuto asignadas
     const servidoresConEquipos = await Promise.all(
@@ -246,6 +270,7 @@ export async function GET(request: NextRequest) {
           equipos,
           equiposPorTipo,
           actividades,
+          alojamiento: alojamientoPorServidorId.get(servidor.id) || null,
         }
       })
     )

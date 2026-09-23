@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { ImageIcon, Phone, Loader2, Pill, Eye, Clipboard, UtensilsCrossed, Tablets, Pencil } from "lucide-react"
+import { Building2, ImageIcon, Phone, Loader2, Pill, Eye, Clipboard, UtensilsCrossed, Tablets, Pencil } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Caminante } from "@/lib/types"
 import { PersonEditForm } from "@/components/servidor/person-edit-form"
@@ -316,6 +316,14 @@ export function CaminanteCard({ caminante, onUpdate, canEdit = true, canEditFull
               </Badge>
             )}
           </div>
+          {caminante.alojamiento ? (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{caminante.alojamiento.edificio_nombre}</span>
+              <span aria-hidden="true">-</span>
+              <span className="truncate">{caminante.alojamiento.habitacion_nombre}</span>
+            </div>
+          ) : null}
         </div>
       </CardHeader>
 

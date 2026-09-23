@@ -354,13 +354,14 @@ export function CaminantesManagement({ adminUser, readOnly = false, canManagePay
     doc.text(`Total: ${filteredCaminantes.length} caminantes`, 14, 28)
     doc.text(`Fecha: ${new Date().toLocaleDateString("es-CO")}`, 14, 34)
 
-    const headers = ["#", "Nombre", "Cédula", "Celular", "Mesa"]
+    const headers = ["#", "Nombre", "Cédula", "Celular", "Mesa", "Habitación"]
     const data = filteredCaminantes.map((c, i) => [
       i + 1,
       c.nombre_completo,
       c.cedula,
       c.celular,
       c.mesa_id ? mesas.find(m => m.id === c.mesa_id)?.numero?.toString() || "\u2014" : "Sin asignar",
+      c.alojamiento ? `${c.alojamiento.edificio_nombre} - ${c.alojamiento.habitacion_nombre}` : "Sin asignar",
     ])
 
     autoTable(doc, {
@@ -419,6 +420,7 @@ export function CaminantesManagement({ adminUser, readOnly = false, canManagePay
                   <TableHead>Cédula</TableHead>
                   <TableHead>Celular</TableHead>
                   <TableHead>Mesa</TableHead>
+                  <TableHead>Habitación</TableHead>
                   <TableHead>Pago</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
@@ -588,6 +590,13 @@ export function CaminantesManagement({ adminUser, readOnly = false, canManagePay
                         </Dialog>
                       ) : (
                         <Badge variant="outline">Sin asignar</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {caminante.alojamiento ? (
+                        <span>{caminante.alojamiento.edificio_nombre} - {caminante.alojamiento.habitacion_nombre}</span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Sin asignar</span>
                       )}
                     </TableCell>
                     <TableCell>

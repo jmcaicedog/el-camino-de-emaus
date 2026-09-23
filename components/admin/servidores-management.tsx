@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ServidorCard } from "@/components/servidor/servidor-card"
 import type { AdminUser } from "@/lib/types"
-import { CaminanteCard } from "@/components/servidor/caminante-card"
 import { Label } from "@/components/ui/label"
 import { uiAvatarUrl } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
@@ -29,8 +28,6 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
   const { toast } = useToast()
   const [servidores, setServidores] = useState<(Servidor & { equiposPorTipo?: Array<{ id?: string; nombre: string; tipo: string }> })[]>([])
   const [admins, setAdmins] = useState<Set<string>>(new Set())
-  const [mesas, setMesas] = useState<Array<{ id: string; numero: number }>>([])
-  const [caminantes, setCaminantes] = useState<Array<any>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedServidor, setSelectedServidor] = useState<Servidor | null>(null)
@@ -40,8 +37,8 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState<"all" | "sin-equipos" | "sin-actividades" | "ambas">("all")
-  const [showEquipos, setShowEquipos] = useState(true)
-  const [showActividades, setShowActividades] = useState(true)
+  const [showEquipos, setShowEquipos] = useState(false)
+  const [showActividades, setShowActividades] = useState(false)
 
   const parseMoney = (value: unknown) => {
     if (typeof value === "number") return Number.isFinite(value) ? value : 0
@@ -104,21 +101,15 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
 
   const loadServidores = async () => {
     try {
-      const [servidoresRes, mesasRes, caminantesRes, adminsRes] = await Promise.all([
+      const [servidoresRes, adminsRes] = await Promise.all([
         fetch("/api/servidores"),
-        fetch("/api/mesas"),
-        fetch("/api/caminantes"),
         fetch("/api/admins").catch(() => ({ ok: false, json: () => [] })),
       ])
-      const [servidoresData, mesasData, caminantesData, adminsData] = await Promise.all([
+      const [servidoresData, adminsData] = await Promise.all([
         servidoresRes.json(),
-        mesasRes.json(),
-        caminantesRes.json(),
         adminsRes.ok ? adminsRes.json() : [],
       ])
       setServidores(servidoresData)
-      setMesas(mesasData)
-      setCaminantes(caminantesData)
       // Crear set de IDs de administradores para verificación rápida
       setAdmins(new Set(adminsData.map((admin: any) => admin.id)))
     } catch (error) {
@@ -250,10 +241,9 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
     doc.text(`Total: ${filteredServidores.length} servidores`, 14, 28)
     doc.text(`Fecha: ${new Date().toLocaleDateString("es-CO")}`, 14, 34)
 
-    let headers = ["#", "Nombre", "Cédula", "Celular"]
+    let headers = ["#", "Nombre", "Celular", "Habitación"]
     if (showEquipos) headers.push("Equipos")
     if (showActividades) headers.push("Actividades")
-    headers.push("Mesa")
 
     const data = filteredServidores.map((s, i) => {
       const { equipos, actividades } = getEquiposYActividades(s)
@@ -264,12 +254,11 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
       let row: (string | number)[] = [
         i + 1,
         s.nombre_completo,
-        s.cedula,
         s.celular,
+        s.alojamiento ? `${s.alojamiento.edificio_nombre} - ${s.alojamiento.habitacion_nombre}` : "Sin asignar",
       ]
       if (showEquipos) row.push(equiposStr)
       if (showActividades) row.push(actividadesStr)
-      row.push(s.mesa_id ? mesas.find(m => m.id === s.mesa_id)?.numero?.toString() || "—" : "Sin asignar")
       return row
     })
 
@@ -378,11 +367,10 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                 <TableRow>
                   <TableHead>Foto</TableHead>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>Cédula</TableHead>
                   <TableHead>Celular</TableHead>
                   {showEquipos && <TableHead>Equipos</TableHead>}
                   {showActividades && <TableHead>Actividades</TableHead>}
-                  <TableHead>Mesa</TableHead>
+                  <TableHead>Habitación</TableHead>
                   {(adminUser?.is_super || canManagePayments) && <TableHead>Pago</TableHead>}
                   <TableHead>Acciones</TableHead>
                 </TableRow>
@@ -422,7 +410,6 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                         </DialogContent>
                       </Dialog>
                     </TableCell>
-                    <TableCell>{servidor.cedula}</TableCell>
                     <TableCell>{servidor.celular}</TableCell>
                     {showEquipos && (
                       <TableCell>
@@ -459,123 +446,10 @@ export function ServidoresManagement({ adminUser, readOnly = false, canManagePay
                       </TableCell>
                     )}
                     <TableCell className="whitespace-nowrap">
-                      {servidor.mesa_id ? (
-                        <Dialog onOpenChange={(open: boolean) => {
-                          if (open) loadServidores()
-                        }}>
-                          <DialogTrigger asChild>
-                            <Badge variant="secondary" className="cursor-pointer">{mesas.find((m) => m.id === servidor.mesa_id)?.numero}</Badge>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Mesa {mesas.find((m) => m.id === servidor.mesa_id)?.numero}</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <h4 className="text-sm font-medium">Servidores asignados</h4>
-                                <ul className="mt-2 space-y-2">
-                                  {(() => {
-                                    const asignados = servidores.filter((s) => s.mesa_id === servidor.mesa_id)
-                                    // dedupe by id just in case
-                                    const seen = new Set<string>()
-                                    const unique = asignados.filter((s) => {
-                                      if (seen.has(s.id)) return false
-                                      seen.add(s.id)
-                                      return true
-                                    })
-                                    const lideres = unique.filter((s) => s.tipo_servidor === "lider")
-                                    const colideres = unique.filter((s) => s.tipo_servidor === "colider")
-                                    const otros = unique.filter((s) => !s.tipo_servidor)
-
-                                    return (
-                                      <>
-                                        {lideres.length > 0 && (
-                                          <li>
-                                            <div className="text-xs text-muted-foreground">Líder</div>
-                                            <ul className="mt-1 space-y-1">
-                                              {lideres.map((s) => (
-                                                <li key={s.id}>
-                                                  <Dialog>
-                                                    <DialogTrigger asChild>
-                                                      <button className="text-sm underline underline-offset-2 text-primary/90">{s.nombre_completo}</button>
-                                                    </DialogTrigger>
-                                                    <DialogContent>
-                                                      <ServidorCard servidor={s} onUpdate={loadServidores} canEdit={canEditServidor(s)} />
-                                                    </DialogContent>
-                                                  </Dialog>
-                                                </li>
-                                              ))}
-                                            </ul>
-                                          </li>
-                                        )}
-
-                                        {colideres.length > 0 && (
-                                          <li>
-                                            <div className="text-xs text-muted-foreground">Colíder</div>
-                                            <ul className="mt-1 space-y-1">
-                                              {colideres.map((s) => (
-                                                <li key={s.id}>
-                                                  <Dialog>
-                                                    <DialogTrigger asChild>
-                                                      <button className="text-sm underline underline-offset-2 text-primary/90">{s.nombre_completo}</button>
-                                                    </DialogTrigger>
-                                                    <DialogContent>
-                                                      <ServidorCard servidor={s} onUpdate={loadServidores} canEdit={canEditServidor(s)} />
-                                                    </DialogContent>
-                                                  </Dialog>
-                                                </li>
-                                              ))}
-                                            </ul>
-                                          </li>
-                                        )}
-
-                                        {otros.length > 0 && (
-                                          <li>
-                                            <div className="text-xs text-muted-foreground">Otros</div>
-                                            <ul className="mt-1 space-y-1">
-                                              {otros.map((s) => (
-                                                <li key={s.id}>
-                                                  <Dialog>
-                                                    <DialogTrigger asChild>
-                                                      <button className="text-sm underline underline-offset-2 text-primary/90">{s.nombre_completo}</button>
-                                                    </DialogTrigger>
-                                                    <DialogContent>
-                                                      <ServidorCard servidor={s} onUpdate={loadServidores} canEdit={canEditServidor(s)} />
-                                                    </DialogContent>
-                                                  </Dialog>
-                                                </li>
-                                              ))}
-                                            </ul>
-                                          </li>
-                                        )}
-                                      </>
-                                    )
-                                  })()}
-                                </ul>
-                              </div>
-
-                              <div>
-                                <h4 className="text-sm font-medium">Caminantes asignados</h4>
-                                <ul className="mt-2 space-y-1">
-                                  {caminantes.filter((c) => c.mesa_id === servidor.mesa_id).map((c) => (
-                                    <li key={c.id}>
-                                      <Dialog>
-                                        <DialogTrigger asChild>
-                                          <button className="text-sm underline underline-offset-2 text-primary/90">{c.nombre_completo}</button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                          <CaminanteCard caminante={c} onUpdate={loadServidores} />
-                                        </DialogContent>
-                                      </Dialog>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                      {servidor.alojamiento ? (
+                        <span>{servidor.alojamiento.edificio_nombre} - {servidor.alojamiento.habitacion_nombre}</span>
                       ) : (
-                        <Badge variant="outline">Sin asignar</Badge>
+                        <span className="text-sm text-muted-foreground">Sin asignar</span>
                       )}
                     </TableCell>
                     {(adminUser?.is_super || canManagePayments) && (

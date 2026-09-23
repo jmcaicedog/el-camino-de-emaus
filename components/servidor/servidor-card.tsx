@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, Pill, UtensilsCrossed, Eye, Tablets, Pencil } from "lucide-react"
+import { Building2, Loader2, Pill, UtensilsCrossed, Eye, Tablets, Pencil } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Servidor } from "@/lib/types"
 import ServidorDetails from "@/components/servidor/servidor-details"
@@ -181,7 +181,17 @@ export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCar
               className="w-full h-full object-cover"
             />
           </div>
-          <CardTitle className="text-lg">{servidor.nombre_completo}</CardTitle>
+          <div className="min-w-0">
+            <CardTitle className="text-lg">{servidor.nombre_completo}</CardTitle>
+            {servidor.alojamiento ? (
+              <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                <Building2 className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{servidor.alojamiento.edificio_nombre}</span>
+                <span aria-hidden="true">-</span>
+                <span className="truncate">{servidor.alojamiento.habitacion_nombre}</span>
+              </div>
+            ) : null}
+          </div>
         </div>
       </CardHeader>
 

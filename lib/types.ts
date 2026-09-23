@@ -1,6 +1,11 @@
 export type UserRole = "admin" | "servidor_lider" | "servidor_colider"
 export type TipoServidor = "lider" | "colider"
 
+export interface AlojamientoPerfil {
+  edificio_nombre: string
+  habitacion_nombre: string
+}
+
 export interface Caminante {
   id: string
   nombre_completo: string
@@ -43,6 +48,7 @@ export interface Caminante {
   caminantes_contactados?: boolean
   familiares_contactados?: boolean
   mesa_id?: string
+  alojamiento?: AlojamientoPerfil | null
   created_at: string
   updated_at: string
 }
@@ -99,6 +105,7 @@ export interface Servidor {
   equipos?: string[]
   actividades?: string[]
   es_lider_equipo?: boolean
+  alojamiento?: AlojamientoPerfil | null
   created_at: string
   updated_at: string
 }
