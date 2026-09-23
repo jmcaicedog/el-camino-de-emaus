@@ -194,15 +194,17 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                 </Button>
               </div>
               <div className="flex max-w-full flex-wrap items-center justify-end gap-1 text-xs text-muted-foreground md:text-sm">
-                <span className="max-w-55 truncate sm:max-w-none">{adminUser.nombre_completo}</span>
-                {alojamientoServidor ? (
-                  <span className="flex min-w-0 items-center gap-1">
-                    <Building2 className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">{alojamientoServidor.edificio_nombre}</span>
-                    <span aria-hidden="true">-</span>
-                    <span className="truncate">{alojamientoServidor.habitacion_nombre}</span>
-                  </span>
-                ) : null}
+                <div className="flex min-w-0 flex-col items-end gap-0.5 md:flex-row md:items-center md:gap-1">
+                  <span className="max-w-55 truncate sm:max-w-none">{adminUser.nombre_completo}</span>
+                  {alojamientoServidor ? (
+                    <span className="flex min-w-0 items-center gap-1">
+                      <Building2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{alojamientoServidor.edificio_nombre}</span>
+                      <span aria-hidden="true">-</span>
+                      <span className="truncate">{alojamientoServidor.habitacion_nombre}</span>
+                    </span>
+                  ) : null}
+                </div>
                 {pagoServidor ? (
                   <Badge variant="secondary" className={getPaymentBadgeClass(pagoServidor.status)}>
                     {pagoServidor.text}
