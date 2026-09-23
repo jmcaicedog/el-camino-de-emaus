@@ -146,7 +146,7 @@ export function exportAlojamientoPDF({ edificios, edificioIds }: ExportAlojamien
   const marginX = 10
   const marginBottom = 12
   const columnGap = 4
-  const columns = 2
+  const columns = 3
   const columnWidth = (pageWidth - marginX * 2 - columnGap * (columns - 1)) / columns
 
   doc.setFontSize(15)
