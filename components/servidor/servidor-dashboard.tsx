@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Building2, LogOut, Users, Mail, Loader2, FileSpreadsheet, FileText, Timer } from "lucide-react"
+import { Building2, CalendarClock, Clock3, LogOut, Users, Mail, Loader2, FileSpreadsheet, FileText, Timer } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -13,6 +13,7 @@ import type { Servidor, Mesa, Caminante } from "@/lib/types"
 import { CaminanteGridView } from "@/components/servidor/caminante-grid-view"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { formatSantisimoTurn } from "@/lib/santisimo-turnos"
 
 interface ServidorDashboardProps {
   servidor: Servidor
@@ -21,10 +22,11 @@ interface ServidorDashboardProps {
   isCartasTeam?: boolean
   isSnacksTeam?: boolean
   isLogisticaTeam?: boolean
+  canManageSantisimo?: boolean
   allMesas?: Mesa[]
 }
 
-export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminantes, isCartasTeam = false, isSnacksTeam = false, isLogisticaTeam = false, allMesas = [] }: ServidorDashboardProps) {
+export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminantes, isCartasTeam = false, isSnacksTeam = false, isLogisticaTeam = false, canManageSantisimo = false, allMesas = [] }: ServidorDashboardProps) {
   const router = useRouter()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [caminantes, setCaminantes] = useState(initialCaminantes)
@@ -98,6 +100,12 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
                       <span className="truncate">{servidor.alojamiento.habitacion_nombre}</span>
                     </span>
                   ) : null}
+                  {(servidor.turnos_santisimo || []).map((turno) => (
+                    <span key={turno.id} className="flex items-center gap-1 font-medium text-amber-800">
+                      <Clock3 className="h-3.5 w-3.5 shrink-0" />
+                      <span>Turno en Santísimo: {formatSantisimoTurn(turno.turno_inicio)}</span>
+                    </span>
+                  ))}
                   <Badge variant="secondary" className={getPaymentBadgeClass()}>
                     {pagoServidor}
                   </Badge>
@@ -114,6 +122,13 @@ export function ServidorDashboard({ servidor, mesa, caminantes: initialCaminante
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
+              {canManageSantisimo && (
+                <Link href="/admin/turnos-santisimo">
+                  <Button variant="outline" size="icon" aria-label="Abrir Turnos en el Santísimo" title="Turnos en el Santísimo">
+                    <CalendarClock className="h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
               <Link href="/minuto-a-minuto">
                 <Button variant="outline" size="icon" aria-label="Abrir Minuto a Minuto" title="Minuto a Minuto">
                   <Timer className="h-4 w-4" />

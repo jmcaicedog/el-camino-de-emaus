@@ -7,6 +7,11 @@ function normalizeTeamName(value: string) {
     .toLowerCase()
 }
 
+function isSantisimoTeamName(value: string) {
+  const normalized = normalizeTeamName(value)
+  return normalized.includes("santisimo") || normalized.includes("oracion")
+}
+
 export async function isLogisticaMemberByAuthUserId(userId: string) {
   const service = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -114,21 +119,26 @@ export async function getServidorAssignmentContext(userId: string) {
       equipoIds: [] as string[],
       isSuper,
       isFullViewer: isSuper,
+      canManageSantisimo: isSuper,
     }
   }
 
   const { data: relaciones } = await service
     .from("servidor_equipo")
-    .select("equipo_id, equipos(nombre)")
+    .select("equipo_id, es_lider, equipos(nombre)")
     .eq("servidor_id", servidor.id)
 
   const equipoIds: string[] = []
   const equipoNombres: string[] = []
+  let isSantisimoLeader = false
 
   if (relaciones) {
     for (const r of relaciones as any[]) {
       if (r.equipo_id) equipoIds.push(r.equipo_id)
       if (r.equipos?.nombre) equipoNombres.push(r.equipos.nombre)
+      if (r.es_lider && r.equipos?.nombre && isSantisimoTeamName(r.equipos.nombre)) {
+        isSantisimoLeader = true
+      }
     }
   }
 
@@ -137,7 +147,8 @@ export async function getServidorAssignmentContext(userId: string) {
     equipoNombres.some((nombre) => {
       const norm = normalizeTeamName(nombre)
       return norm.includes("log") || norm.includes("minuto") || norm.includes("campan")
-    })
+    }) ||
+    isSantisimoLeader
 
   return {
     servidorId: servidor.id,
@@ -145,5 +156,6 @@ export async function getServidorAssignmentContext(userId: string) {
     equipoIds,
     isSuper,
     isFullViewer,
+    canManageSantisimo: isSuper || isSantisimoLeader,
   }
 }

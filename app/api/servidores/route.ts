@@ -185,6 +185,7 @@ export async function GET(request: NextRequest) {
       { data: responsablesMinuto, error: responsablesMinutoError },
       { data: relaciones, error: relacionesError },
       { data: asignaciones, error: asignacionesError },
+      { data: turnosSantisimo, error: turnosSantisimoError },
     ] = await Promise.all([
         service.from("minuto_eventos").select("id, titulo").order("fecha_inicio", { ascending: true }),
         service.from("minuto_evento_responsables").select("evento_id, tipo_responsable, servidor_id, equipo_id"),
@@ -205,14 +206,20 @@ export async function GET(request: NextRequest) {
           .select("persona_id, habitaciones(nombre, edificios(nombre))")
           .eq("persona_tipo", "servidor")
           .in("persona_id", servidorIds),
+        service
+          .from("turnos_santisimo")
+          .select("id, servidor_id, turno_inicio, created_at")
+          .in("servidor_id", servidorIds)
+          .order("turno_inicio", { ascending: true }),
       ])
 
-    if (eventosMinutoError || responsablesMinutoError || relacionesError || asignacionesError) {
+    if (eventosMinutoError || responsablesMinutoError || relacionesError || asignacionesError || turnosSantisimoError) {
       const message =
         eventosMinutoError?.message ||
         responsablesMinutoError?.message ||
         relacionesError?.message ||
         asignacionesError?.message ||
+        turnosSantisimoError?.message ||
         "No fue posible consultar datos de servidores"
       return NextResponse.json({ message }, { status: 400 })
     }
@@ -236,6 +243,12 @@ export async function GET(request: NextRequest) {
           : []
       }),
     )
+    const turnosPorServidorId = new Map<string, typeof turnosSantisimo>()
+    for (const turno of turnosSantisimo || []) {
+      const list = turnosPorServidorId.get(turno.servidor_id) || []
+      list.push(turno)
+      turnosPorServidorId.set(turno.servidor_id, list)
+    }
 
     const servidoresConEquipos = (servidores || []).map((servidor) => {
         const relacionesServidor = relacionesPorServidorId.get(servidor.id) || []
@@ -271,6 +284,7 @@ export async function GET(request: NextRequest) {
           equiposPorTipo,
           actividades,
           alojamiento: alojamientoPorServidorId.get(servidor.id) || null,
+          turnos_santisimo: turnosPorServidorId.get(servidor.id) || [],
         }
       })
 

@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Building2, Loader2, Pill, UtensilsCrossed, Eye, Tablets, Pencil } from "lucide-react"
+import { Building2, Clock3, Loader2, Pill, UtensilsCrossed, Eye, Tablets, Pencil } from "lucide-react"
 import { uiAvatarUrl } from "@/lib/utils"
 import type { Servidor } from "@/lib/types"
 import ServidorDetails from "@/components/servidor/servidor-details"
 import { useToast } from "@/hooks/use-toast"
 import { PersonEditForm } from "@/components/servidor/person-edit-form"
+import { formatSantisimoTurn } from "@/lib/santisimo-turnos"
 
 interface ServidorCardProps {
   servidor: Servidor
@@ -191,6 +192,12 @@ export function ServidorCard({ servidor, onUpdate, canEdit = true }: ServidorCar
                 <span className="truncate">{servidor.alojamiento.habitacion_nombre}</span>
               </div>
             ) : null}
+            {(servidor.turnos_santisimo || []).map((turno) => (
+              <div key={turno.id} className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-800">
+                <Clock3 className="h-3.5 w-3.5 shrink-0" />
+                <span>Turno en Santísimo: {formatSantisimoTurn(turno.turno_inicio)}</span>
+              </div>
+            ))}
           </div>
         </div>
       </CardHeader>

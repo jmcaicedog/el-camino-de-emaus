@@ -32,27 +32,42 @@ export async function GET() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { autoRefreshToken: false, persistSession: false } },
     )
-    const [{ data: relaciones, error: relacionesError }, { data: asignacion, error: asignacionError }] = await Promise.all([
-      supabase.from("servidor_equipo").select("equipos(nombre)").eq("servidor_id", servidor.id),
+    const [
+      { data: relaciones, error: relacionesError },
+      { data: asignacion, error: asignacionError },
+      { data: turnos, error: turnosError },
+    ] = await Promise.all([
+      supabase.from("servidor_equipo").select("es_lider, equipos(nombre)").eq("servidor_id", servidor.id),
       service
         .from("asignaciones_alojamiento")
         .select("habitaciones(nombre, edificios(nombre))")
         .eq("persona_id", servidor.id)
         .eq("persona_tipo", "servidor")
         .maybeSingle(),
+      service
+        .from("turnos_santisimo")
+        .select("id, servidor_id, turno_inicio, created_at")
+        .eq("servidor_id", servidor.id)
+        .order("turno_inicio", { ascending: true }),
     ])
 
-    if (relacionesError || asignacionError) {
-      return NextResponse.json({ message: relacionesError?.message || asignacionError?.message || "No fue posible consultar el perfil" }, { status: 400 })
+    if (relacionesError || asignacionError || turnosError) {
+      return NextResponse.json({ message: relacionesError?.message || asignacionError?.message || turnosError?.message || "No fue posible consultar el perfil" }, { status: 400 })
     }
 
     const habitacion = (Array.isArray(asignacion?.habitaciones) ? asignacion?.habitaciones[0] : asignacion?.habitaciones) as unknown as {
       nombre: string
       edificios: { nombre: string } | null
     } | null
+    const canManageSantisimo = (relaciones || []).some((relacion: any) => {
+      const nombre = String(relacion.equipos?.nombre || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+      return relacion.es_lider && (nombre.includes("santisimo") || nombre.includes("oracion"))
+    })
     return NextResponse.json({
       ...servidor,
       equipos: (relaciones || []).map((relacion: any) => relacion.equipos?.nombre).filter(Boolean),
+      can_manage_santisimo: canManageSantisimo,
+      turnos_santisimo: turnos || [],
       alojamiento: habitacion?.edificios
         ? { edificio_nombre: habitacion.edificios.nombre, habitacion_nombre: habitacion.nombre }
         : null,

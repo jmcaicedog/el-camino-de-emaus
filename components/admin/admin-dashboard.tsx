@@ -12,12 +12,14 @@ import { MesaReport } from "@/components/admin/mesa-report"
 import { SystemSettingsPanel } from "@/components/admin/system-settings-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2, ClipboardCheck, Timer, Shirt } from "lucide-react"
+import { CalendarClock, Clock3, LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2, ClipboardCheck, Timer, Shirt } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import type { AdminUser } from "@/lib/types"
+import type { TurnoSantisimo } from "@/lib/types"
+import { formatSantisimoTurn } from "@/lib/santisimo-turnos"
 
 interface AdminDashboardProps {
   adminUser: AdminUser
@@ -34,9 +36,11 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const [isLogisticaTeam, setIsLogisticaTeam] = useState(false)
   const [isContabilidadTeam, setIsContabilidadTeam] = useState(false)
   const [isMesaRegistroTeam, setIsMesaRegistroTeam] = useState(false)
+  const [canManageSantisimo, setCanManageSantisimo] = useState(false)
   const [isAdditionalTeam, setIsAdditionalTeam] = useState(false)
   const [pagoServidor, setPagoServidor] = useState<{ text: string; status: "zero" | "partial" | "complete" } | null>(null)
   const [alojamientoServidor, setAlojamientoServidor] = useState<{ edificio_nombre: string; habitacion_nombre: string } | null>(null)
+  const [turnosSantisimo, setTurnosSantisimo] = useState<TurnoSantisimo[]>([])
 
   const getPaymentBadgeClass = (status: "zero" | "partial" | "complete") => {
     if (status === "zero") return "bg-red-100 text-red-800 border-red-300"
@@ -90,6 +94,8 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             status,
           })
           setAlojamientoServidor(myServidor.alojamiento || null)
+          setCanManageSantisimo(Boolean(myServidor.can_manage_santisimo))
+          setTurnosSantisimo(myServidor.turnos_santisimo || [])
         }
         const myEquipos: string[] = (myServidor?.equipos || []).map((e: string) => e.normalize('NFC').toLowerCase())
         const equiposConPermisoDefinido = [
@@ -131,9 +137,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
       }
     }
     
-    if (!adminUser.is_super) {
-      checkRoles()
-    }
+    checkRoles()
 
     loadLogo()
   }, [adminUser])
@@ -173,6 +177,13 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                     </Button>
                   </Link>
                 )}
+                {(adminUser.is_super || canManageSantisimo) && (
+                  <Link href="/admin/turnos-santisimo">
+                    <Button variant="outline" size="icon" aria-label="Abrir Turnos en el Santísimo" title="Turnos en el Santísimo">
+                      <CalendarClock className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
                 {(adminUser.is_super || isLogisticaTeam) && (
                   <Link href="/admin/alojamiento">
                     <Button variant="outline" size="icon" aria-label="Abrir módulo de alojamiento" title="Alojamiento">
@@ -208,6 +219,12 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                       <span className="truncate">{alojamientoServidor.habitacion_nombre}</span>
                     </span>
                   ) : null}
+                  {turnosSantisimo.map((turno) => (
+                    <span key={turno.id} className="flex items-center gap-1 font-medium text-amber-800">
+                      <Clock3 className="h-3.5 w-3.5 shrink-0" />
+                      <span>Turno en Santísimo: {formatSantisimoTurn(turno.turno_inicio)}</span>
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>

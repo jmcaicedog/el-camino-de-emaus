@@ -6,6 +6,14 @@ export interface AlojamientoPerfil {
   habitacion_nombre: string
 }
 
+export interface TurnoSantisimo {
+  id: string
+  servidor_id: string
+  turno_inicio: string
+  created_at?: string
+  servidor?: Pick<Servidor, "id" | "nombre_completo" | "imagen">
+}
+
 export interface Caminante {
   id: string
   nombre_completo: string
@@ -106,6 +114,7 @@ export interface Servidor {
   actividades?: string[]
   es_lider_equipo?: boolean
   alojamiento?: AlojamientoPerfil | null
+  turnos_santisimo?: TurnoSantisimo[]
   created_at: string
   updated_at: string
 }

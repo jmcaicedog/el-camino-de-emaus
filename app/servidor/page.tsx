@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { ServidorDashboard } from "@/components/servidor/servidor-dashboard"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { getServidorAssignmentContext } from "@/lib/access-control"
 
 export default async function ServidorPage() {
   const supabase = await createClient()
@@ -26,7 +27,7 @@ export default async function ServidorPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } },
   )
-  const [{ data: asignacionAlojamiento }, { data: equipoMemberships }] = await Promise.all([
+  const [{ data: asignacionAlojamiento }, { data: equipoMemberships }, { data: turnosSantisimo }, assignmentContext] = await Promise.all([
     service
       .from("asignaciones_alojamiento")
       .select("habitaciones(nombre, edificios(nombre))")
@@ -34,6 +35,12 @@ export default async function ServidorPage() {
       .eq("persona_tipo", "servidor")
       .maybeSingle(),
     supabase.from("servidor_equipo").select("equipos (nombre)").eq("servidor_id", servidorData.id),
+    service
+      .from("turnos_santisimo")
+      .select("id, servidor_id, turno_inicio, created_at")
+      .eq("servidor_id", servidorData.id)
+      .order("turno_inicio", { ascending: true }),
+    getServidorAssignmentContext(user.id),
   ])
 
   const habitacion = (Array.isArray(asignacionAlojamiento?.habitaciones) ? asignacionAlojamiento?.habitaciones[0] : asignacionAlojamiento?.habitaciones) as unknown as {
@@ -73,12 +80,13 @@ export default async function ServidorPage() {
 
   return (
     <ServidorDashboard
-      servidor={{ ...servidorData, alojamiento }}
+      servidor={{ ...servidorData, alojamiento, turnos_santisimo: turnosSantisimo || [] }}
       mesa={mesaData}
       caminantes={caminantesData}
       isCartasTeam={isCartasTeam}
       isSnacksTeam={isSnacksTeam}
       isLogisticaTeam={isLogisticaTeam}
+      canManageSantisimo={assignmentContext.canManageSantisimo}
       allMesas={allMesas}
     />
   )
