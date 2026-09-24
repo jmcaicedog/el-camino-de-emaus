@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { getSantisimoSlots, type SantisimoSlot } from "@/lib/santisimo-turnos"
 import type { TurnoSantisimo } from "@/lib/types"
@@ -141,40 +142,67 @@ export function TurnosSantisimoManagement() {
         </Button>
       </div>
 
-      {(["viernes", "sabado", "domingo"] as const).map((dayKey) => {
-        const daySlots = slots.filter((slot) => slot.dayKey === dayKey)
-        return (
-          <Card key={dayKey}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">{daySlots[0]?.dayLabel}</CardTitle>
-              <CardDescription>{daySlots.length} franjas horarias</CardDescription>
-            </CardHeader>
-            <CardContent className="divide-y p-0">
-              {daySlots.map((slot) => {
-                const assignments = turnosBySlot.get(new Date(slot.inicio).toISOString()) || []
-                return (
-                  <div key={slot.inicio} className="grid gap-3 px-4 py-3 sm:grid-cols-[150px_1fr_auto] sm:items-center sm:px-6">
-                    <div className="font-medium tabular-nums">{slot.timeLabel}</div>
-                    <div className="flex min-w-0 flex-wrap gap-2">
-                      {assignments.length === 0 ? <span className="text-sm text-muted-foreground">Sin servidores asignados</span> : assignments.map((turno) => (
-                        <span key={turno.id} className="inline-flex max-w-full items-center gap-1 rounded-md border bg-muted px-2 py-1 text-sm">
-                          <span className="truncate">{turno.servidor?.nombre_completo || "Servidor"}</span>
-                          <button type="button" className="rounded p-0.5 hover:bg-background" aria-label={`Remover a ${turno.servidor?.nombre_completo || "servidor"}`} title="Remover del turno" onClick={() => setPendingRemoval(turno)}>
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => openAssignment(slot)}>
-                      <Plus className="mr-2 h-4 w-4" />Asignar
-                    </Button>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
-        )
-      })}
+      <Tabs defaultValue="viernes" className="space-y-4">
+        <TabsList className="grid h-auto w-full grid-cols-3">
+          {(["viernes", "sabado", "domingo"] as const).map((dayKey) => {
+            const daySlots = slots.filter((slot) => slot.dayKey === dayKey)
+            return (
+              <TabsTrigger key={dayKey} value={dayKey} className="py-2.5">
+                {daySlots[0]?.dayLabel}
+              </TabsTrigger>
+            )
+          })}
+        </TabsList>
+
+        {(["viernes", "sabado", "domingo"] as const).map((dayKey) => {
+          const daySlots = slots.filter((slot) => slot.dayKey === dayKey)
+          return (
+            <TabsContent key={dayKey} value={dayKey}>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">{daySlots[0]?.dayLabel}</CardTitle>
+                  <CardDescription>{daySlots.length} franjas horarias</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 px-3 pb-3 sm:px-5 sm:pb-5">
+                  {daySlots.map((slot) => {
+                    const assignments = turnosBySlot.get(new Date(slot.inicio).toISOString()) || []
+                    const isAssigned = assignments.length > 0
+                    return (
+                      <div
+                        key={slot.inicio}
+                        className={`grid gap-3 rounded-md border-l-4 px-4 py-3 transition-colors sm:grid-cols-[190px_minmax(0,1fr)_auto] sm:items-center ${
+                          isAssigned
+                            ? "border-green-600 bg-green-50/80"
+                            : "border-red-500 bg-red-50/80"
+                        }`}
+                      >
+                        <div className={`whitespace-nowrap font-semibold tabular-nums ${isAssigned ? "text-green-900" : "text-red-900"}`}>
+                          {slot.timeLabel}
+                        </div>
+                        <div className="flex min-w-0 flex-wrap gap-2">
+                          {assignments.length === 0 ? (
+                            <span className="text-sm font-medium text-red-700">Sin servidores asignados</span>
+                          ) : assignments.map((turno) => (
+                            <span key={turno.id} className="inline-flex max-w-full items-center gap-1 rounded-md border border-green-300 bg-green-100 px-2 py-1 text-sm font-medium text-green-900">
+                              <span className="truncate">{turno.servidor?.nombre_completo || "Servidor"}</span>
+                              <button type="button" className="rounded p-0.5 hover:bg-green-200" aria-label={`Remover a ${turno.servidor?.nombre_completo || "servidor"}`} title="Remover del turno" onClick={() => setPendingRemoval(turno)}>
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                        <Button variant="outline" size="sm" className={isAssigned ? "border-green-300 bg-white/80" : "border-red-300 bg-white/80"} onClick={() => openAssignment(slot)}>
+                          <Plus className="mr-2 h-4 w-4" />Asignar
+                        </Button>
+                      </div>
+                    )
+                  })}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )
+        })}
+      </Tabs>
 
       <Dialog open={Boolean(selectedSlot)} onOpenChange={(open) => !open && setSelectedSlot(null)}>
         <DialogContent className="max-h-[85vh] max-w-lg overflow-hidden">
