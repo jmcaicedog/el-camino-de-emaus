@@ -12,7 +12,7 @@ import { MesaReport } from "@/components/admin/mesa-report"
 import { SystemSettingsPanel } from "@/components/admin/system-settings-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { CalendarClock, Clock3, LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2, ClipboardCheck, Timer, Shirt } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -228,23 +228,21 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
 
       <main className="container mx-auto px-4 py-8">
         {turnosSantisimo.length > 0 ? (
-          <Card className="mb-6 border-amber-200 bg-amber-50/60">
-            <CardHeader className="gap-1 pb-3">
-              <div className="flex items-center justify-between gap-3">
-                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+          <Card className="mb-4 border-amber-200 bg-amber-50/60">
+            <CardContent className="flex flex-col gap-2 p-3 md:flex-row md:items-center md:gap-4 md:p-4">
+              <div className="flex shrink-0 items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm font-semibold md:text-base">
                   <CalendarClock className="h-5 w-5 shrink-0 text-amber-700" />
                   Mis turnos en el Santísimo
-                </CardTitle>
+                </div>
                 <Badge variant="outline" className="shrink-0 border-amber-300 bg-background text-amber-900">
-                  {turnosSantisimo.length} {turnosSantisimo.length === 1 ? "turno" : "turnos"}
+                  {turnosSantisimo.length}
                 </Badge>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 md:justify-end">
                 {turnosSantisimo.map((turno) => (
-                  <div key={turno.id} className="flex items-center gap-2 rounded-md border border-amber-200 bg-background px-3 py-2.5 text-sm font-medium text-amber-950">
-                    <Clock3 className="h-4 w-4 shrink-0 text-amber-700" />
+                  <div key={turno.id} className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-background px-2.5 py-1.5 text-xs font-medium text-amber-950 md:text-sm">
+                    <Clock3 className="h-3.5 w-3.5 shrink-0 text-amber-700" />
                     <span>{formatSantisimoTurn(turno.turno_inicio)}</span>
                   </div>
                 ))}
