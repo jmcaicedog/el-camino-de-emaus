@@ -13,7 +13,7 @@ import { SystemSettingsPanel } from "@/components/admin/system-settings-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { CalendarClock, Clock3, LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2, ClipboardCheck, Timer, Shirt } from "lucide-react"
+import { CalendarClock, ChevronDown, Clock3, LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2, ClipboardCheck, Timer, Shirt } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -159,8 +159,8 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
+          <div className="flex items-start justify-between gap-2 sm:items-center">
+            <div className="flex min-w-0 items-center gap-3 sm:flex-1">
               <Image src={logoSrc} alt="El Camino de Emaús" width={48} height={48} className="h-12 w-12 shrink-0 object-contain" />
               <div className="min-w-0">
                 <h1 className="text-lg font-bold leading-tight md:text-xl">Panel administrativo</h1>
@@ -177,12 +177,13 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                 </div>
               </div>
             </div>
-            <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto sm:justify-end md:gap-2">
-                {pagoServidor ? (
-                  <Badge variant="secondary" className={`${getPaymentBadgeClass(pagoServidor.status)} shrink-0`}>
-                    {pagoServidor.text}
-                  </Badge>
-                ) : null}
+            <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center md:gap-2">
+              {pagoServidor ? (
+                <Badge variant="secondary" className={`${getPaymentBadgeClass(pagoServidor.status)} order-2 shrink-0 sm:order-1`}>
+                  {pagoServidor.text}
+                </Badge>
+              ) : null}
+              <div className="order-1 flex max-w-48 flex-wrap items-center justify-end gap-1.5 sm:order-2 sm:max-w-none md:gap-2">
                 {adminUser.is_super && <SystemSettingsPanel />}
                 {(adminUser.is_super || isContabilidadTeam) && (
                   <Link href="/admin/camisas">
@@ -221,6 +222,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                   <LogOut className="h-4 w-4 md:mr-2" />
                   <span className="hidden md:inline">Cerrar Sesión</span>
                 </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -228,8 +230,31 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
 
       <main className="container mx-auto px-4 py-8">
         {turnosSantisimo.length > 0 ? (
-          <Card className="mb-4 border-amber-200 bg-amber-50/60">
-            <CardContent className="flex flex-col gap-2 p-3 md:flex-row md:items-center md:gap-4 md:p-4">
+          <Card className="mb-4 gap-0 border-amber-200 bg-amber-50/60 py-0">
+            <details className="group md:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 [&::-webkit-details-marker]:hidden">
+                <div className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+                  <CalendarClock className="h-5 w-5 shrink-0 text-amber-700" />
+                  <span className="truncate">Mis turnos en el Santísimo</span>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Badge variant="outline" className="border-amber-300 bg-background text-amber-900">
+                    {turnosSantisimo.length}
+                  </Badge>
+                  <ChevronDown className="h-4 w-4 text-amber-800 transition-transform group-open:rotate-180" />
+                </div>
+              </summary>
+              <div className="flex flex-col gap-1.5 border-t border-amber-200 px-3 py-2.5">
+                {turnosSantisimo.map((turno) => (
+                  <div key={turno.id} className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-background px-2.5 py-1.5 text-xs font-medium text-amber-950">
+                    <Clock3 className="h-3.5 w-3.5 shrink-0 text-amber-700" />
+                    <span>{formatSantisimoTurn(turno.turno_inicio)}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+
+            <CardContent className="hidden items-center gap-4 px-4 py-2 md:flex">
               <div className="flex shrink-0 items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm font-semibold md:text-base">
                   <CalendarClock className="h-5 w-5 shrink-0 text-amber-700" />
