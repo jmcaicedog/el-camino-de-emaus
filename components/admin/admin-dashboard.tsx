@@ -12,6 +12,7 @@ import { MesaReport } from "@/components/admin/mesa-report"
 import { SystemSettingsPanel } from "@/components/admin/system-settings-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarClock, Clock3, LogOut, Users, Table2, UserCog, FileText, UsersRound, ShieldCheck, ClipboardList, Building2, ClipboardCheck, Timer, Shirt } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -158,14 +159,27 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex min-w-0 flex-1 items-center">
-              <Image src={logoSrc} alt="El Camino de Emaús" width={40} height={40} className="object-contain flex-shrink-0 md:w-[50px] md:h-[50px]" />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <Image src={logoSrc} alt="El Camino de Emaús" width={48} height={48} className="h-12 w-12 shrink-0 object-contain" />
+              <div className="min-w-0">
+                <h1 className="text-lg font-bold leading-tight md:text-xl">Panel administrativo</h1>
+                <div className="mt-1 flex min-w-0 flex-col gap-0.5 text-xs text-muted-foreground md:flex-row md:items-center md:gap-2 md:text-sm">
+                  <span className="truncate font-medium text-foreground">{adminUser.nombre_completo}</span>
+                  {alojamientoServidor ? (
+                    <span className="flex min-w-0 items-center gap-1">
+                      <Building2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">
+                        {alojamientoServidor.edificio_nombre} - {alojamientoServidor.habitacion_nombre}
+                      </span>
+                    </span>
+                  ) : null}
+                </div>
+              </div>
             </div>
-            <div className="flex min-w-0 flex-col items-end gap-1.5">
-              <div className="flex shrink-0 items-center gap-1 md:gap-2">
+            <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto sm:justify-end md:gap-2">
                 {pagoServidor ? (
-                  <Badge variant="secondary" className={getPaymentBadgeClass(pagoServidor.status)}>
+                  <Badge variant="secondary" className={`${getPaymentBadgeClass(pagoServidor.status)} shrink-0`}>
                     {pagoServidor.text}
                   </Badge>
                 ) : null}
@@ -203,36 +217,42 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                     <Timer className="h-4 w-4" />
                   </Button>
                 </Link>
-                <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="flex-shrink-0">
+                <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut} size="sm" className="shrink-0">
                   <LogOut className="h-4 w-4 md:mr-2" />
                   <span className="hidden md:inline">Cerrar Sesión</span>
                 </Button>
-              </div>
-              <div className="flex max-w-full flex-wrap items-center justify-end gap-1 text-xs text-muted-foreground md:text-sm">
-                <div className="flex min-w-0 flex-col items-end gap-0.5 md:flex-row md:items-center md:gap-1">
-                  <span className="max-w-55 truncate sm:max-w-none">{adminUser.nombre_completo}</span>
-                  {alojamientoServidor ? (
-                    <span className="flex min-w-0 items-center gap-1">
-                      <Building2 className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">{alojamientoServidor.edificio_nombre}</span>
-                      <span aria-hidden="true">-</span>
-                      <span className="truncate">{alojamientoServidor.habitacion_nombre}</span>
-                    </span>
-                  ) : null}
-                  {turnosSantisimo.map((turno) => (
-                    <span key={turno.id} className="flex items-center gap-1 font-medium text-amber-800">
-                      <Clock3 className="h-3.5 w-3.5 shrink-0" />
-                      <span>Turno en Santísimo: {formatSantisimoTurn(turno.turno_inicio)}</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {turnosSantisimo.length > 0 ? (
+          <Card className="mb-6 border-amber-200 bg-amber-50/60">
+            <CardHeader className="gap-1 pb-3">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <CalendarClock className="h-5 w-5 shrink-0 text-amber-700" />
+                  Mis turnos en el Santísimo
+                </CardTitle>
+                <Badge variant="outline" className="shrink-0 border-amber-300 bg-background text-amber-900">
+                  {turnosSantisimo.length} {turnosSantisimo.length === 1 ? "turno" : "turnos"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {turnosSantisimo.map((turno) => (
+                  <div key={turno.id} className="flex items-center gap-2 rounded-md border border-amber-200 bg-background px-3 py-2.5 text-sm font-medium text-amber-950">
+                    <Clock3 className="h-4 w-4 shrink-0 text-amber-700" />
+                    <span>{formatSantisimoTurn(turno.turno_inicio)}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className={`grid w-full h-auto ${tabCount === 6 ? 'grid-cols-6' : tabCount === 5 ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="equipos" className="flex-col gap-1 py-2 px-1 text-xs md:flex-row md:gap-2 md:py-2 md:px-3 md:text-sm">
