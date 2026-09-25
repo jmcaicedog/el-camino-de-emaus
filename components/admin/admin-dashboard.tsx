@@ -230,7 +230,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
 
       <main className="container mx-auto px-4 py-8">
         {turnosSantisimo.length > 0 ? (
-          <Card className="mb-4 gap-0 border-amber-200 bg-amber-50/60 py-0">
+          <Card className="mb-4 gap-0 border-amber-200 bg-amber-50/60 py-0 md:py-0">
             <details className="group md:hidden">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 [&::-webkit-details-marker]:hidden">
                 <div className="flex min-w-0 items-center gap-2 text-sm font-semibold">
